@@ -20,7 +20,9 @@ const SEEDS: Seed[] = [
 
 export function seedRoutines(now: Date = new Date()): Routine[] {
   return SEEDS.map((s, i) => ({
-    id: crypto.randomUUID(),
+    // Private singleton ids: seeding on a second device creates the same
+    // records instead of eight duplicates.
+    id: `#seed-${i}`,
     name: s.name,
     color: s.color,
     minText: s.minText,
@@ -36,7 +38,7 @@ export function seedRoutines(now: Date = new Date()): Routine[] {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  id: 'me',
+  id: '#me',
   targetWake: '08:00',
   targetBed: '00:00',
   lastBackupAt: null,

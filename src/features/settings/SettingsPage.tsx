@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState, type ReactNode } from 'react'
 import { ROUTINE_COLORS } from '../../design/palette'
+import { useAccount } from '../../data/account'
 import { store } from '../../data/store'
 import type { Backup, Routine } from '../../domain/types'
 import { Button } from './components/Button'
@@ -100,6 +101,7 @@ export function SettingsPage() {
   }
 
   const hint = settings ? backupHint(settings.lastBackupAt, new Date()) : null
+  const account = useAccount()
 
   return (
     <div className="mx-auto flex max-w-[40rem] flex-col gap-6 p-4 pb-8">
@@ -189,6 +191,22 @@ export function SettingsPage() {
           </p>
         )}
       </Group>
+
+      {account.cloud && (
+        <Group title="Hesap" footer="Rutinlerin ve tiklerin bu hesaba kaydedilir; giriş yaptığın her cihazda aynı veriyi görürsün.">
+          <div className="flex items-center justify-between gap-3 px-2">
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate text-body">{account.email ?? 'Giriş yapılmadı'}</span>
+              {account.evalDaysLeft !== null && (
+                <span className="text-footnote text-muted">Deneme hesabı · {account.evalDaysLeft} gün kaldı</span>
+              )}
+            </div>
+            <Button variant="danger" onClick={() => void account.logout()}>
+              Çıkış yap
+            </Button>
+          </div>
+        </Group>
+      )}
 
       {archived.length > 0 && (
         <Group title="Arşiv">

@@ -1,8 +1,17 @@
 # Architecture
 
-Routine runs entirely on the device. There is no server, no account and no paid
-service. Data lives in IndexedDB (via Dexie); the app is a static PWA served from
-GitHub Pages at `/Routine/`.
+Routine is a local-first PWA served from GitHub Pages at `/Routine/`. Data lives
+in IndexedDB (via Dexie) and syncs to Dexie Cloud (free tier) when
+`VITE_DEXIE_CLOUD_URL` is set at build time; the user signs in with an email
+one-time code. Without the URL (tests, local dev) the app runs local-only.
+
+Sync rules that every table must follow:
+
+- Primary keys are globally unique strings (UUIDs) or private singleton ids
+  starting with `#` (one per account: `#me` settings, `#YYYY-MM-DD` day logs,
+  `#seed-N` starter routines). Never `++id`.
+- Avoid schema migrations; Dexie Cloud apps keep `version(1)` and only add
+  optional fields.
 
 ## Layers
 

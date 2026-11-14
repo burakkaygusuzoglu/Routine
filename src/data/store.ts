@@ -35,13 +35,30 @@ export interface RoutineStore {
 
 export const completionId = (routineId: string, date: DateKey) => `${routineId}|${date}`
 
+/** Private singleton id: one day log per account per day, on every device. */
+export const dayLogId = (date: DateKey) => `#${date}`
+
 export function createStore(db: RoutineDB = defaultDb): RoutineStore {
   return {
     async init() {
+      if (db.isCloud) {
+        // Pull the account's data first, so a new device does not seed
+        // defaults over it. Offline is fine: we fall back to what is local.
+        try {
+          await Promise.race([
+            db.cloud.sync({ purpose: 'pull', wait: true }),
+            new Promise((resolve) => setTimeout(resolve, 8000)),
+          ])
+        } catch {
+          // Offline or server unreachable.
+        }
+      }
       await db.transaction('rw', db.routines, db.settings, async () => {
-        if ((await db.settings.count()) > 0) return
-        await db.settings.put(DEFAULT_SETTINGS)
-        await db.routines.bulkPut(seedRoutines())
+        if (await db.settings.get(DEFAULT_SETTINGS.id)) return
+        await db.settings.add(DEFAULT_SETTINGS)
+        const seeds = seedRoutines()
+        const existing = new Set(await db.routines.bulkGet(seeds.map((r) => r.id)).then((rs) => rs.filter(Boolean).map((r) => r!.id)))
+        await db.routines.bulkAdd(seeds.filter((r) => !existing.has(r.id)))
       })
     },
 
@@ -71,21 +88,24 @@ export function createStore(db: RoutineDB = defaultDb): RoutineStore {
     },
 
     async getDayLog(date) {
-      return (await db.dayLogs.get(date)) ?? { date, wokeAt: null, bedAt: null, badDay: false }
+      const row = await db.dayLogs.get(dayLogId(date))
+      if (!row) return { date, wokeAt: null, bedAt: null, badDay: false }
+      const { id: _id, ...log } = row
+      return log
     },
     async saveDayLog(log) {
-      await db.dayLogs.put(log)
+      await db.dayLogs.put({ ...log, id: dayLogId(log.date) })
     },
 
     async getSettings() {
-      return (await db.settings.get('me')) ?? DEFAULT_SETTINGS
+      return (await db.settings.get(DEFAULT_SETTINGS.id)) ?? DEFAULT_SETTINGS
     },
     async saveSettings(settings) {
       await db.settings.put(settings)
     },
 
     async exportBackup() {
-      const [routines, completions, dayLogs, settings, focusSessions, notes] = await Promise.all([
+      const [routines, completions, dayLogRows, settings, focusSessions, notes] = await Promise.all([
         db.routines.toArray(),
         db.completions.toArray(),
         db.dayLogs.toArray(),
@@ -93,6 +113,7 @@ export function createStore(db: RoutineDB = defaultDb): RoutineStore {
         db.focusSessions.toArray(),
         db.notes.toArray(),
       ])
+      const dayLogs = dayLogRows.map(({ id: _id, ...log }) => log)
       return { app: 'routine', version: 1, exportedAt: new Date().toISOString(), routines, completions, dayLogs, settings, focusSessions, notes }
     },
     async importBackup(backup) {
@@ -101,8 +122,9 @@ export function createStore(db: RoutineDB = defaultDb): RoutineStore {
         await Promise.all(db.tables.map((t) => t.clear()))
         await db.routines.bulkPut(backup.routines)
         await db.completions.bulkPut(backup.completions)
-        await db.dayLogs.bulkPut(backup.dayLogs)
-        await db.settings.bulkPut(backup.settings)
+        await db.dayLogs.bulkPut(backup.dayLogs.map((log) => ({ ...log, id: dayLogId(log.date) })))
+        // Backups made before cloud sync stored settings under 'me'.
+        await db.settings.bulkPut(backup.settings.map((st) => ({ ...st, id: DEFAULT_SETTINGS.id })))
         await db.focusSessions.bulkPut(backup.focusSessions ?? [])
         await db.notes.bulkPut(backup.notes ?? [])
       })

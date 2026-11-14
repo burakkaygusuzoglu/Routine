@@ -48,7 +48,8 @@ export interface DayLog {
 }
 
 export interface Settings {
-  id: 'me'
+  /** Private singleton id: one settings object per account. */
+  id: '#me'
   targetWake: ClockTime
   targetBed: ClockTime
   lastBackupAt: string | null

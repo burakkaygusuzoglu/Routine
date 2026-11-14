@@ -11,11 +11,21 @@ beforeEach(async () => {
 })
 
 describe('RoutineStore', () => {
-  it('seeds eight routines once', async () => {
+  it('seeds eight routines once, with private singleton ids', async () => {
     await store.init()
     const routines = await store.listRoutines()
     expect(routines).toHaveLength(8)
     expect(routines[0].name).toBe('Sabit kalkış')
+    expect(routines.every((r) => r.id.startsWith('#seed-'))).toBe(true)
+    expect((await store.getSettings()).id).toBe('#me')
+  })
+
+  it('imports a pre-cloud backup (settings id "me")', async () => {
+    const backup = await store.exportBackup()
+    const legacy = { ...backup, settings: backup.settings.map((s) => ({ ...s, id: 'me', targetWake: '07:30' })) }
+    const other = createStore(new RoutineDB(`test-${n++}`))
+    await other.importBackup(JSON.parse(JSON.stringify(legacy)))
+    expect((await other.getSettings()).targetWake).toBe('07:30')
   })
 
   it('keeps one completion per routine per day and can clear it', async () => {

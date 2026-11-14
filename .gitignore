@@ -4,3 +4,7 @@ dist/
 .env.*
 .DS_Store
 *.log
+
+# Dexie Cloud CLI credentials: never commit
+dexie-cloud.key
+dexie-cloud.json
