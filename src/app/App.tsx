@@ -1,19 +1,20 @@
 import { useEffect, useState } from 'react'
-import { HashRouter, NavLink, Route, Routes } from 'react-router-dom'
+import { HashRouter, Route, Routes } from 'react-router-dom'
 import { store } from '../data/store'
 import { ProgressPage } from '../features/progress/ProgressPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { TodayPage } from '../features/today/TodayPage'
 import { WeeklyPage } from '../features/weekly/WeeklyPage'
+import { InstallHint } from '../pwa'
+import { CalendarIcon, CheckCircleIcon, GridIcon, Sidebar, SlidersIcon, TabBar, type NavItem } from '../ui'
 
-const TABS = [
-  { to: '/', label: 'Bugün' },
-  { to: '/progress', label: 'İlerleme' },
-  { to: '/weekly', label: 'Haftalık' },
-  { to: '/settings', label: 'Ayarlar' },
+const NAV: NavItem[] = [
+  { to: '/', label: 'Bugün', icon: <CheckCircleIcon /> },
+  { to: '/progress', label: 'İlerleme', icon: <GridIcon /> },
+  { to: '/weekly', label: 'Haftalık', icon: <CalendarIcon /> },
+  { to: '/settings', label: 'Ayarlar', icon: <SlidersIcon /> },
 ]
 
-/** Temporary shell. The UI package replaces the nav with TabBar / Sidebar. */
 export function App() {
   const [ready, setReady] = useState(false)
   useEffect(() => {
@@ -23,8 +24,10 @@ export function App() {
 
   return (
     <HashRouter>
-      <div className="flex h-full flex-col">
-        <main className="min-h-0 flex-1 overflow-y-auto pt-[var(--safe-top)]">
+      <InstallHint />
+      <div className="flex h-full flex-col min-[900px]:flex-row">
+        <Sidebar items={NAV} />
+        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto pt-[var(--safe-top)]">
           <Routes>
             <Route path="/" element={<TodayPage />} />
             <Route path="/progress" element={<ProgressPage />} />
@@ -32,20 +35,7 @@ export function App() {
             <Route path="/settings" element={<SettingsPage />} />
           </Routes>
         </main>
-        <nav aria-label="Sekmeler" className="grid grid-cols-4 border-t border-line bg-chrome pb-[var(--safe-bottom)]">
-          {TABS.map((t) => (
-            <NavLink
-              key={t.to}
-              to={t.to}
-              end
-              className={({ isActive }) =>
-                `flex min-h-[var(--tap)] items-center justify-center text-caption ${isActive ? 'font-semibold text-accent' : 'text-muted'}`
-              }
-            >
-              {t.label}
-            </NavLink>
-          ))}
-        </nav>
+        <TabBar items={NAV} />
       </div>
     </HashRouter>
   )
