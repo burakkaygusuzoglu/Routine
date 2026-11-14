@@ -193,10 +193,11 @@ export function SettingsPage() {
       </Group>
 
       {account.cloud && (
-        <Group title="Hesap" footer="Rutinlerin ve tiklerin bu hesaba kaydedilir; giriş yaptığın her cihazda aynı veriyi görürsün.">
+        <Group title="Hesap" footer="Verilerin hesabına kaydedilir ve yalnızca sen görebilirsin. Giriş yaptığın her cihazda aynı veriyi görürsün. Çıkış yapınca bu cihazdaki kopya silinir.">
           <div className="flex items-center justify-between gap-3 px-2">
             <div className="flex min-w-0 flex-col">
-              <span className="truncate text-body">{account.email ?? 'Giriş yapılmadı'}</span>
+              {settings?.displayName && <span className="truncate text-body font-semibold">{settings.displayName}</span>}
+              <span className={`truncate ${settings?.displayName ? 'text-footnote text-muted' : 'text-body'}`}>{account.email ?? 'Giriş yapılmadı'}</span>
               {account.evalDaysLeft !== null && (
                 <span className="text-footnote text-muted">Deneme hesabı · {account.evalDaysLeft} gün kaldı</span>
               )}

@@ -22,7 +22,12 @@ export function useAccount(): Account {
     email: user?.isLoggedIn ? (user.email ?? user.userId ?? null) : null,
     evalDaysLeft: user?.isLoggedIn && user.license?.type === 'eval' ? (user.license.evalDaysLeft ?? null) : null,
     logout: async () => {
-      if (db.isCloud) await db.cloud.logout()
+      if (!db.isCloud) return
+      try {
+        await db.cloud.logout()
+      } catch {
+        // The person chose to keep unsynced changes and stay signed in.
+      }
     },
   }
 }

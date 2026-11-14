@@ -1,13 +1,29 @@
 /// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // GitHub Pages serves the app under /Routine/.
+// Content Security Policy for the production build only (dev needs inline
+// scripts for hot reload). Network access is limited to this site and the
+// Dexie Cloud sync service.
+const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.dexie.cloud wss://*.dexie.cloud; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+
+const securityHeaders: Plugin = {
+  name: 'routine-security-meta',
+  apply: 'build',
+  transformIndexHtml(html) {
+    return html.replace(
+      '<meta charset="UTF-8" />',
+      `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />\n    <meta name="referrer" content="no-referrer" />`,
+    )
+  },
+}
+
 export default defineConfig({
   base: '/Routine/',
-  plugins: [
+  plugins: [securityHeaders, 
     react(),
     tailwindcss(),
     VitePWA({

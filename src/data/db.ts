@@ -33,7 +33,7 @@ export class RoutineDB extends Dexie {
       focusSessions: 'id, startedAt, routineId',
       notes: 'id, createdAt',
     })
-    if (cloudUrl) this.cloud.configure({ databaseUrl: cloudUrl, requireAuth: true })
+    if (cloudUrl) this.cloud.configure({ databaseUrl: cloudUrl, requireAuth: true, customLoginGui: true })
   }
 }
 

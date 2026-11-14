@@ -53,6 +53,8 @@ export interface Settings {
   targetWake: ClockTime
   targetBed: ClockTime
   lastBackupAt: string | null
+  /** Name given at sign-up; optional. */
+  displayName?: string
 }
 
 /** Faz 3. */
