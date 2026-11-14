@@ -1,0 +1,71 @@
+/*
+ * Design tokens: the single source of truth for colour, type, radius and spacing.
+ * Tailwind v4 turns every --color-*, --radius-*, --text-* below into utilities
+ * (bg-surface, text-muted, rounded-card, text-title ...). Never hardcode a hex in
+ * a component; add a token here instead.
+ */
+@theme {
+  --font-sans: -apple-system, 'SF Pro Text', system-ui, 'Segoe UI', sans-serif;
+
+  /* Ground and surfaces (dark theme is the default and only theme in v1). */
+  --color-bg: #0b0d12;
+  --color-chrome: #10131a;
+  --color-surface: #151821;
+  --color-raised: #1c2030;
+  --color-line: #232735;
+  --color-field-line: #2e3345;
+  --color-empty: #232735;
+
+  /* Text. Both pass 4.5:1 on bg and surface. */
+  --color-text: #f3f4f6;
+  --color-muted: #a3a9b5;
+
+  /* App accent: actions, active tab, day rings, weekly bars. */
+  --color-accent: #d4ff5c;
+  --color-on-accent: #0b0d12;
+  --color-danger: #ff8f7d;
+
+  /* Night mode (Faz 3) is deliberately dimmer. */
+  --color-night-bg: #07080b;
+  --color-night-surface: #0f1116;
+  --color-night-text: #c9cdd6;
+  --color-night-muted: #8e95a3;
+  --color-night-accent: #2b9c8d;
+
+  /* Routine colours. Keys match RoutineColor in src/design/palette.ts. */
+  --color-routine-amber: #ffb84d;
+  --color-routine-sky: #4cc9f0;
+  --color-routine-violet: #a78bfa;
+  --color-routine-coral: #ff7a66;
+  --color-routine-blue: #5b9bff;
+  --color-routine-green: #5be38a;
+  --color-routine-pink: #f27db5;
+  --color-routine-teal: #3dd6c3;
+
+  /* iOS type scale. */
+  --text-large-title: 34px;
+  --text-large-title--line-height: 41px;
+  --text-title: 22px;
+  --text-title--line-height: 28px;
+  --text-headline: 17px;
+  --text-headline--line-height: 22px;
+  --text-body: 16px;
+  --text-body--line-height: 21px;
+  --text-footnote: 13px;
+  --text-footnote--line-height: 18px;
+  --text-caption: 12px;
+  --text-caption--line-height: 15px;
+
+  --radius-cell: 3px;
+  --radius-control: 12px;
+  --radius-row: 14px;
+  --radius-card: 16px;
+  --radius-hero: 20px;
+}
+
+:root {
+  /* Minimum touch target (Apple HIG). */
+  --tap: 44px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
