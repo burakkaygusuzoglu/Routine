@@ -3,12 +3,24 @@ import { useRef, useState, type ReactNode } from 'react'
 import { ROUTINE_COLORS } from '../../design/palette'
 import { useAccount } from '../../data/account'
 import { store } from '../../data/store'
+import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
 import type { Backup, Routine } from '../../domain/types'
 import { Button } from './components/Button'
 import { ChevronDown, ChevronUp, Plus } from './components/icons'
 import { Sheet } from './components/Sheet'
 import { RoutineEditSheet } from './RoutineEditSheet'
-import { backupFileName, backupHint, lastBackupText, moveId, parseBackup, timeSummary } from './logic'
+import {
+  backupFileName,
+  backupHint,
+  CALENDAR_EMPTY_REASON,
+  CALENDAR_FILE_NAME,
+  calendarOutdated,
+  lastBackupText,
+  lastCalendarExportText,
+  moveId,
+  parseBackup,
+  timeSummary,
+} from './logic'
 import { sheetErrorText } from './messages'
 
 type Editing = { routine: Routine | null } | null
@@ -27,7 +39,10 @@ const ICON_BTN =
   'flex min-h-[var(--tap)] min-w-[var(--tap)] items-center justify-center rounded-control text-muted disabled:opacity-30'
 
 function downloadJson(name: string, data: unknown) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  downloadBlob(name, new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
+}
+
+function downloadBlob(name: string, blob: Blob) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -100,6 +115,23 @@ export function SettingsPage() {
     })
   }
 
+  const exportable = settings ? exportableRoutines(active, settings) : []
+  const signature = settings ? scheduleSignature(active, settings) : ''
+  const outdated = calendarOutdated(settings?.calendarExport, signature)
+
+  const exportCalendar = () =>
+    attempt(async () => {
+      const now = new Date()
+      const current = await store.getSettings()
+      const routines = await store.listRoutines()
+      downloadBlob(CALENDAR_FILE_NAME, new Blob([buildIcs(routines, current, now)], { type: 'text/calendar' }))
+      await store.saveSettings({
+        ...current,
+        calendarExport: { at: now.toISOString(), signature: scheduleSignature(routines, current) },
+      })
+      return 'Takvim dosyası indirildi.'
+    })
+
   const hint = settings ? backupHint(settings.lastBackupAt, new Date()) : null
   const account = useAccount()
 
@@ -159,6 +191,31 @@ export function SettingsPage() {
       <Group title="Günüm">
         <TimeRow label="Uyanma hedefi" value={settings?.targetWake ?? ''} onChange={(v) => saveTime('targetWake', v)} />
         <TimeRow label="Yatma hedefi" value={settings?.targetBed ?? ''} onChange={(v) => saveTime('targetBed', v)} />
+      </Group>
+
+      <Group
+        title="Hatırlatmalar"
+        footer={
+          <>
+            <p>
+              iPhone'da dosyayı açınca 'Tümünü Ekle' de. Saat değiştirirsen yeniden aktar; önce eski 'Routine'
+              etkinliklerini sil.
+            </p>
+            {settings?.calendarExport && <p>{lastCalendarExportText(settings.calendarExport.at)}</p>}
+          </>
+        }
+      >
+        {outdated && (
+          <p role="status" className="px-2 py-1 text-footnote font-semibold text-accent">
+            Saatler değişti. Takvim'i güncellemek için yeniden aktar.
+          </p>
+        )}
+        <Button onClick={exportCalendar} disabled={!settings || exportable.length === 0}>
+          Takvim'e aktar
+        </Button>
+        {settings && exportable.length === 0 && (
+          <p className="px-2 py-1 text-footnote text-muted">{CALENDAR_EMPTY_REASON}</p>
+        )}
       </Group>
 
       <Group

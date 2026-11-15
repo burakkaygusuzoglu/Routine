@@ -197,3 +197,17 @@ export function parseBackup(text: string): Backup {
   if (!routinesOk) throw new Error(BAD_FILE)
   return data as Backup
 }
+
+export function lastCalendarExportText(iso: string): string {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `Son aktarım: ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+/** True when an export exists and the schedule has changed since. */
+export function calendarOutdated(saved: { signature: string } | undefined, current: string): boolean {
+  return !!saved && saved.signature !== current
+}
+
+export const CALENDAR_FILE_NAME = 'routine.ics'
+export const CALENDAR_EMPTY_REASON = 'Takvim alarmı açık bir rutin yok. Rutini düzenlerken "Takvim alarmı"nı aç.'
