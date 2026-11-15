@@ -6,6 +6,7 @@ import { AuthScreen, PENDING_NAME_KEY } from '../features/auth/AuthScreen'
 import { ProgressPage } from '../features/progress/ProgressPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { TodayPage } from '../features/today/TodayPage'
+import { useAppBadge } from '../features/today/useAppBadge'
 import { WeeklyPage } from '../features/weekly/WeeklyPage'
 import { InstallHint } from '../pwa'
 import { CalendarIcon, CheckCircleIcon, GridIcon, Sidebar, SlidersIcon, TabBar, type NavItem } from '../ui'
@@ -16,6 +17,12 @@ const NAV: NavItem[] = [
   { to: '/weekly', label: 'Haftalık', icon: <CalendarIcon /> },
   { to: '/settings', label: 'Ayarlar', icon: <SlidersIcon /> },
 ]
+
+/** Keeps the home-screen icon badge in sync; mounted only once signed in. */
+function BadgeSync() {
+  useAppBadge()
+  return null
+}
 
 /** Saves the name typed on the sign-up screen once the account exists. */
 async function applyPendingName() {
@@ -65,6 +72,7 @@ export function App() {
 
   return (
     <HashRouter>
+      <BadgeSync />
       <div className="flex h-full flex-col min-[900px]:flex-row">
         <Sidebar items={NAV} />
         <main className="min-h-0 min-w-0 flex-1 overflow-y-auto pt-[var(--safe-top)]">
