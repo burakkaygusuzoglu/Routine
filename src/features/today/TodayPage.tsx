@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { addDays, fromDateKey, isScheduled, todayKey, toClockTime, weekStart } from '../../domain/date'
 import { dayProgress, nextUp, routineTime, todaysRoutines } from '../../domain/schedule'
 import type { CompletionStatus, DateKey, Routine } from '../../domain/types'
@@ -9,9 +9,11 @@ import { Hero } from './components/Hero'
 import { RoutineRow } from './components/RoutineRow'
 import { Sheet } from './components/Sheet'
 import { WakeChip } from './components/WakeChip'
+import { UndoToast } from './components/UndoToast'
 import { WeekStrip } from './components/WeekStrip'
 import type { CellState } from './components/DayDots'
 import { LOOKBACK_DAYS, doneKey, routineStreak, toDoneMap } from './streak'
+import { inverseAction, makeUndo, type UndoEntry } from './undo'
 
 const DAY_NAMES = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
 const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
@@ -34,6 +36,9 @@ function useToday(): DateKey {
 export function TodayPage() {
   const today = useToday()
   const [actionFor, setActionFor] = useState<Routine | null>(null)
+  const [undo, setUndo] = useState<UndoEntry | null>(null)
+  const undoKey = useRef(0)
+  const dismissUndo = useCallback(() => setUndo(null), [])
 
   const routines = useLiveQuery(() => store.listRoutines(), [])
   const settings = useLiveQuery(() => store.getSettings(), [])
@@ -52,7 +57,17 @@ export function TodayPage() {
   const progress = dayProgress(routines, completions, today)
   const next = nextUp(routines, completions, today, wakeTime, settings)
 
-  const set = (r: Routine, status: CompletionStatus | null) => store.setCompletion(r.id, today, status)
+  const set = (r: Routine, status: CompletionStatus | null) => {
+    const entry = makeUndo(r, today, done.get(doneKey(r.id, today)), status, ++undoKey.current)
+    if (entry) setUndo(entry)
+    return store.setCompletion(r.id, today, status)
+  }
+  const undoLast = () => {
+    if (!undo) return
+    const { routineId, date, status } = inverseAction(undo)
+    setUndo(null)
+    void store.setCompletion(routineId, date, status)
+  }
   const isDone = (s: CompletionStatus | undefined) => s === 'full' || s === 'min'
 
   const cellsFor = (r: Routine): CellState[] =>
@@ -124,6 +139,8 @@ export function TodayPage() {
           Temizle
         </Button>
       </Sheet>
+
+      <UndoToast entry={undo} onUndo={undoLast} onDismiss={dismissUndo} />
     </div>
   )
 }
