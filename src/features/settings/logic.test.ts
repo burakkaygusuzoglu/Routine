@@ -152,3 +152,17 @@ describe('backup helpers', () => {
     expect(() => parseBackup(JSON.stringify({ ...ok, routines: [{}] }))).toThrow()
   })
 })
+
+import { calendarOutdated, lastCalendarExportText } from './logic'
+
+describe('calendar export helpers', () => {
+  it('formats the last export time', () => {
+    expect(lastCalendarExportText(new Date(2026, 10, 3, 9, 5).toISOString())).toBe('Son aktarım: 3 Kas 2026, 09:05')
+  })
+
+  it('flags an outdated export only when one exists and differs', () => {
+    expect(calendarOutdated(undefined, 'x')).toBe(false)
+    expect(calendarOutdated({ signature: 'x' }, 'x')).toBe(false)
+    expect(calendarOutdated({ signature: 'x' }, 'y')).toBe(true)
+  })
+})
