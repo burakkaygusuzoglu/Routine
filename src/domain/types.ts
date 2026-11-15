@@ -55,6 +55,8 @@ export interface Settings {
   lastBackupAt: string | null
   /** Name given at sign-up; optional. */
   displayName?: string
+  /** Last iPhone Calendar export: when, and a signature of the exported schedule. */
+  calendarExport?: { at: string; signature: string }
 }
 
 /** Faz 3. */
