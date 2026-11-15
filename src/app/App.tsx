@@ -65,10 +65,10 @@ export function App() {
 
   return (
     <HashRouter>
-      <InstallHint />
       <div className="flex h-full flex-col min-[900px]:flex-row">
         <Sidebar items={NAV} />
         <main className="min-h-0 min-w-0 flex-1 overflow-y-auto pt-[var(--safe-top)]">
+          <InstallHint />
           <Routes>
             <Route path="/" element={<TodayPage />} />
             <Route path="/progress" element={<ProgressPage />} />

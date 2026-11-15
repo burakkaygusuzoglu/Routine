@@ -84,7 +84,7 @@ function EmailStep({ ui }: { ui: Extract<DXCUserInteraction, { type: 'email' }> 
             type="button"
             aria-selected={mode === m}
             onClick={() => setMode(m)}
-            className={`min-h-[40px] rounded-[9px] text-footnote font-semibold ${mode === m ? 'bg-raised text-text' : 'text-muted'}`}
+            className={`min-h-[var(--tap)] rounded-[9px] text-footnote font-semibold ${mode === m ? 'bg-raised text-text' : 'text-muted'}`}
           >
             {m === 'signin' ? 'Giriş yap' : 'Kayıt ol'}
           </button>

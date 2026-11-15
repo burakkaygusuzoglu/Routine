@@ -114,7 +114,7 @@ export function RoutineEditSheet({ routine, all, onClose }: Props) {
           <p className="mt-4 text-footnote font-semibold text-muted" id={`${nameId}-color`}>
             Renk
           </p>
-          <div role="group" aria-labelledby={`${nameId}-color`} className="mt-2 flex justify-between">
+          <div role="group" aria-labelledby={`${nameId}-color`} className="mt-2 grid grid-cols-4">
             {ROUTINE_COLOR_KEYS.map((c) => (
               <button
                 key={c}
@@ -122,7 +122,7 @@ export function RoutineEditSheet({ routine, all, onClose }: Props) {
                 aria-label={COLOR_NAMES[c]}
                 aria-pressed={draft.color === c}
                 onClick={() => set('color', c)}
-                className="flex min-h-[var(--tap)] min-w-0 max-w-11 flex-1 items-center justify-center"
+                className="flex min-h-[var(--tap)] items-center justify-center"
               >
                 <span
                   className={`size-8 rounded-full ${draft.color === c ? 'outline-2 outline-offset-2 outline-text' : ''}`}
@@ -177,7 +177,7 @@ export function RoutineEditSheet({ routine, all, onClose }: Props) {
           <p className="mt-4 text-footnote font-semibold text-muted" id={`${timeId}-days`}>
             Günler
           </p>
-          <div role="group" aria-labelledby={`${timeId}-days`} className="mt-2 flex justify-between gap-1">
+          <div role="group" aria-labelledby={`${timeId}-days`} className="mt-2 grid grid-cols-7">
             {DAY_SHORT.map((label, i) => {
               const on = draft.days.includes(i)
               return (
@@ -187,12 +187,16 @@ export function RoutineEditSheet({ routine, all, onClose }: Props) {
                   aria-label={DAY_LONG[i]}
                   aria-pressed={on}
                   onClick={() => set('days', toggleDay(draft.days, i))}
-                  className={`min-h-[var(--tap)] min-w-0 max-w-11 flex-1 rounded-control text-footnote font-semibold ${
-                    on ? 'text-on-accent' : 'bg-bg text-muted'
-                  }`}
-                  style={on ? { backgroundColor: ROUTINE_COLORS[draft.color] } : undefined}
+                  className="flex min-h-[var(--tap)] min-w-0 items-center justify-center px-0.5"
                 >
-                  {label}
+                  <span
+                    className={`flex h-10 w-full items-center justify-center rounded-control text-footnote font-semibold ${
+                      on ? 'text-on-accent' : 'bg-bg text-muted'
+                    }`}
+                    style={on ? { backgroundColor: ROUTINE_COLORS[draft.color] } : undefined}
+                  >
+                    {label}
+                  </span>
                 </button>
               )
             })}

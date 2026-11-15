@@ -20,8 +20,7 @@ export function InstallHint() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 top-0 z-50 flex flex-col gap-2 px-4"
-      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}
+      className="pointer-events-none flex flex-col gap-2 px-4 pt-3 empty:hidden"
     >
       <UpdatePrompt />
       {showHint && (
