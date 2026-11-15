@@ -24,7 +24,7 @@ export function Hero({ done, total, next, nextTime, onStart }: Props) {
         {next ? (
           <>
             <p className="text-footnote text-muted">Sıradaki{nextTime ? ` · ${nextTime}` : ''}</p>
-            <p className="truncate text-title font-bold">
+            <p className="line-clamp-2 text-title font-bold">
               {next.name}
             </p>
             {next.minText.trim() && <p className="text-footnote text-muted">Minimum: {next.minText}</p>}
