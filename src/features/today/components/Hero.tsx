@@ -27,7 +27,7 @@ export function Hero({ done, total, next, nextTime, onStart }: Props) {
             <p className="truncate text-title font-bold">
               {next.name}
             </p>
-            <p className="text-footnote text-muted">Minimum: {next.minText}</p>
+            {next.minText.trim() && <p className="text-footnote text-muted">Minimum: {next.minText}</p>}
           </>
         ) : allDone ? (
           <>

@@ -23,7 +23,7 @@ function subtitle(routine: Routine, status: CompletionStatus | undefined): strin
     case 'skipped':
       return 'Bugün atlandı'
     default:
-      return `Min: ${routine.minText}`
+      return routine.minText.trim() ? `Min: ${routine.minText}` : 'Bekliyor'
   }
 }
 
