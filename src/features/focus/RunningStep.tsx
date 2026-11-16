@@ -177,7 +177,11 @@ export function RunningStep({ routine, startMs, plannedMin, intent, onFinish }: 
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          onClick={() => setDives((n) => n + 1)}
+          onClick={() => {
+            // A self-reported drift is saved with the session, like a missed check-in.
+            drifts.current += 1
+            setDives((n) => n + 1)
+          }}
           className="flex min-h-[var(--tap)] cursor-pointer flex-col items-center gap-1 rounded-card border border-line bg-surface px-2 py-4 text-text focus-visible:outline-2 focus-visible:outline-accent"
         >
           <span className="text-headline font-semibold">Daldım</span>
