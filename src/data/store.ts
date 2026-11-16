@@ -1,4 +1,4 @@
-import type { Backup, Completion, CompletionStatus, DateKey, DayLog, Routine, Settings } from '../domain/types'
+import type { Backup, Completion, CompletionStatus, DateKey, DayLog, FocusSession, Note, Routine, Settings } from '../domain/types'
 import { db as defaultDb, type RoutineDB } from './db'
 import { DEFAULT_SETTINGS, seedRoutines } from './seed'
 
@@ -24,6 +24,18 @@ export interface RoutineStore {
 
   getDayLog(date: DateKey): Promise<DayLog>
   saveDayLog(log: DayLog): Promise<void>
+
+  /** Day logs with from <= date <= to, oldest first. */
+  listDayLogs(from: DateKey, to: DateKey): Promise<DayLog[]>
+
+  /** Focus sessions that started on or after `fromIso` (ISO timestamp), oldest first. */
+  listFocusSessions(fromIso: string): Promise<FocusSession[]>
+  saveFocusSession(session: FocusSession): Promise<void>
+
+  /** Thought parking lot, newest first. */
+  listNotes(): Promise<Note[]>
+  saveNote(note: Note): Promise<void>
+  deleteNote(id: string): Promise<void>
 
   getSettings(): Promise<Settings>
   saveSettings(settings: Settings): Promise<void>
@@ -60,6 +72,13 @@ export function createStore(db: RoutineDB = defaultDb): RoutineStore {
         const existing = new Set(await db.routines.bulkGet(seeds.map((r) => r.id)).then((rs) => rs.filter(Boolean).map((r) => r!.id)))
         await db.routines.bulkAdd(seeds.filter((r) => !existing.has(r.id)))
       })
+      // Starter routines created before icons existed get their icon and identity once.
+      const seedById = new Map(seedRoutines().map((r) => [r.id, r]))
+      const stale = (await db.routines.toArray()).filter((r) => r.icon === undefined && seedById.has(r.id))
+      for (const r of stale) {
+        const seed = seedById.get(r.id)!
+        await db.routines.update(r.id, { icon: seed.icon, identity: r.identity ?? seed.identity })
+      }
     },
 
     async listRoutines(opts) {
@@ -95,6 +114,28 @@ export function createStore(db: RoutineDB = defaultDb): RoutineStore {
     },
     async saveDayLog(log) {
       await db.dayLogs.put({ ...log, id: dayLogId(log.date) })
+    },
+
+    async listDayLogs(from, to) {
+      const rows = await db.dayLogs.where('date').between(from, to, true, true).sortBy('date')
+      return rows.map(({ id: _id, ...log }) => log)
+    },
+
+    async listFocusSessions(fromIso) {
+      return db.focusSessions.where('startedAt').aboveOrEqual(fromIso).sortBy('startedAt')
+    },
+    async saveFocusSession(session) {
+      await db.focusSessions.put(session)
+    },
+
+    async listNotes() {
+      return (await db.notes.orderBy('createdAt').toArray()).reverse()
+    },
+    async saveNote(note) {
+      await db.notes.put(note)
+    },
+    async deleteNote(id) {
+      await db.notes.delete(id)
     },
 
     async getSettings() {

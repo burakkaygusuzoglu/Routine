@@ -1,21 +1,24 @@
+import type { RoutineIconName } from '../design/routineIcons'
 import type { Routine, Settings } from '../domain/types'
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6]
 
 type Seed = Pick<Routine, 'name' | 'color' | 'minText' | 'anchor' | 'fixedTime' | 'offsetMin'> & {
   days?: number[]
+  icon: RoutineIconName
+  identity: string
 }
 
 /** Starter routines. Everything here is editable in the app. */
 const SEEDS: Seed[] = [
-  { name: 'Sabit kalkış', color: 'amber', minText: 'Alarm çalınca kalk, perdeyi aç', anchor: 'wake', fixedTime: null, offsetMin: 0 },
-  { name: 'Sabah cilt bakımı', color: 'sky', minText: 'Sadece nemlendirici', anchor: 'wake', fixedTime: null, offsetMin: 15 },
-  { name: 'Ders çalışma', color: 'violet', minText: '1 pomodoro (25 dk)', anchor: 'fixed', fixedTime: '14:00', offsetMin: 0 },
-  { name: 'Antrenman', color: 'coral', minText: 'Salona git, sadece ısın', anchor: 'fixed', fixedTime: '18:00', offsetMin: 0, days: [0, 2, 4, 5] },
-  { name: 'Yazılım / TryHackMe', color: 'blue', minText: '1 görev ya da 20 dk', anchor: 'fixed', fixedTime: '20:00', offsetMin: 0 },
-  { name: 'Beslenme düzeni', color: 'green', minText: 'Öğünlerin çoğu plana uygundu', anchor: 'bedtime', fixedTime: null, offsetMin: 90 },
-  { name: 'Akşam cilt bakımı', color: 'pink', minText: 'Temizleme ve krem', anchor: 'bedtime', fixedTime: null, offsetMin: 60 },
-  { name: 'Uyku hazırlığı', color: 'teal', minText: 'Telefonu şarja koy, yatağa gir', anchor: 'bedtime', fixedTime: null, offsetMin: 30 },
+  { name: 'Sabit kalkış', color: 'amber', minText: 'Alarm çalınca kalk, perdeyi aç', anchor: 'wake', fixedTime: null, offsetMin: 0, icon: 'sun', identity: 'güne erken başlayan biri' },
+  { name: 'Sabah cilt bakımı', color: 'sky', minText: 'Sadece nemlendirici', anchor: 'wake', fixedTime: null, offsetMin: 15, icon: 'drop', identity: 'kendine özen gösteren biri' },
+  { name: 'Ders çalışma', color: 'violet', minText: '1 pomodoro (25 dk)', anchor: 'fixed', fixedTime: '14:00', offsetMin: 0, icon: 'book', identity: 'işini bitiren bir öğrenci' },
+  { name: 'Antrenman', color: 'coral', minText: 'Salona git, sadece ısın', anchor: 'fixed', fixedTime: '18:00', offsetMin: 0, days: [0, 2, 4, 5], icon: 'dumbbell', identity: 'güçlü ve aktif biri' },
+  { name: 'Yazılım / TryHackMe', color: 'blue', minText: '1 görev ya da 20 dk', anchor: 'fixed', fixedTime: '20:00', offsetMin: 0, icon: 'code', identity: 'her gün gelişen bir mühendis' },
+  { name: 'Beslenme düzeni', color: 'green', minText: 'Öğünlerin çoğu plana uygundu', anchor: 'bedtime', fixedTime: null, offsetMin: 90, icon: 'apple', identity: 'bedenine iyi bakan biri' },
+  { name: 'Akşam cilt bakımı', color: 'pink', minText: 'Temizleme ve krem', anchor: 'bedtime', fixedTime: null, offsetMin: 60, icon: 'drop', identity: 'kendine özen gösteren biri' },
+  { name: 'Uyku hazırlığı', color: 'teal', minText: 'Telefonu şarja koy, yatağa gir', anchor: 'bedtime', fixedTime: null, offsetMin: 30, icon: 'moon', identity: 'düzenli uyuyan biri' },
 ]
 
 export function seedRoutines(now: Date = new Date()): Routine[] {
@@ -30,6 +33,8 @@ export function seedRoutines(now: Date = new Date()): Routine[] {
     fixedTime: s.fixedTime,
     offsetMin: s.offsetMin,
     days: s.days ?? ALL_DAYS,
+    icon: s.icon,
+    identity: s.identity,
     calendarAlarm: true,
     sort: i,
     createdAt: now.toISOString(),

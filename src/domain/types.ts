@@ -1,4 +1,5 @@
 import type { RoutineColor } from '../design/palette'
+import type { RoutineIconName } from '../design/routineIcons'
 
 /** Local calendar day, "YYYY-MM-DD". Never derived from UTC. */
 export type DateKey = string
@@ -26,6 +27,10 @@ export interface Routine {
   sort: number
   createdAt: string
   archivedAt: string | null
+  /** Icon key from src/design/routineIcons.tsx; undefined shows the default. */
+  icon?: RoutineIconName
+  /** Identity this routine votes for, e.g. "disiplinli biri". Optional. */
+  identity?: string
 }
 
 export type CompletionStatus = 'full' | 'min' | 'skipped'
@@ -45,6 +50,10 @@ export interface DayLog {
   wokeAt: ClockTime | null
   bedAt: ClockTime | null
   badDay: boolean
+  /** Night mode: answer to "Bugün seni en çok ne zorladı?" */
+  reflection?: string
+  /** Night mode: the first task for the next morning. */
+  firstTask?: string
 }
 
 export interface Settings {

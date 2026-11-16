@@ -67,4 +67,27 @@ describe('RoutineStore', () => {
     expect(await other.listCompletions('2026-11-14', '2026-11-14')).toHaveLength(1)
     expect((await other.getDayLog('2026-11-14')).wokeAt).toBe('08:12')
   })
+
+  it('gives starter routines icons and identities', async () => {
+    const routines = await store.listRoutines()
+    expect(routines.every((r) => r.icon && r.identity)).toBe(true)
+  })
+
+  it('lists day logs in a date range with reflection fields', async () => {
+    await store.saveDayLog({ date: '2026-11-15', wokeAt: null, bedAt: '23:50', badDay: false, reflection: 'Ders', firstTask: 'Lab' })
+    await store.saveDayLog({ date: '2026-11-17', wokeAt: '08:00', bedAt: null, badDay: false })
+    const logs = await store.listDayLogs('2026-11-14', '2026-11-16')
+    expect(logs).toHaveLength(1)
+    expect(logs[0].reflection).toBe('Ders')
+  })
+
+  it('stores focus sessions and notes', async () => {
+    await store.saveFocusSession({ id: 'f1', routineId: '#seed-2', startedAt: '2026-11-16T10:00:00.000Z', plannedMin: 25, endedAt: null, driftCount: 2, intent: 'Bölüm 4' })
+    expect(await store.listFocusSessions('2026-11-16T00:00:00.000Z')).toHaveLength(1)
+    await store.saveNote({ id: 'n1', text: 'eski', createdAt: '2026-11-16T10:00:00.000Z' })
+    await store.saveNote({ id: 'n2', text: 'yeni', createdAt: '2026-11-16T11:00:00.000Z' })
+    expect((await store.listNotes()).map((n) => n.id)).toEqual(['n2', 'n1'])
+    await store.deleteNote('n1')
+    expect(await store.listNotes()).toHaveLength(1)
+  })
 })

@@ -3,6 +3,8 @@ import { HashRouter, Route, Routes } from 'react-router-dom'
 import { openDatabase, useAuthState } from '../data/auth'
 import { store } from '../data/store'
 import { AuthScreen, PENDING_NAME_KEY } from '../features/auth/AuthScreen'
+import { FocusPage } from '../features/focus/FocusPage'
+import { NightPage } from '../features/night/NightPage'
 import { ProgressPage } from '../features/progress/ProgressPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { TodayPage } from '../features/today/TodayPage'
@@ -36,6 +38,24 @@ async function applyPendingName() {
   if (!name) return
   const settings = await store.getSettings()
   await store.saveSettings({ ...settings, displayName: name })
+}
+
+function TabbedLayout() {
+  return (
+    <div className="flex h-full flex-col min-[900px]:flex-row">
+      <Sidebar items={NAV} />
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto pt-[var(--safe-top)]">
+        <InstallHint />
+        <Routes>
+          <Route path="/" element={<TodayPage />} />
+          <Route path="/progress" element={<ProgressPage />} />
+          <Route path="/weekly" element={<WeeklyPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Routes>
+      </main>
+      <TabBar items={NAV} />
+    </div>
+  )
 }
 
 export function App() {
@@ -73,19 +93,12 @@ export function App() {
   return (
     <HashRouter>
       <BadgeSync />
-      <div className="flex h-full flex-col min-[900px]:flex-row">
-        <Sidebar items={NAV} />
-        <main className="min-h-0 min-w-0 flex-1 overflow-y-auto pt-[var(--safe-top)]">
-          <InstallHint />
-          <Routes>
-            <Route path="/" element={<TodayPage />} />
-            <Route path="/progress" element={<ProgressPage />} />
-            <Route path="/weekly" element={<WeeklyPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Routes>
-        </main>
-        <TabBar items={NAV} />
-      </div>
+      <Routes>
+        {/* Full-screen modes: no tab bar, no sidebar. */}
+        <Route path="/focus/:routineId" element={<FocusPage />} />
+        <Route path="/night" element={<NightPage />} />
+        <Route path="*" element={<TabbedLayout />} />
+      </Routes>
     </HashRouter>
   )
 }
