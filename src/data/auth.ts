@@ -25,7 +25,17 @@ export function useAuthState(): AuthState {
 
 /** Starts a fresh code request for `email` (used by "Kodu tekrar gönder"). */
 export function requestCode(email: string): Promise<void> {
-  return db.cloud.login({ email, grant_type: 'otp' })
+  // Cancelling a prompt rejects its login with an AbortError; that is not a failure.
+  return db.cloud.login({ email, grant_type: 'otp' }).catch(() => undefined)
+}
+
+/**
+ * Asks for the email again (used by "Farklı e-posta kullan"). Cancelling the
+ * code prompt ends the login that the app started on launch, so a new one is
+ * needed or the screen would stay on the loading spinner.
+ */
+export function restartLogin(): Promise<void> {
+  return db.cloud.login().catch(() => undefined)
 }
 
 /**

@@ -1,6 +1,6 @@
 import type { DXCAlert, DXCUserInteraction } from 'dexie-cloud-addon'
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { requestCode } from '../../data/auth'
+import { requestCode, restartLogin } from '../../data/auth'
 import { ROUTINE_COLOR_KEYS, ROUTINE_COLORS, type RoutineColor, routineInk } from '../../design/palette'
 import { RoutineIcon, type RoutineIconName } from '../../design/routineIcons'
 import { CodeInput } from './CodeInput'
@@ -268,7 +268,14 @@ function OtpStep({ ui }: { ui: Extract<DXCUserInteraction, { type: 'otp' }> }) {
             {left > 0 ? `Kodu tekrar gönder (${left} sn)` : 'Kodu tekrar gönder'}
           </button>
         )}
-        <button type="button" className={LINK} onClick={() => ui.onCancel()}>
+        <button
+          type="button"
+          className={LINK}
+          onClick={() => {
+            ui.onCancel()
+            void restartLogin()
+          }}
+        >
           Farklı e-posta kullan
         </button>
       </div>

@@ -50,7 +50,7 @@ export function MonthCalendar({ monthStart, cells, color, today }: MonthCalendar
               key={date}
               style={style}
               className={`flex aspect-square items-center justify-center rounded-cell text-footnote ${
-                state === 'empty' ? 'bg-empty text-muted' : state === 'full' ? 'text-bg' : 'text-text'
+                state === 'empty' ? 'bg-empty text-muted' : state === 'full' ? 'text-on-accent' : 'text-text'
               } ${date === today ? 'font-bold' : ''}`}
             >
               {i + 1}

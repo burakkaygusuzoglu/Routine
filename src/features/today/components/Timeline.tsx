@@ -31,7 +31,7 @@ function BlockContent({ entry, isNext, onCheck, onOpen }: { entry: TimelineEntry
   const state = status === 'full' ? 'full' : status === 'min' ? 'min' : 'pending'
   return (
     <div
-      className={`flex h-full items-center overflow-hidden rounded-row pl-0 pr-2 ${done || status === 'skipped' ? 'opacity-60' : ''}`}
+      className="flex h-full items-center overflow-hidden rounded-row pl-0 pr-2"
       style={{ background: tint(routine.color), boxShadow: isNext ? `inset 0 0 0 1px ${color}` : undefined }}
     >
       <CheckCircle
@@ -49,7 +49,7 @@ function BlockContent({ entry, isNext, onCheck, onOpen }: { entry: TimelineEntry
         <span className="shrink-0" style={{ color: ink }}>
           <RoutineIcon name={routine.icon} size={18} />
         </span>
-        <span className={`min-w-0 truncate text-footnote font-semibold ${done ? 'text-muted' : ''}`}>{routine.name}</span>
+        <span className={`min-w-0 truncate text-footnote font-semibold ${done || status === 'skipped' ? 'text-muted' : ''}`}>{routine.name}</span>
       </button>
     </div>
   )
