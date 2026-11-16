@@ -6,6 +6,8 @@ import { RoutineIcon } from '../../design/routineIcons'
 import { addDays, fromDateKey, todayKey, weekdayIndex, weekStart } from '../../domain/date'
 import { Card, CloseIcon } from '../../ui'
 import { Garden } from './Garden'
+import { LifetimeGarden } from './LifetimeGarden'
+import { lifetimeStats } from './lifetime'
 import { canGoNext, dayName, focusMinutes, formatMinutes, shortDate, suggest, weekStats, weekTitle } from './logic'
 
 const pct = (rate: number) => `%${Math.round(rate * 100)}`
@@ -51,6 +53,9 @@ export function WeeklyPage() {
     ])
     return { routines, completions, logs, sessions, settings, notes }
   }, [start, end])
+
+  const lifetimeCompletions = useLiveQuery(() => store.listCompletions('1970-01-01', today), [today])
+  const lifetime = useMemo(() => lifetimeStats(lifetimeCompletions ?? [], today), [lifetimeCompletions, today])
 
   const derived = useMemo(() => {
     if (!data) return null
@@ -109,6 +114,8 @@ export function WeeklyPage() {
             <h2 className="sr-only">Bahçe</h2>
             <Garden leaves={derived.stats.leaves} />
           </Card>
+
+          {lifetimeCompletions && <LifetimeGarden stats={lifetime} />}
 
           <Card>
             <h2 className="mb-1 text-footnote font-semibold text-muted">Öneri</h2>
