@@ -236,5 +236,7 @@ export const DELETE_CONFIRM_WORD = 'SİL'
 
 /** Accepts "sil", "SİL", " Sil " etc. (Turkish dotted İ). */
 export function isDeleteConfirmed(input: string): boolean {
-  return input.trim().toLocaleUpperCase('tr-TR') === DELETE_CONFIRM_WORD
+  const word = input.trim()
+  // Accept 'SIL' typed on a keyboard without the Turkish dotted İ.
+  return word.toLocaleUpperCase('tr-TR') === DELETE_CONFIRM_WORD || word.toUpperCase() === 'SIL'
 }

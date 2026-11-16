@@ -207,7 +207,7 @@ describe('isDeleteConfirmed', () => {
   it('accepts the word in any case and rejects anything else', () => {
     expect(isDeleteConfirmed('SİL')).toBe(true)
     expect(isDeleteConfirmed(' sil ')).toBe(true)
-    expect(isDeleteConfirmed('SIL')).toBe(false)
+    expect(isDeleteConfirmed('SIL')).toBe(true)
     expect(isDeleteConfirmed('')).toBe(false)
   })
 })

@@ -94,7 +94,8 @@ export function weekStats(routines: Routine[], completions: Completion[], start:
 
   const rated = days
     .map((date) => ({ date, s: perDay.get(date)!.s, rate: perDay.get(date)!.s ? perDay.get(date)!.d / perDay.get(date)!.s : 0 }))
-    .filter((x) => x.s > 0)
+    // Today is still in progress: judging it would read as blame, so only finished days count.
+    .filter((x) => x.s > 0 && x.date < today)
   let bestDay: WeekStats['bestDay'] = null
   let hardestDay: WeekStats['hardestDay'] = null
   for (const x of rated) {

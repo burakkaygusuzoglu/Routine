@@ -9,7 +9,8 @@ export const emptyCells = (): string[] => Array.from({ length: CODE_LENGTH }, ()
 
 /** Keeps letters and digits only (drops spaces, dashes, anything pasted along). */
 export function cleanChars(raw: string): string {
-  return raw.replace(/[^\p{L}\p{N}]/gu, '')
+  // Sign-in codes are upper case; normalise so lower-case typing or pasting still works.
+  return raw.replace(/[^\p{L}\p{N}]/gu, '').toUpperCase()
 }
 
 export interface CellsUpdate {

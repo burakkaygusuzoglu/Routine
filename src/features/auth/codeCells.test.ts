@@ -3,12 +3,12 @@ import { backspaceAt, cleanChars, codeOf, emptyCells, fillFrom, inputAt, isCompl
 
 describe('code input', () => {
   it('keeps letters and digits only', () => {
-    expect(cleanChars(' ab-12 c3\n')).toBe('ab12c3')
+    expect(cleanChars(' ab-12 c3\n')).toBe('AB12C3')
   })
 
   it('types one character and moves to the next box', () => {
     const r = inputAt(emptyCells(), 0, 'a')
-    expect(r.cells[0]).toBe('a')
+    expect(r.cells[0]).toBe('A')
     expect(r.focus).toBe(1)
   })
 
@@ -20,8 +20,8 @@ describe('code input', () => {
 
   it('replaces a filled box with the newly typed character', () => {
     const cells = fillFrom(emptyCells(), 0, 'a').cells
-    expect(inputAt(cells, 0, 'ab').cells[0]).toBe('b')
-    expect(inputAt(cells, 0, 'ba').cells[0]).toBe('b')
+    expect(inputAt(cells, 0, 'ab').cells[0]).toBe('B')
+    expect(inputAt(cells, 0, 'ba').cells[0]).toBe('B')
   })
 
   it('ignores characters that are not letters or digits', () => {
@@ -32,7 +32,7 @@ describe('code input', () => {
 
   it('paste fills all boxes, ignoring separators and overflow', () => {
     const r = fillFrom(emptyCells(), 0, ' AB12 cd34-XYZ ')
-    expect(codeOf(r.cells)).toBe('AB12cd34')
+    expect(codeOf(r.cells)).toBe('AB12CD34')
     expect(isComplete(r.cells)).toBe(true)
     expect(r.focus).toBe(7)
   })
@@ -45,8 +45,8 @@ describe('code input', () => {
 
   it('autofill into a middle box spreads forward', () => {
     const r = inputAt(emptyCells(), 5, 'abcdef')
-    expect(codeOf(r.cells)).toBe('abc')
-    expect(r.cells.slice(5)).toEqual(['a', 'b', 'c'])
+    expect(codeOf(r.cells)).toBe('ABC')
+    expect(r.cells.slice(5)).toEqual(['A', 'B', 'C'])
   })
 
   it('backspace clears a filled box and stays', () => {
@@ -60,7 +60,7 @@ describe('code input', () => {
     const cells = fillFrom(emptyCells(), 0, 'abc').cells
     const r = backspaceAt(cells, 3)
     expect(r.cells[2]).toBe('')
-    expect(r.cells[1]).toBe('b')
+    expect(r.cells[1]).toBe('B')
     expect(r.focus).toBe(2)
   })
 
