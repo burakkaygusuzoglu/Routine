@@ -10,10 +10,13 @@ import { RoutineRow } from './components/RoutineRow'
 import { Sheet } from './components/Sheet'
 import { WakeChip } from './components/WakeChip'
 import { UndoToast } from './components/UndoToast'
+import { Timeline } from './components/Timeline'
+import { ViewToggle } from './components/ViewToggle'
 import { WeekStrip } from './components/WeekStrip'
 import type { CellState } from './components/DayDots'
 import { missedYesterday } from './missed'
 import { LOOKBACK_DAYS, doneKey, routineStreak, toDoneMap } from './streak'
+import { loadView, saveView, type TodayView } from './timeline'
 import { inverseAction, makeUndo, type UndoEntry } from './undo'
 
 const DAY_NAMES = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
@@ -38,6 +41,7 @@ export function TodayPage() {
   const today = useToday()
   const [actionFor, setActionFor] = useState<Routine | null>(null)
   const [undo, setUndo] = useState<UndoEntry | null>(null)
+  const [view, setView] = useState<TodayView>(loadView)
   const undoKey = useRef(0)
   const dismissUndo = useCallback(() => setUndo(null), [])
 
@@ -109,6 +113,26 @@ export function TodayPage() {
         onStart={() => next && void set(next, 'min')}
       />
 
+      <ViewToggle
+        value={view}
+        onChange={(v) => {
+          setView(v)
+          saveView(v)
+        }}
+      />
+
+      {view === 'timeline' ? (
+        <Timeline
+          entries={list.map((r) => ({
+            routine: r,
+            time: routineTime(r, dayLog.wokeAt, settings),
+            status: done.get(doneKey(r.id, today)),
+          }))}
+          nextId={next?.id ?? null}
+          onCheck={(e) => void set(e.routine, isDone(e.status) ? null : 'full')}
+          onOpen={setActionFor}
+        />
+      ) : (
       <ul className="flex flex-col gap-1" aria-label="Bugünün rutinleri">
         {list.map((r) => {
           const status = done.get(doneKey(r.id, today))
@@ -128,6 +152,7 @@ export function TodayPage() {
           )
         })}
       </ul>
+      )}
 
       <Sheet open={actionFor !== null} onClose={() => setActionFor(null)} title={actionFor?.name ?? ''}>
         <Button onClick={() => choose('full')}>Tam yaptım</Button>
