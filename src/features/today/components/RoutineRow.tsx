@@ -59,7 +59,7 @@ export function RoutineRow({ routine, time, status, cells, streak, isNext, misse
         <span className="min-w-0 flex-1">
           <span className="block truncate text-body font-semibold">{routine.name}</span>
           {showMissed ? (
-            <span className="block truncate text-footnote" style={{ color }}>
+            <span className="block text-footnote" style={{ color }}>
               {time ?? 'Gün sonu'} · {MISSED_LINE}
             </span>
           ) : (

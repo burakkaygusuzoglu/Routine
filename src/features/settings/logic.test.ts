@@ -83,6 +83,12 @@ describe('draft <-> routine', () => {
   it('unchanged draft is not changed', () => {
     expect(isChanged(routine, draftFromRoutine(routine))).toBe(false)
   })
+  it('unchanged draft with icon and identity is not changed', () => {
+    // Icon and identity sit before the other fields, as in the seeded routines.
+    const { calendarAlarm, sort, createdAt, archivedAt, ...head } = routine
+    const r: Routine = { ...head, icon: 'dumbbell', identity: 'güçlü biri', calendarAlarm, sort, createdAt, archivedAt }
+    expect(isChanged(r, draftFromRoutine(r))).toBe(false)
+  })
   it('detects edits', () => {
     const d = draftFromRoutine(routine)
     expect(isChanged(routine, { ...d, name: 'Spor' })).toBe(true)
