@@ -142,6 +142,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
       role="dialog"
       aria-modal="true"
       aria-label="Routine’e hoş geldin"
+      onKeyDown={onKeyDown}
     >
       <div className="flex justify-end px-4">
         <button type="button" onClick={onDone} className="min-h-[var(--tap)] min-w-[var(--tap)] px-2 text-body text-muted hover:text-text">
@@ -151,7 +152,6 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
       <div
         ref={track}
         onScroll={onScroll}
-        onKeyDown={onKeyDown}
         tabIndex={0}
         role="group"
         aria-roledescription="carousel"
