@@ -1,7 +1,7 @@
 import type { DXCAlert, DXCUserInteraction } from 'dexie-cloud-addon'
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { requestCode } from '../../data/auth'
-import { ROUTINE_COLOR_KEYS, ROUTINE_COLORS, type RoutineColor } from '../../design/palette'
+import { ROUTINE_COLOR_KEYS, ROUTINE_COLORS, type RoutineColor, routineInk } from '../../design/palette'
 import { RoutineIcon, type RoutineIconName } from '../../design/routineIcons'
 import { CodeInput } from './CodeInput'
 import { codeOf, emptyCells, isComplete, resendSecondsLeft, type CellsUpdate } from './codeCells'
@@ -75,7 +75,7 @@ function Hero() {
       <ul className="flex flex-col gap-2 pt-1 text-left">
         {BENEFITS.map((b) => (
           <li key={b.text} className="flex items-center gap-3 text-body">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-surface" style={{ color: ROUTINE_COLORS[b.color] }}>
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-surface" style={{ color: routineInk(b.color) }}>
               <RoutineIcon name={b.icon} size={18} />
             </span>
             <span>{b.text}</span>
