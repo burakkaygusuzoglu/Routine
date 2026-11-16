@@ -16,13 +16,13 @@ interface Props {
 export function Hero({ done, total, next, nextTime, onStart }: Props) {
   const allDone = total > 0 && next === null
   return (
-    <section aria-label="Sıradaki" className="flex items-center gap-4 rounded-hero bg-surface p-4">
+    <section aria-label="Sıradaki" className="flex flex-wrap items-center gap-4 rounded-hero bg-surface p-4">
       <ProgressRing value={total ? done / total : 0} size={68} thickness={7} label={`${done}/${total} tamamlandı`}>
         <span className="text-headline font-bold">
           {done}/{total}
         </span>
       </ProgressRing>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 basis-32">
         {next ? (
           <>
             <p className="text-footnote text-muted">Sıradaki{nextTime ? ` · ${nextTime}` : ''}</p>
@@ -30,7 +30,7 @@ export function Hero({ done, total, next, nextTime, onStart }: Props) {
               <span className="mt-1 shrink-0" style={{ color: routineInk(next.color) }}>
                 <RoutineIcon name={next.icon} size={24} />
               </span>
-              <span className="line-clamp-2 min-w-0">{next.name}</span>
+              <span className="line-clamp-2 min-w-0 break-words">{next.name}</span>
             </p>
             {next.minText.trim() && <p className="text-footnote text-muted">Minimum: {next.minText}</p>}
           </>
