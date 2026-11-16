@@ -5,6 +5,7 @@ import { store } from '../data/store'
 import { AuthScreen, PENDING_NAME_KEY } from '../features/auth/AuthScreen'
 import { FocusPage } from '../features/focus/FocusPage'
 import { NightPage } from '../features/night/NightPage'
+import { Onboarding, useOnboardingDone } from '../features/onboarding'
 import { ProgressPage } from '../features/progress/ProgressPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { TodayPage } from '../features/today/TodayPage'
@@ -95,6 +96,7 @@ function TabbedLayout() {
 }
 
 export function App() {
+  const [onboarded, markOnboarded] = useOnboardingDone()
   const { cloud, user, interaction } = useAuthState()
   const signedIn = !cloud || Boolean(user?.isLoggedIn)
   const userKey = cloud ? (user?.userId ?? '') : 'local'
@@ -125,6 +127,9 @@ export function App() {
       </div>
     )
   }
+
+  // First run on this device: three short cards, once.
+  if (!onboarded) return <Onboarding onDone={markOnboarded} />
 
   return (
     <HashRouter>
