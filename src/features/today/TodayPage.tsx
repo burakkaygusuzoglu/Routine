@@ -12,6 +12,7 @@ import { WakeChip } from './components/WakeChip'
 import { UndoToast } from './components/UndoToast'
 import { WeekStrip } from './components/WeekStrip'
 import type { CellState } from './components/DayDots'
+import { missedYesterday } from './missed'
 import { LOOKBACK_DAYS, doneKey, routineStreak, toDoneMap } from './streak'
 import { inverseAction, makeUndo, type UndoEntry } from './undo'
 
@@ -120,6 +121,7 @@ export function TodayPage() {
               cells={cellsFor(r)}
               streak={routineStreak(r, done, today)}
               isNext={next?.id === r.id}
+              missed={missedYesterday(r, done, today)}
               onCheck={() => void set(r, isDone(status) ? null : 'full')}
               onOpen={() => setActionFor(r)}
             />

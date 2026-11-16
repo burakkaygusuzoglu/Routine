@@ -1,3 +1,5 @@
+import { ROUTINE_COLORS } from '../../../design/palette'
+import { RoutineIcon } from '../../../design/routineIcons'
 import type { Routine } from '../../../domain/types'
 import { Button } from './Button'
 import { ProgressRing } from './ProgressRing'
@@ -24,8 +26,11 @@ export function Hero({ done, total, next, nextTime, onStart }: Props) {
         {next ? (
           <>
             <p className="text-footnote text-muted">Sıradaki{nextTime ? ` · ${nextTime}` : ''}</p>
-            <p className="line-clamp-2 text-title font-bold">
-              {next.name}
+            <p className="flex items-start gap-2 text-title font-bold">
+              <span className="mt-1 shrink-0" style={{ color: ROUTINE_COLORS[next.color] }}>
+                <RoutineIcon name={next.icon} size={24} />
+              </span>
+              <span className="line-clamp-2 min-w-0">{next.name}</span>
             </p>
             {next.minText.trim() && <p className="text-footnote text-muted">Minimum: {next.minText}</p>}
           </>
