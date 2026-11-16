@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useNavigate } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { addDays, fromDateKey, isScheduled, todayKey, toClockTime, weekStart } from '../../domain/date'
 import { dayProgress, nextUp, routineTime, todaysRoutines } from '../../domain/schedule'
@@ -17,6 +18,7 @@ import { ViewToggle } from './components/ViewToggle'
 import { WeekStrip } from './components/WeekStrip'
 import type { CellState } from './components/DayDots'
 import { lastCelebrated, markCelebrated, shouldCelebrate, type Progress } from './celebration'
+import { focusPath } from './entries'
 import { missedYesterday } from './missed'
 import { LOOKBACK_DAYS, doneKey, routineStreak, toDoneMap } from './streak'
 import { loadView, saveView, type TodayView } from './timeline'
@@ -42,6 +44,7 @@ function useToday(): DateKey {
 
 export function TodayPage() {
   const today = useToday()
+  const navigate = useNavigate()
   const [actionFor, setActionFor] = useState<Routine | null>(null)
   const [undo, setUndo] = useState<UndoEntry | null>(null)
   const [view, setView] = useState<TodayView>(loadView)
@@ -132,7 +135,7 @@ export function TodayPage() {
         total={progress.total}
         next={next}
         nextTime={next ? routineTime(next, dayLog.wokeAt, settings) : null}
-        onStart={() => next && void set(next, 'min')}
+        onStart={() => next && navigate(focusPath(next.id))}
       />
 
       <ViewToggle
