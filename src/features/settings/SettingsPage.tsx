@@ -338,6 +338,21 @@ export function SettingsPage() {
         </Group>
       )}
 
+      <Group title="Hakkında">
+        <div className="flex min-h-[var(--tap)] items-center justify-between gap-3 px-2">
+          <span className="text-body">Sürüm</span>
+          <span className="text-body text-muted">{import.meta.env.VITE_APP_VERSION ?? 'dev'}</span>
+        </div>
+        <a
+          href="https://github.com/burakkaygusuzoglu/Routine"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex min-h-[var(--tap)] items-center rounded-row px-2 text-body font-semibold text-accent"
+        >
+          Kaynak kod
+        </a>
+      </Group>
+
       <Button variant="danger" onClick={() => setDeleting('warn')}>
         Tüm verilerimi sil
       </Button>
