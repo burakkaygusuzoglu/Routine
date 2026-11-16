@@ -166,3 +166,32 @@ describe('calendar export helpers', () => {
     expect(calendarOutdated({ signature: 'x' }, 'y')).toBe(true)
   })
 })
+
+describe('icon and identity', () => {
+  it('draft defaults and unchanged legacy routine', () => {
+    expect(newDraft().icon).toBe('star')
+    expect(newDraft().identity).toBe('')
+    expect(draftFromRoutine(routine).icon).toBe('star')
+    expect(isChanged(routine, draftFromRoutine(routine))).toBe(false)
+  })
+  it('saves icon and trimmed identity', () => {
+    const d = { ...draftFromRoutine(routine), icon: 'dumbbell' as const, identity: '  disiplinli biri ' }
+    const r = applyDraft(routine, d)
+    expect(r.icon).toBe('dumbbell')
+    expect(r.identity).toBe('disiplinli biri')
+    expect(isChanged(routine, d)).toBe(true)
+    expect(isChanged(r, draftFromRoutine(r))).toBe(false)
+  })
+  it('clears identity and caps length', () => {
+    const withId = { ...routine, identity: 'sporcu' }
+    const cleared = applyDraft(withId, { ...draftFromRoutine(withId), identity: '   ' })
+    expect('identity' in cleared).toBe(false)
+    const long = applyDraft(routine, { ...draftFromRoutine(routine), identity: 'a'.repeat(60) })
+    expect(long.identity).toHaveLength(40)
+  })
+  it('new routine from draft carries icon and identity', () => {
+    const r = createRoutine({ ...newDraft(), name: 'Oku', icon: 'book', identity: 'okur' }, [], 'x', new Date())
+    expect(r.icon).toBe('book')
+    expect(r.identity).toBe('okur')
+  })
+})

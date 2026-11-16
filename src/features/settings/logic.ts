@@ -1,4 +1,5 @@
 import type { RoutineColor } from '../../design/palette'
+import { DEFAULT_ROUTINE_ICON, type RoutineIconName } from '../../design/routineIcons'
 import { fromDateKey, toDateKey, todayKey } from '../../domain/date'
 import type { AnchorType, Backup, ClockTime, Routine } from '../../domain/types'
 
@@ -7,6 +8,7 @@ export const DAY_SHORT = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'] as c
 export const DAY_LONG = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'] as const
 
 export const MAX_OFFSET_MIN = 720
+export const MAX_IDENTITY_LENGTH = 40
 
 /** Editable form state of a routine. `offset` is text so the field can be empty while typing. */
 export interface RoutineDraft {
@@ -18,6 +20,8 @@ export interface RoutineDraft {
   offset: string
   days: number[]
   calendarAlarm: boolean
+  icon: RoutineIconName
+  identity: string
 }
 
 export const DEFAULT_FIXED_TIME: ClockTime = '09:00'
@@ -32,6 +36,8 @@ export function newDraft(): RoutineDraft {
     offset: '15',
     days: [0, 1, 2, 3, 4, 5, 6],
     calendarAlarm: false,
+    icon: DEFAULT_ROUTINE_ICON,
+    identity: '',
   }
 }
 
@@ -45,6 +51,8 @@ export function draftFromRoutine(r: Routine): RoutineDraft {
     offset: String(r.offsetMin),
     days: [...r.days].sort((a, b) => a - b),
     calendarAlarm: r.calendarAlarm,
+    icon: r.icon ?? DEFAULT_ROUTINE_ICON,
+    identity: r.identity ?? '',
   }
 }
 
@@ -83,8 +91,14 @@ export function toggleDay(days: number[], day: number): number[] {
 
 /** The editable fields of `base` replaced by the draft's values. Draft must be valid. */
 export function applyDraft(base: Routine, d: RoutineDraft): Routine {
+  const { icon: _icon, identity: _identity, ...rest } = base
+  const identity = d.identity.trim().slice(0, MAX_IDENTITY_LENGTH).trim()
+  // A routine without an icon keeps showing the default; only store a deliberate choice.
+  const icon = base.icon === undefined && d.icon === DEFAULT_ROUTINE_ICON ? undefined : d.icon
   return {
-    ...base,
+    ...rest,
+    ...(icon !== undefined ? { icon } : {}),
+    ...(identity !== '' ? { identity } : {}),
     name: d.name.trim(),
     color: d.color,
     minText: d.minText.trim(),
