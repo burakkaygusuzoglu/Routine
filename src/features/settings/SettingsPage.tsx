@@ -94,8 +94,9 @@ export function SettingsPage() {
   const download = () =>
     attempt(async () => {
       const now = new Date()
-      downloadJson(backupFileName(now), await store.exportBackup())
+      // Record the backup time first so the file itself carries it.
       await store.saveSettings({ ...(await store.getSettings()), lastBackupAt: now.toISOString() })
+      downloadJson(backupFileName(now), await store.exportBackup())
       return 'Yedek indirildi.'
     })
 
