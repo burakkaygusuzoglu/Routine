@@ -360,7 +360,14 @@ export function SettingsPage() {
         </a>
       </Group>
 
-      <Button variant="danger" onClick={() => setDeleting('warn')}>
+      <Button
+        variant="danger"
+        onClick={() => {
+          // An old "Yedek yüklendi." must not show up inside the delete sheet.
+          setMessage(null)
+          setDeleting('warn')
+        }}
+      >
         Tüm verilerimi sil
       </Button>
 
