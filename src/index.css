@@ -1,6 +1,18 @@
 @import 'tailwindcss';
 @import './design/tokens.css';
 
+/* Dynamic Type: on iOS the root size follows the system text-size setting, so
+   every rem value (type tokens, Tailwind spacing) scales with it. Elsewhere 16px. */
+html {
+  font-size: 16px;
+}
+
+@supports (font: -apple-system-body) {
+  html {
+    font: -apple-system-body;
+  }
+}
+
 html,
 body,
 #root {
