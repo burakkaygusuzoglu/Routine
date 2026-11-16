@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ROUTINE_COLORS } from '../../design/palette'
+import { routineInk } from '../../design/palette'
 import type { Routine } from '../../domain/types'
 import { Button, SegmentedControl } from '../../ui'
 import { DEFAULT_DURATION, DURATIONS } from './focusLogic'
@@ -31,7 +31,7 @@ export function SetupStep({ routine, onStart }: SetupStepProps) {
       </div>
       <div className="flex flex-col gap-1">
         <p className="m-0 text-footnote text-muted">Odak seansı</p>
-        <h1 className="m-0 text-large-title font-bold" style={{ color: ROUTINE_COLORS[routine.color] }}>
+        <h1 className="m-0 text-large-title font-bold" style={{ color: routineInk(routine.color) }}>
           {routine.name}
         </h1>
       </div>

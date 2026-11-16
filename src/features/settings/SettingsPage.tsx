@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState, type ReactNode } from 'react'
-import { ROUTINE_COLORS } from '../../design/palette'
+import { routineInk } from '../../design/palette'
 import { RoutineIcon } from '../../design/routineIcons'
+import { ThemePicker } from '../../design/ThemePicker'
 import { deleteAllData, useAccount, type SyncKind } from '../../data/account'
 import { store } from '../../data/store'
 import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
@@ -181,7 +182,7 @@ export function SettingsPage() {
               onClick={() => setEditing({ routine: r })}
               className="flex min-h-[var(--tap)] flex-1 items-center gap-3 rounded-row px-2 text-left"
             >
-              <span aria-hidden="true" className="shrink-0" style={{ color: ROUTINE_COLORS[r.color] }}>
+              <span aria-hidden="true" className="shrink-0" style={{ color: routineInk(r.color) }}>
                 <RoutineIcon name={r.icon} size={20} />
               </span>
               <span className="min-w-0">
@@ -213,7 +214,7 @@ export function SettingsPage() {
         <button
           type="button"
           onClick={() => setEditing({ routine: null })}
-          className="flex min-h-[var(--tap)] items-center gap-2 rounded-row px-2 text-body font-semibold text-accent"
+          className="flex min-h-[var(--tap)] items-center gap-2 rounded-row px-2 text-body font-semibold text-accent-ink"
         >
           <Plus />
           Rutin ekle
@@ -223,6 +224,12 @@ export function SettingsPage() {
       <Group title="Günüm">
         <TimeRow label="Uyanma hedefi" value={settings?.targetWake ?? ''} onChange={(v) => saveTime('targetWake', v)} />
         <TimeRow label="Yatma hedefi" value={settings?.targetBed ?? ''} onChange={(v) => saveTime('targetBed', v)} />
+      </Group>
+
+      <Group title="Görünüm">
+        <div className="px-2">
+          <ThemePicker />
+        </div>
       </Group>
 
       <Group
@@ -238,7 +245,7 @@ export function SettingsPage() {
         }
       >
         {outdated && (
-          <p role="status" className="px-2 py-1 text-footnote font-semibold text-accent">
+          <p role="status" className="px-2 py-1 text-footnote font-semibold text-accent-ink">
             Saatler değişti. Takvim'i güncellemek için yeniden aktar.
           </p>
         )}
@@ -321,7 +328,7 @@ export function SettingsPage() {
         <Group title="Arşiv">
           {archived.map((r) => (
             <div key={r.id} className="flex items-center gap-3 px-2">
-              <span aria-hidden="true" className="shrink-0" style={{ color: ROUTINE_COLORS[r.color] }}>
+              <span aria-hidden="true" className="shrink-0" style={{ color: routineInk(r.color) }}>
                 <RoutineIcon name={r.icon} size={20} />
               </span>
               <span className="min-w-0 flex-1 truncate text-body text-muted">{r.name}</span>
@@ -329,7 +336,7 @@ export function SettingsPage() {
                 type="button"
                 onClick={() => restore(r)}
                 aria-label={`${r.name} geri al`}
-                className="min-h-[var(--tap)] min-w-[var(--tap)] px-2 text-body font-semibold text-accent"
+                className="min-h-[var(--tap)] min-w-[var(--tap)] px-2 text-body font-semibold text-accent-ink"
               >
                 Geri al
               </button>
@@ -347,7 +354,7 @@ export function SettingsPage() {
           href="https://github.com/burakkaygusuzoglu/Routine"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-h-[var(--tap)] items-center rounded-row px-2 text-body font-semibold text-accent"
+          className="flex min-h-[var(--tap)] items-center rounded-row px-2 text-body font-semibold text-accent-ink"
         >
           Kaynak kod
         </a>

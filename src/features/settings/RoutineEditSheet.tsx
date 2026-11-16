@@ -95,7 +95,7 @@ export function RoutineEditSheet({ routine, all, onClose }: Props) {
           type="button"
           onClick={save}
           disabled={!canSave}
-          className="min-h-[var(--tap)] min-w-[var(--tap)] text-body font-semibold text-accent disabled:text-muted disabled:opacity-60"
+          className="min-h-[var(--tap)] min-w-[var(--tap)] text-body font-semibold text-accent-ink disabled:text-muted disabled:opacity-60"
         >
           Kaydet
         </button>

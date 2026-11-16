@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { ROUTINE_COLORS, type RoutineColor } from '../../../design/palette'
+import { routineInk, type RoutineColor } from '../../../design/palette'
 import { RoutineIcon, type RoutineIconName } from '../../../design/routineIcons'
 import type { CellState } from '../../../domain/streak'
 import { HeatGrid } from './HeatGrid'
@@ -26,12 +26,12 @@ export const RoutineCard = memo(function RoutineCard({ name, color, icon, streak
     >
       <span className="block">
         <span className="flex items-center gap-2 text-footnote font-semibold text-text">
-          <span aria-hidden="true" className="shrink-0" style={{ color: ROUTINE_COLORS[color] }}>
+          <span aria-hidden="true" className="shrink-0" style={{ color: routineInk(color) }}>
             <RoutineIcon name={icon} size={16} />
           </span>
           <span className="min-w-0 truncate">{name}</span>
         </span>
-        <span className="block text-footnote font-semibold" style={{ color: ROUTINE_COLORS[color] }}>
+        <span className="block text-footnote font-semibold" style={{ color: routineInk(color) }}>
           {streakText}
         </span>
         {nextText && <span className="block text-caption text-muted">{nextText}</span>}

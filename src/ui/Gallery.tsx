@@ -86,7 +86,7 @@ export function Gallery() {
               </div>
             </Card>
             <Card className="max-w-[240px]">
-              <p className="m-0 mb-2 text-footnote font-semibold text-accent">6 gün seri</p>
+              <p className="m-0 mb-2 text-footnote font-semibold text-accent-ink">6 gün seri</p>
               <HeatGrid cells={HEAT} color="coral" />
             </Card>
           </div>

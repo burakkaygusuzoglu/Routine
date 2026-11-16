@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { fromDateKey } from '../../../domain/date'
-import { ROUTINE_COLORS } from '../../../design/palette'
+import { routineInk } from '../../../design/palette'
 import { RoutineIcon } from '../../../design/routineIcons'
 import type { Completion, DateKey, Routine } from '../../../domain/types'
 import {
@@ -126,7 +126,7 @@ export function MonthView({ routines, completions, today }: MonthViewProps) {
           <ul className="m-0 flex list-none flex-col gap-1 p-0">
             {detail.map(({ routine, status }) => (
               <li key={routine.id} className="flex min-h-11 items-center gap-3 rounded-row bg-raised px-3">
-                <span aria-hidden="true" className="shrink-0" style={{ color: ROUTINE_COLORS[routine.color] }}>
+                <span aria-hidden="true" className="shrink-0" style={{ color: routineInk(routine.color) }}>
                   <RoutineIcon name={routine.icon} size={20} />
                 </span>
                 <span className="min-w-0 flex-1 truncate text-body">{routine.name}</span>

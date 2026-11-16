@@ -34,7 +34,7 @@ export function UndoToast({ entry, onUndo, onDismiss }: Props) {
           <button
             type="button"
             onClick={onUndo}
-            className="min-h-11 min-w-11 shrink-0 rounded-control px-3 text-body font-semibold text-accent"
+            className="min-h-11 min-w-11 shrink-0 rounded-control px-3 text-body font-semibold text-accent-ink"
           >
             Geri al
           </button>

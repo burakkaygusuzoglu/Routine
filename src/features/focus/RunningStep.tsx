@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { store } from '../../data/store'
-import { ROUTINE_COLORS } from '../../design/palette'
+import { ROUTINE_COLORS, routineInk } from '../../design/palette'
 import type { Routine } from '../../domain/types'
 import { Button, ProgressRing, Sheet } from '../../ui'
 import {
@@ -65,6 +65,8 @@ export function RunningStep({
   onFinish,
 }: RunningStepProps) {
   const color = ROUTINE_COLORS[routine.color]
+  /** Same hue, darker in the light theme: for text and icons. */
+  const ink = routineInk(routine.color)
   const [now, setNow] = useState(() => Date.now())
   const [dives, setDives] = useState(0)
   const [checkInShown, setCheckInShown] = useState(false)
@@ -156,7 +158,7 @@ export function RunningStep({
       </div>
 
       <div className="mt-4 flex flex-col items-center gap-1 text-center">
-        <h1 className="m-0 text-title font-bold" style={{ color }}>
+        <h1 className="m-0 text-title font-bold" style={{ color: ink }}>
           {routine.name}
         </h1>
         {intent && <p className="m-0 text-body text-muted">Şu an: {intent}</p>}

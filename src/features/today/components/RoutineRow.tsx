@@ -1,4 +1,4 @@
-import { ROUTINE_COLORS, tint } from '../../../design/palette'
+import { ROUTINE_COLORS, routineInk, tint } from '../../../design/palette'
 import { RoutineIcon } from '../../../design/routineIcons'
 import type { CompletionStatus, Routine } from '../../../domain/types'
 import { CheckCircle } from './CheckCircle'
@@ -33,6 +33,8 @@ function subtitle(routine: Routine, status: CompletionStatus | undefined): strin
 
 export function RoutineRow({ routine, time, status, cells, streak, isNext, missed = false, onCheck, onOpen }: Props) {
   const color = ROUTINE_COLORS[routine.color]
+  /** Same hue, darker in the light theme: for text and icons. */
+  const ink = routineInk(routine.color)
   const done = status === 'full' || status === 'min'
   const showMissed = missed && status === undefined
   const state = status === 'full' ? 'full' : status === 'min' ? 'min' : 'pending'
@@ -53,13 +55,13 @@ export function RoutineRow({ routine, time, status, cells, streak, isNext, misse
         aria-label={`${routine.name}: seçenekleri aç`}
         className="flex min-h-11 min-w-0 flex-1 items-center gap-2 py-2 pl-2 text-left"
       >
-        <span className="shrink-0" style={{ color }}>
+        <span className="shrink-0" style={{ color: ink }}>
           <RoutineIcon name={routine.icon} size={22} />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate text-body font-semibold">{routine.name}</span>
           {showMissed ? (
-            <span className="block text-footnote" style={{ color }}>
+            <span className="block text-footnote" style={{ color: ink }}>
               {time ?? 'Gün sonu'} · {MISSED_LINE}
             </span>
           ) : (
@@ -70,7 +72,7 @@ export function RoutineRow({ routine, time, status, cells, streak, isNext, misse
         </span>
         <span className="flex shrink-0 flex-col items-end gap-1">
           <DayDots cells={cells} color={routine.color} />
-          <span className="text-caption font-semibold" style={{ color }}>
+          <span className="text-caption font-semibold" style={{ color: ink }}>
             {streak} gün
           </span>
         </span>

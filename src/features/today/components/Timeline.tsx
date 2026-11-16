@@ -1,4 +1,4 @@
-import { ROUTINE_COLORS, tint } from '../../../design/palette'
+import { ROUTINE_COLORS, routineInk, tint } from '../../../design/palette'
 import { RoutineIcon } from '../../../design/routineIcons'
 import { clockToMinutes } from '../../../domain/date'
 import type { CompletionStatus, Routine } from '../../../domain/types'
@@ -25,6 +25,8 @@ const isDone = (s: CompletionStatus | undefined) => s === 'full' || s === 'min'
 function BlockContent({ entry, isNext, onCheck, onOpen }: { entry: TimelineEntry; isNext: boolean; onCheck: () => void; onOpen: () => void }) {
   const { routine, status } = entry
   const color = ROUTINE_COLORS[routine.color]
+  /** Same hue, darker in the light theme: for text and icons. */
+  const ink = routineInk(routine.color)
   const done = isDone(status)
   const state = status === 'full' ? 'full' : status === 'min' ? 'min' : 'pending'
   return (
@@ -44,7 +46,7 @@ function BlockContent({ entry, isNext, onCheck, onOpen }: { entry: TimelineEntry
         aria-label={`${routine.name}: seçenekleri aç`}
         className="flex min-h-11 min-w-0 flex-1 items-center gap-1 text-left"
       >
-        <span className="shrink-0" style={{ color }}>
+        <span className="shrink-0" style={{ color: ink }}>
           <RoutineIcon name={routine.icon} size={18} />
         </span>
         <span className={`min-w-0 truncate text-footnote font-semibold ${done ? 'text-muted' : ''}`}>{routine.name}</span>

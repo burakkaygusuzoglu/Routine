@@ -22,6 +22,7 @@ const securityHeaders: Plugin = {
 }
 
 export default defineConfig({
+  define: { 'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version ?? 'dev') },
   base: '/Routine/',
   plugins: [securityHeaders, 
     react(),

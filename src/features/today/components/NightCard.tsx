@@ -5,7 +5,7 @@ import { RoutineIcon } from '../../../design/routineIcons'
 export function NightCard() {
   return (
     <section aria-label="Gece modu" className="flex items-center gap-3 rounded-card bg-surface p-4">
-      <span className="text-accent">
+      <span className="text-accent-ink">
         <RoutineIcon name="moon" size={28} />
       </span>
       <div className="min-w-0 flex-1">

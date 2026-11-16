@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState } from 'react'
 import { store } from '../../data/store'
-import { ROUTINE_COLORS } from '../../design/palette'
+import { ROUTINE_COLORS, routineInk } from '../../design/palette'
 import { RoutineIcon } from '../../design/routineIcons'
 import { addDays, fromDateKey, todayKey, weekdayIndex, weekStart } from '../../domain/date'
 import { Card, CloseIcon } from '../../ui'
@@ -143,7 +143,7 @@ export function WeeklyPage() {
               <ul className="m-0 flex list-none flex-col gap-3 p-0">
                 {derived.stats.perRoutine.map(({ routine, done, scheduled, rate }) => (
                   <li key={routine.id} className="flex items-center gap-3">
-                    <span style={{ color: ROUTINE_COLORS[routine.color] }} className="shrink-0">
+                    <span style={{ color: routineInk(routine.color) }} className="shrink-0">
                       <RoutineIcon name={routine.icon} size={20} />
                     </span>
                     <span className="min-w-0 flex-1 truncate text-body">{routine.name}</span>

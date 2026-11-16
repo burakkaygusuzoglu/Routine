@@ -28,7 +28,7 @@ export function TabBar({ items }: NavProps) {
           end={it.to === '/'}
           className={({ isActive }) =>
             `flex min-h-[var(--tap)] flex-col items-center justify-center gap-1 py-2 text-caption no-underline ${focus} ${
-              isActive ? 'font-semibold text-accent' : 'text-muted'
+              isActive ? 'font-semibold text-accent-ink' : 'text-muted'
             }`
           }
         >
@@ -55,7 +55,7 @@ export function Sidebar({ items }: NavProps) {
           end={it.to === '/'}
           className={({ isActive }) =>
             `flex min-h-[var(--tap)] items-center gap-3 rounded-control px-3 text-body no-underline ${focus} ${
-              isActive ? 'bg-surface font-semibold text-accent' : 'text-muted'
+              isActive ? 'bg-surface font-semibold text-accent-ink' : 'text-muted'
             }`
           }
         >

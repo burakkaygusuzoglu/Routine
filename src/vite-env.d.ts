@@ -2,4 +2,5 @@
 
 interface ImportMetaEnv {
   readonly VITE_DEXIE_CLOUD_URL?: string
+  readonly VITE_APP_VERSION?: string
 }

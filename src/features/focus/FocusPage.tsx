@@ -28,7 +28,7 @@ function Message({ text }: { text: string }) {
       <p className="m-0 text-body text-text">{text}</p>
       <a
         href="#/"
-        className="inline-flex min-h-[var(--tap)] items-center text-body font-semibold text-accent focus-visible:outline-2 focus-visible:outline-accent"
+        className="inline-flex min-h-[var(--tap)] items-center text-body font-semibold text-accent-ink focus-visible:outline-2 focus-visible:outline-accent"
       >
         Bugün sayfasına dön
       </a>
