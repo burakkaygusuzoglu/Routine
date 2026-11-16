@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { HashRouter, Route, Routes } from 'react-router-dom'
+import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { openDatabase, useAuthState } from '../data/auth'
 import { store } from '../data/store'
 import { AuthScreen, PENDING_NAME_KEY } from '../features/auth/AuthScreen'
@@ -40,18 +40,54 @@ async function applyPendingName() {
   await store.saveSettings({ ...settings, displayName: name })
 }
 
+/** Width from which Today and Progress sit side by side. */
+const WIDE_QUERY = '(min-width: 1200px)'
+
+/** True while the viewport is at least 1200 px wide; false where matchMedia is missing. */
+function useWide(): boolean {
+  const [wide, setWide] = useState(() => (typeof matchMedia === 'function' ? matchMedia(WIDE_QUERY).matches : false))
+  useEffect(() => {
+    if (typeof matchMedia !== 'function') return
+    const mq = matchMedia(WIDE_QUERY)
+    const onChange = () => setWide(mq.matches)
+    onChange()
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return wide
+}
+
 function TabbedLayout() {
+  const { pathname } = useLocation()
+  // Only the Today route gets the Progress aside, and only on wide screens.
+  const split = useWide() && pathname === '/'
   return (
     <div className="flex h-full flex-col min-[900px]:flex-row">
       <Sidebar items={NAV} />
-      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto pt-[var(--safe-top)]">
-        <InstallHint />
-        <Routes>
-          <Route path="/" element={<TodayPage />} />
-          <Route path="/progress" element={<ProgressPage />} />
-          <Route path="/weekly" element={<WeeklyPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Routes>
+      <main
+        className={`min-h-0 min-w-0 flex-1 pt-[var(--safe-top)] ${split ? 'flex overflow-hidden' : 'overflow-y-auto'}`}
+      >
+        {split ? (
+          <>
+            <div className="min-h-0 w-[520px] shrink-0 overflow-y-auto">
+              <InstallHint />
+              <TodayPage />
+            </div>
+            <aside aria-label="İlerleme" className="min-h-0 min-w-0 flex-1 overflow-y-auto border-l border-line">
+              <ProgressPage />
+            </aside>
+          </>
+        ) : (
+          <>
+            <InstallHint />
+            <Routes>
+              <Route path="/" element={<TodayPage />} />
+              <Route path="/progress" element={<ProgressPage />} />
+              <Route path="/weekly" element={<WeeklyPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </>
+        )}
       </main>
       <TabBar items={NAV} />
     </div>
