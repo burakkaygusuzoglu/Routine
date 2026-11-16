@@ -113,7 +113,12 @@ export function applyDraft(base: Routine, d: RoutineDraft): Routine {
 /** True when saving the draft would change the routine. */
 export function isChanged(original: Routine, d: RoutineDraft): boolean {
   if (!isValid(d)) return true
-  return JSON.stringify(applyDraft(original, d)) !== JSON.stringify(original)
+  return stableJson(applyDraft(original, d)) !== stableJson(original)
+}
+
+/** JSON with sorted keys, so key order never counts as a change. */
+function stableJson(r: Routine): string {
+  return JSON.stringify(r, Object.keys(r).sort())
 }
 
 /** Builds a brand-new routine from a valid draft. `sort` goes after every existing routine. */
