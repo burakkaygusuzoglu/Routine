@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { addDays, fromDateKey, isScheduled, todayKey, toClockTime, weekStart } from '../../domain/date'
 import { dayProgress, nextUp, routineTime, todaysRoutines } from '../../domain/schedule'
 import type { CompletionStatus, DateKey, Routine } from '../../domain/types'
+import { ROUTINE_COLORS } from '../../design/palette'
 import { store } from '../../data/store'
 import { Button } from './components/Button'
 import { Hero } from './components/Hero'
@@ -10,10 +11,12 @@ import { RoutineRow } from './components/RoutineRow'
 import { Sheet } from './components/Sheet'
 import { WakeChip } from './components/WakeChip'
 import { UndoToast } from './components/UndoToast'
+import { Celebration } from './components/Celebration'
 import { Timeline } from './components/Timeline'
 import { ViewToggle } from './components/ViewToggle'
 import { WeekStrip } from './components/WeekStrip'
 import type { CellState } from './components/DayDots'
+import { lastCelebrated, markCelebrated, shouldCelebrate, type Progress } from './celebration'
 import { missedYesterday } from './missed'
 import { LOOKBACK_DAYS, doneKey, routineStreak, toDoneMap } from './streak'
 import { loadView, saveView, type TodayView } from './timeline'
@@ -54,6 +57,25 @@ export function TodayPage() {
   )
 
   const done = useMemo(() => toDoneMap(completions ?? []), [completions])
+
+  // Celebrate when the last scheduled routine of the day becomes done.
+  const loaded = !!(routines && settings && dayLog && completions)
+  const progressNow = useMemo(
+    () => (routines && completions ? dayProgress(routines, completions, today) : null),
+    [routines, completions, today],
+  )
+  const prevProgress = useRef<{ day: DateKey; progress: Progress } | null>(null)
+  const [celebrating, setCelebrating] = useState<Progress | null>(null)
+  const closeCelebration = useCallback(() => setCelebrating(null), [])
+  useEffect(() => {
+    if (!loaded || !progressNow) return
+    const prev = prevProgress.current?.day === today ? prevProgress.current.progress : null
+    if (shouldCelebrate(prev, progressNow, today, lastCelebrated())) {
+      markCelebrated(today)
+      setCelebrating(progressNow)
+    }
+    prevProgress.current = { day: today, progress: progressNow }
+  }, [loaded, progressNow, today])
 
   if (!routines || !settings || !dayLog || !completions) return null
 
@@ -166,6 +188,15 @@ export function TodayPage() {
           Temizle
         </Button>
       </Sheet>
+
+      {celebrating && (
+        <Celebration
+          colors={[...new Set(list.map((r) => ROUTINE_COLORS[r.color]))]}
+          done={celebrating.done}
+          total={celebrating.total}
+          onClose={closeCelebration}
+        />
+      )}
 
       <UndoToast entry={undo} onUndo={undoLast} onDismiss={dismissUndo} />
     </div>
