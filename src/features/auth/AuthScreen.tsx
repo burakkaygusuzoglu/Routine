@@ -3,6 +3,8 @@ import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } fr
 import { requestCode } from '../../data/auth'
 import { ROUTINE_COLOR_KEYS, ROUTINE_COLORS, type RoutineColor } from '../../design/palette'
 import { RoutineIcon, type RoutineIconName } from '../../design/routineIcons'
+import { CodeInput } from './CodeInput'
+import { codeOf, emptyCells, isComplete, resendSecondsLeft, type CellsUpdate } from './codeCells'
 import { alertText, isValidEmail } from './messages'
 
 const FIELD =
@@ -184,21 +186,37 @@ function EmailStep({ ui }: { ui: Extract<DXCUserInteraction, { type: 'email' }> 
 }
 
 function OtpStep({ ui }: { ui: Extract<DXCUserInteraction, { type: 'otp' }> }) {
-  const [code, setCode] = useState('')
+  const [cells, setCells] = useState<string[]>(emptyCells)
   const [busy, setBusy] = useState(false)
-  const id = useId()
-  const input = useRef<HTMLInputElement>(null)
+  const [sentAt, setSentAt] = useState(() => Date.now())
+  const [now, setNow] = useState(() => Date.now())
+  const labelId = useId()
   const email = ui.alerts.find((a) => a.messageParams?.email)?.messageParams.email
+  const firstBox = useRef<HTMLDivElement>(null)
+  const left = resendSecondsLeft(sentAt, now)
+
+  // A new prompt (for example "wrong code") clears the boxes and starts over.
   useEffect(() => {
     setBusy(false)
-    input.current?.focus()
+    setCells(emptyCells())
+    firstBox.current?.querySelector('input')?.focus()
   }, [ui])
 
-  function submit(e: FormEvent) {
-    e.preventDefault()
-    if (code.trim().length < 4) return
+  useEffect(() => {
+    if (left === 0) return
+    const t = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [left])
+
+  function submit(next: readonly string[]) {
+    if (busy || !isComplete(next)) return
     setBusy(true)
-    ui.onSubmit({ otp: code.trim() })
+    ui.onSubmit({ otp: codeOf(next) })
+  }
+
+  function change(u: CellsUpdate) {
+    setCells(u.cells)
+    submit(u.cells)
   }
 
   return (
@@ -215,45 +233,45 @@ function OtpStep({ ui }: { ui: Extract<DXCUserInteraction, { type: 'otp' }> }) {
           )}
         </p>
       </div>
-      <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
-        <div className="flex flex-col gap-2">
-          <label htmlFor={id} className="text-footnote font-semibold text-muted">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          submit(cells)
+        }}
+        className="flex flex-col gap-4"
+        noValidate
+      >
+        <div className="flex flex-col gap-2" ref={firstBox}>
+          <span id={labelId} className="text-footnote font-semibold text-muted">
             Doğrulama kodu
-          </label>
-          <input
-            id={id}
-            ref={input}
-            className={`${FIELD} text-center text-title font-semibold tracking-[0.3em]`}
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            autoCapitalize="characters"
-            spellCheck={false}
-            value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\s/g, ''))}
-          />
+          </span>
+          <CodeInput cells={cells} onChange={change} labelledBy={labelId} readOnly={busy} />
         </div>
         <Alerts alerts={ui.alerts.filter((a) => a.messageCode !== 'OTP_SENT' || !email)} />
-        <button type="submit" className={PRIMARY} disabled={code.trim().length < 4 || busy}>
+        <button type="submit" className={PRIMARY} disabled={!isComplete(cells) || busy}>
           Doğrula
         </button>
-        <div className="flex flex-wrap justify-center gap-2">
-          {email && (
-            <button
-              type="button"
-              className={LINK}
-              onClick={() => {
-                ui.onCancel()
-                void requestCode(email)
-              }}
-            >
-              Kodu tekrar gönder
-            </button>
-          )}
-          <button type="button" className={LINK} onClick={() => ui.onCancel()}>
-            Farklı e-posta kullan
-          </button>
-        </div>
       </form>
+      <div className="flex flex-wrap justify-center gap-2">
+        {email && (
+          <button
+            type="button"
+            className={`${LINK} disabled:opacity-60`}
+            disabled={left > 0}
+            onClick={() => {
+              setSentAt(Date.now())
+              setNow(Date.now())
+              ui.onCancel()
+              void requestCode(email)
+            }}
+          >
+            {left > 0 ? `Kodu tekrar gönder (${left} sn)` : 'Kodu tekrar gönder'}
+          </button>
+        )}
+        <button type="button" className={LINK} onClick={() => ui.onCancel()}>
+          Farklı e-posta kullan
+        </button>
+      </div>
     </Shell>
   )
 }
