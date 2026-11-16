@@ -263,7 +263,12 @@ export function SettingsPage() {
               {settings?.displayName && <span className="truncate text-body font-semibold">{settings.displayName}</span>}
               <span className={`truncate ${settings?.displayName ? 'text-footnote text-muted' : 'text-body'}`}>{account.email ?? 'Giriş yapılmadı'}</span>
               {account.evalDaysLeft !== null && (
-                <span className="text-footnote text-muted">Deneme hesabı · {account.evalDaysLeft} gün kaldı</span>
+                <>
+                  <span className="text-footnote text-muted">Deneme hesabı · {account.evalDaysLeft} gün kaldı</span>
+                  <span className="text-footnote text-muted">
+                    Kalıcı hesap için manager.dexie.cloud üzerinden hesabını üretim kullanıcısına çevir.
+                  </span>
+                </>
               )}
             </div>
             <Button variant="danger" onClick={() => void account.logout()}>
