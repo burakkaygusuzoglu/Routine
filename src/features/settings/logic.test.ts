@@ -8,6 +8,7 @@ import {
   daysSinceBackup,
   draftFromRoutine,
   isChanged,
+  isDeleteConfirmed,
   isValid,
   lastBackupText,
   moveId,
@@ -199,5 +200,14 @@ describe('icon and identity', () => {
     const r = createRoutine({ ...newDraft(), name: 'Oku', icon: 'book', identity: 'okur' }, [], 'x', new Date())
     expect(r.icon).toBe('book')
     expect(r.identity).toBe('okur')
+  })
+})
+
+describe('isDeleteConfirmed', () => {
+  it('accepts the word in any case and rejects anything else', () => {
+    expect(isDeleteConfirmed('SİL')).toBe(true)
+    expect(isDeleteConfirmed(' sil ')).toBe(true)
+    expect(isDeleteConfirmed('SIL')).toBe(false)
+    expect(isDeleteConfirmed('')).toBe(false)
   })
 })

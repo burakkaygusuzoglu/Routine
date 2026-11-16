@@ -1,7 +1,8 @@
 import { useObservable } from 'dexie-react-hooks'
 import { BehaviorSubject } from 'rxjs'
 import type { UserLogin } from 'dexie-cloud-addon'
-import { db } from './db'
+import { db, type RoutineDB } from './db'
+import { createStore } from './store'
 
 const signedOut = new BehaviorSubject<UserLogin | null>(null)
 const idleSync = new BehaviorSubject<SyncSnapshot>({ phase: 'initial' })
@@ -94,5 +95,22 @@ export function useAccount(): Account {
         // The person chose to keep unsynced changes and stay signed in.
       }
     },
+  }
+}
+
+/**
+ * Deletes every routine, tick, day log, note and setting in one transaction,
+ * then recreates the starter routines. In cloud mode the deletes are pushed to
+ * the server (so every device loses the data) and the person is logged out.
+ */
+export async function deleteAllData(database: RoutineDB = db): Promise<void> {
+  await database.transaction('rw', database.tables, async () => {
+    await Promise.all(database.tables.map((t) => t.clear()))
+  })
+  if (database.isCloud) await database.cloud.sync({ purpose: 'push', wait: true })
+  await createStore(database).init()
+  if (database.isCloud) {
+    await database.cloud.sync({ purpose: 'push', wait: true })
+    await database.cloud.logout({ force: true })
   }
 }

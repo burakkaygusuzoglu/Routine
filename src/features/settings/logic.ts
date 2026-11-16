@@ -230,3 +230,11 @@ export function calendarOutdated(saved: { signature: string } | undefined, curre
 
 export const CALENDAR_FILE_NAME = 'routine.ics'
 export const CALENDAR_EMPTY_REASON = 'Takvim alarmı açık bir rutin yok. Rutini düzenlerken "Takvim alarmı"nı aç.'
+
+/** The word that must be typed to confirm deleting all data. */
+export const DELETE_CONFIRM_WORD = 'SİL'
+
+/** Accepts "sil", "SİL", " Sil " etc. (Turkish dotted İ). */
+export function isDeleteConfirmed(input: string): boolean {
+  return input.trim().toLocaleUpperCase('tr-TR') === DELETE_CONFIRM_WORD
+}

@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState, type ReactNode } from 'react'
 import { ROUTINE_COLORS } from '../../design/palette'
 import { RoutineIcon } from '../../design/routineIcons'
-import { useAccount, type SyncKind } from '../../data/account'
+import { deleteAllData, useAccount, type SyncKind } from '../../data/account'
 import { store } from '../../data/store'
 import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
 import type { Backup, Routine } from '../../domain/types'
@@ -16,6 +16,8 @@ import {
   CALENDAR_EMPTY_REASON,
   CALENDAR_FILE_NAME,
   calendarOutdated,
+  DELETE_CONFIRM_WORD,
+  isDeleteConfirmed,
   lastBackupText,
   lastCalendarExportText,
   moveId,
@@ -67,6 +69,9 @@ export function SettingsPage() {
   const [editing, setEditing] = useState<Editing>(null)
   const [pending, setPending] = useState<Backup | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<'warn' | 'confirm' | null>(null)
+  const [typed, setTyped] = useState('')
+  const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const active = (all ?? []).filter((r) => r.archivedAt === null)
@@ -140,6 +145,26 @@ export function SettingsPage() {
       })
       return 'Takvim dosyası indirildi.'
     })
+
+  const closeDelete = () => {
+    setDeleting(null)
+    setTyped('')
+  }
+
+  const confirmDelete = async () => {
+    setBusy(true)
+    setMessage(null)
+    try {
+      await deleteAllData()
+      closeDelete()
+      setMessage('Tüm verilerin silindi.')
+    } catch (e) {
+      setMessage(sheetErrorText(e))
+      closeDelete()
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const hint = settings ? backupHint(settings.lastBackupAt, new Date()) : null
   const account = useAccount()
@@ -313,6 +338,10 @@ export function SettingsPage() {
         </Group>
       )}
 
+      <Button variant="danger" onClick={() => setDeleting('warn')}>
+        Tüm verilerimi sil
+      </Button>
+
       {editing && (
         <RoutineEditSheet
           key={editing.routine?.id ?? 'new'}
@@ -320,6 +349,49 @@ export function SettingsPage() {
           all={all ?? []}
           onClose={() => setEditing(null)}
         />
+      )}
+
+      {deleting === 'warn' && (
+        <Sheet open onClose={closeDelete} title="Tüm verilerimi sil">
+          <div className="flex flex-col gap-3">
+            <p className="text-body">
+              Rutinlerin, işaretlerin, notların ve günlük değerlendirmelerin
+              {account.cloud ? ' giriş yaptığın tüm cihazlarda' : ''} silinecek. Bu geri alınamaz.
+            </p>
+            <p className="text-body text-muted">Önce bir yedek indirmeni öneririz.</p>
+            <Button onClick={() => void download()}>Önce yedek indir</Button>
+            {message && (
+              <p role="status" className="text-footnote text-muted">
+                {message}
+              </p>
+            )}
+            <Button variant="danger" onClick={() => setDeleting('confirm')}>
+              Devam et
+            </Button>
+          </div>
+        </Sheet>
+      )}
+
+      {deleting === 'confirm' && (
+        <Sheet open onClose={closeDelete} title="Silmeyi onayla">
+          <div className="flex flex-col gap-3">
+            <label htmlFor="delete-confirm" className="text-body">
+              Onaylamak için {DELETE_CONFIRM_WORD} yaz.
+            </label>
+            <input
+              id="delete-confirm"
+              type="text"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              autoComplete="off"
+              autoCapitalize="characters"
+              className="min-h-[var(--tap)] rounded-control border border-field-line bg-bg px-3 text-body"
+            />
+            <Button variant="danger" disabled={!isDeleteConfirmed(typed) || busy} onClick={() => void confirmDelete()}>
+              {busy ? 'Siliniyor…' : 'Her şeyi sil'}
+            </Button>
+          </div>
+        </Sheet>
       )}
 
       {pending && (
