@@ -8,6 +8,7 @@ import { Card } from './components/Card'
 import { RoutineCard } from './components/RoutineCard'
 import { RoutineSheet } from './components/RoutineSheet'
 import { IdentityVotes } from './components/IdentityVotes'
+import { nextMilestoneText, reachedMilestones } from './milestones'
 import { hasAnyIdentity, identityVotes } from './identity'
 import { WeekBars } from './components/WeekBars'
 
@@ -88,6 +89,7 @@ export function ProgressPage() {
                 color={routine.color}
                 icon={routine.icon}
                 streak={streak}
+                nextText={nextMilestoneText(streak)}
                 cells={cells}
                 onOpen={() => setOpenId(routine.id)}
               />
@@ -103,6 +105,7 @@ export function ProgressPage() {
         monthStart={monthStart}
         monthCells={open ? cellStates(open.routine, open.own, monthStart, monthEnd, today) : []}
         today={today}
+        milestones={open ? reachedMilestones(open.routine, open.own, today) : []}
       />
     </div>
   )
