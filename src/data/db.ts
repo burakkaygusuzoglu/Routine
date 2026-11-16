@@ -16,6 +16,15 @@ export class RoutineDB extends Dexie {
   readonly isCloud: boolean
 
   /**
+   * The six tables that hold the person's data. In cloud mode `db.tables` also
+   * lists the sync service's own tables (logins, sync state, pending mutations);
+   * those must never be cleared by a restore or a delete.
+   */
+  get dataTables(): Table[] {
+    return [this.routines, this.completions, this.dayLogs, this.settings, this.focusSessions, this.notes]
+  }
+
+  /**
    * With a cloud URL the database syncs to Dexie Cloud and requires login.
    * Dexie Cloud stores it under its own local name, so it never touches the
    * pre-cloud local database.

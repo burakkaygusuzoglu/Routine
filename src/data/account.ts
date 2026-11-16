@@ -104,8 +104,8 @@ export function useAccount(): Account {
  * the server (so every device loses the data) and the person is logged out.
  */
 export async function deleteAllData(database: RoutineDB = db): Promise<void> {
-  await database.transaction('rw', database.tables, async () => {
-    await Promise.all(database.tables.map((t) => t.clear()))
+  await database.transaction('rw', database.dataTables, async () => {
+    await Promise.all(database.dataTables.map((t) => t.clear()))
   })
   if (database.isCloud) await database.cloud.sync({ purpose: 'push', wait: true })
   await createStore(database).init()

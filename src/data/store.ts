@@ -159,8 +159,8 @@ export function createStore(db: RoutineDB = defaultDb): RoutineStore {
     },
     async importBackup(backup) {
       if (backup.app !== 'routine' || backup.version !== 1) throw new Error('Bu dosya bir Routine yedeği değil.')
-      await db.transaction('rw', db.tables, async () => {
-        await Promise.all(db.tables.map((t) => t.clear()))
+      await db.transaction('rw', db.dataTables, async () => {
+        await Promise.all(db.dataTables.map((t) => t.clear()))
         await db.routines.bulkPut(backup.routines)
         await db.completions.bulkPut(backup.completions)
         await db.dayLogs.bulkPut(backup.dayLogs.map((log) => ({ ...log, id: dayLogId(log.date) })))

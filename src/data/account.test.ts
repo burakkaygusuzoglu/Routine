@@ -53,3 +53,14 @@ describe('deleteAllData', () => {
     expect((await store.getSettings()).targetWake).toBe('08:00')
   })
 })
+
+describe('dataTables', () => {
+  it('lists only the six data tables, never the sync service tables', () => {
+    const cloud = new RoutineDB('account-test-cloud-tables', 'https://example.dexie.cloud')
+    const names = cloud.dataTables.map((t) => t.name).sort()
+    expect(names).toEqual(['completions', 'dayLogs', 'focusSessions', 'notes', 'routines', 'settings'])
+    // The sync addon adds more tables to db.tables; those must stay out.
+    expect(cloud.tables.length).toBeGreaterThan(names.length)
+    expect(new RoutineDB('account-test-local-tables').dataTables).toHaveLength(6)
+  })
+})
