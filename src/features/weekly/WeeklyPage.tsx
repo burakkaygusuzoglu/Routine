@@ -6,6 +6,7 @@ import { RoutineIcon } from '../../design/routineIcons'
 import { addDays, fromDateKey, todayKey, weekdayIndex, weekStart } from '../../domain/date'
 import { Card, CloseIcon } from '../../ui'
 import { Garden } from './Garden'
+import { deltaText, focusStats, formatDrift } from './focus'
 import { LifetimeGarden } from './LifetimeGarden'
 import { lifetimeStats } from './lifetime'
 import { canGoNext, dayName, focusMinutes, formatMinutes, shortDate, suggest, weekStats, weekTitle } from './logic'
@@ -47,7 +48,7 @@ export function WeeklyPage() {
       store.listRoutines(),
       store.listCompletions(start, end),
       store.listDayLogs(start, end),
-      store.listFocusSessions(fromDateKey(start).toISOString()),
+      store.listFocusSessions(fromDateKey(addDays(start, -7)).toISOString()),
       store.getSettings(),
       store.listNotes(),
     ])
@@ -64,6 +65,7 @@ export function WeeklyPage() {
       stats,
       suggestion: suggest(stats, data.logs, data.settings.targetWake),
       focus: focusMinutes(data.sessions, start),
+      focusStats: focusStats(data.sessions, start),
       reflections: data.logs.filter((l) => l.reflection).reverse(),
     }
   }, [data, start, today])
@@ -116,6 +118,17 @@ export function WeeklyPage() {
           </Card>
 
           {lifetimeCompletions && <LifetimeGarden stats={lifetime} />}
+
+          <Card>
+            <h2 className="mb-3 text-headline font-semibold">Odak</h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Stat label="Bu hafta" value={formatMinutes(derived.focusStats.thisWeekMin)} />
+              <Stat label="Geçen hafta" value={formatMinutes(derived.focusStats.lastWeekMin)} />
+              <Stat label="Oturum" value={String(derived.focusStats.sessions)} />
+              <Stat label="Ortalama dağılma" value={formatDrift(derived.focusStats.avgDrift)} />
+            </div>
+            <p className="mt-3 text-footnote text-muted">{deltaText(derived.focusStats)}</p>
+          </Card>
 
           <Card>
             <h2 className="mb-1 text-footnote font-semibold text-muted">Öneri</h2>
