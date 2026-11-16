@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState, type ReactNode } from 'react'
 import { ROUTINE_COLORS } from '../../design/palette'
 import { RoutineIcon } from '../../design/routineIcons'
-import { useAccount } from '../../data/account'
+import { useAccount, type SyncKind } from '../../data/account'
 import { store } from '../../data/store'
 import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
 import type { Backup, Routine } from '../../domain/types'
@@ -34,6 +34,13 @@ function Group({ title, children, footer }: { title: string; children: ReactNode
       {footer && <div className="px-1 text-footnote text-muted">{footer}</div>}
     </section>
   )
+}
+
+const SYNC_DOT: Record<SyncKind, string> = {
+  synced: 'bg-routine-green',
+  syncing: 'bg-routine-amber',
+  offline: 'bg-muted',
+  error: 'bg-danger',
 }
 
 const ICON_BTN =
@@ -263,6 +270,20 @@ export function SettingsPage() {
               Çıkış yap
             </Button>
           </div>
+          {account.sync && (
+            <div className="flex items-center justify-between gap-3 px-2">
+              <div className="flex min-w-0 flex-col">
+                <span role="status" className="flex items-center gap-2 text-body">
+                  <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${SYNC_DOT[account.sync.kind]}`} />
+                  {account.sync.text}
+                </span>
+                {account.sync.detail && <span className="text-footnote text-muted">{account.sync.detail}</span>}
+              </div>
+              <Button onClick={() => void account.syncNow()} disabled={account.sync.kind === 'syncing'}>
+                Şimdi eşitle
+              </Button>
+            </div>
+          )}
         </Group>
       )}
 
