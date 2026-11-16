@@ -12,16 +12,19 @@ import { RoutineRow } from './components/RoutineRow'
 import { Sheet } from './components/Sheet'
 import { WakeChip } from './components/WakeChip'
 import { UndoToast } from './components/UndoToast'
+import { MorningNote } from './components/MorningNote'
+import { NightCard } from './components/NightCard'
 import { Celebration } from './components/Celebration'
 import { Timeline } from './components/Timeline'
 import { ViewToggle } from './components/ViewToggle'
 import { WeekStrip } from './components/WeekStrip'
 import type { CellState } from './components/DayDots'
 import { lastCelebrated, markCelebrated, shouldCelebrate, type Progress } from './celebration'
-import { focusPath } from './entries'
+import { focusPath, morningNote, showNightEntry } from './entries'
 import { missedYesterday } from './missed'
 import { LOOKBACK_DAYS, doneKey, routineStreak, toDoneMap } from './streak'
 import { loadView, saveView, type TodayView } from './timeline'
+import { useNowMinutes } from './useNowMinutes'
 import { inverseAction, makeUndo, type UndoEntry } from './undo'
 
 const DAY_NAMES = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
@@ -45,6 +48,7 @@ function useToday(): DateKey {
 export function TodayPage() {
   const today = useToday()
   const navigate = useNavigate()
+  const nowMinutes = useNowMinutes()
   const [actionFor, setActionFor] = useState<Routine | null>(null)
   const [undo, setUndo] = useState<UndoEntry | null>(null)
   const [view, setView] = useState<TodayView>(loadView)
@@ -54,6 +58,7 @@ export function TodayPage() {
   const routines = useLiveQuery(() => store.listRoutines(), [])
   const settings = useLiveQuery(() => store.getSettings(), [])
   const dayLog = useLiveQuery(() => store.getDayLog(today), [today])
+  const yesterdayLog = useLiveQuery(() => store.getDayLog(addDays(today, -1)), [today])
   const completions = useLiveQuery(
     () => store.listCompletions(addDays(today, -LOOKBACK_DAYS), addDays(weekStart(today), 6)),
     [today],
@@ -128,6 +133,8 @@ export function TodayPage() {
         />
       </header>
 
+      {morningNote(yesterdayLog) && <MorningNote text={morningNote(yesterdayLog)!} />}
+
       <WeekStrip weekStart={weekStart(today)} today={today} routines={routines} done={done} />
 
       <Hero
@@ -178,6 +185,8 @@ export function TodayPage() {
         })}
       </ul>
       )}
+
+      {showNightEntry(nowMinutes, settings.targetBed) && <NightCard />}
 
       <Sheet open={actionFor !== null} onClose={() => setActionFor(null)} title={actionFor?.name ?? ''}>
         <Button onClick={() => choose('full')}>Tam yaptım</Button>

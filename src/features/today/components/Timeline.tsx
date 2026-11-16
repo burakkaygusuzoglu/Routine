@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
 import { ROUTINE_COLORS, tint } from '../../../design/palette'
 import { RoutineIcon } from '../../../design/routineIcons'
-import { clockToMinutes, toClockTime } from '../../../domain/date'
+import { clockToMinutes } from '../../../domain/date'
 import type { CompletionStatus, Routine } from '../../../domain/types'
 import { BLOCK_PX, HOUR_PX, hourLabel, layoutBlocks, nowOffset, offsetFor, rangeHeight, timelineRange } from '../timeline'
+import { useNowMinutes } from '../useNowMinutes'
 import { CheckCircle } from './CheckCircle'
 
 export interface TimelineEntry {
@@ -18,16 +18,6 @@ interface Props {
   nextId: string | null
   onCheck: (entry: TimelineEntry) => void
   onOpen: (routine: Routine) => void
-}
-
-/** Current local clock in minutes since midnight, refreshed every 30 s. */
-function useNowMinutes(): number {
-  const [now, setNow] = useState(() => clockToMinutes(toClockTime(new Date())))
-  useEffect(() => {
-    const id = setInterval(() => setNow(clockToMinutes(toClockTime(new Date()))), 30_000)
-    return () => clearInterval(id)
-  }, [])
-  return now
 }
 
 const isDone = (s: CompletionStatus | undefined) => s === 'full' || s === 'min'
