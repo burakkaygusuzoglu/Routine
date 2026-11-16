@@ -27,17 +27,17 @@ export function WeekStrip({ weekStart, today, routines, done }: Props) {
         return (
           <li
             key={day}
-            className={`flex w-12 flex-col items-center gap-1 rounded-row py-1 ${isToday ? 'bg-raised' : ''}`}
+            className={`flex w-11 flex-col items-center gap-1 rounded-row py-1 ${isToday ? 'bg-raised' : ''}`}
             aria-current={isToday ? 'date' : undefined}
           >
             <span className={`text-caption ${isToday ? 'font-bold text-text' : 'text-muted'}`}>{name}</span>
             <ProgressRing
               value={scheduled.length ? count / scheduled.length : 0}
-              size={40}
-              thickness={4}
+              size={32}
+              thickness={3}
               label={`${name}: ${count}/${scheduled.length} tamamlandı`}
             >
-              <span className={`text-footnote ${isToday ? 'font-bold' : 'font-semibold'}`}>{Number(day.slice(8))}</span>
+              <span className={`text-caption ${isToday ? 'font-bold' : 'font-semibold'}`}>{Number(day.slice(8))}</span>
             </ProgressRing>
           </li>
         )

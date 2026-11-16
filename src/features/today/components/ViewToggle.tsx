@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { TodayView } from '../timeline'
 
 interface Props {
@@ -5,26 +6,60 @@ interface Props {
   onChange: (view: TodayView) => void
 }
 
-const OPTIONS: { value: TodayView; label: string }[] = [
-  { value: 'list', label: 'Liste' },
-  { value: 'timeline', label: 'Çizelge' },
+const ICON_PROPS = {
+  width: 22,
+  height: 22,
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.8,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  'aria-hidden': true,
+  focusable: false,
+} as const
+
+const OPTIONS: { value: TodayView; label: string; icon: ReactNode }[] = [
+  {
+    value: 'list',
+    label: 'Liste görünümü',
+    icon: (
+      <svg {...ICON_PROPS}>
+        <path d="M9 6h11M9 12h11M9 18h11" />
+        <path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01" />
+      </svg>
+    ),
+  },
+  {
+    value: 'timeline',
+    label: 'Çizelge görünümü',
+    icon: (
+      <svg {...ICON_PROPS}>
+        <path d="M6 4v16" />
+        <circle cx="6" cy="8" r="1.6" />
+        <circle cx="6" cy="16" r="1.6" />
+        <path d="M11 8h9M11 16h9" />
+      </svg>
+    ),
+  },
 ]
 
-/** Segmented control: Liste / Çizelge. */
+/** Compact icon toggle: list or timeline. Each button is 44 x 44. */
 export function ViewToggle({ value, onChange }: Props) {
   return (
-    <div role="group" aria-label="Görünüm" className="flex gap-1 rounded-control bg-surface p-1">
+    <div role="group" aria-label="Görünüm" className="flex shrink-0 rounded-control bg-surface">
       {OPTIONS.map((o) => (
         <button
           key={o.value}
           type="button"
           aria-pressed={value === o.value}
+          aria-label={o.label}
           onClick={() => onChange(o.value)}
-          className={`min-h-11 flex-1 rounded-row px-4 text-footnote ${
-            value === o.value ? 'bg-raised font-bold text-text' : 'font-semibold text-muted'
+          className={`flex size-11 items-center justify-center rounded-control ${
+            value === o.value ? 'bg-raised text-text' : 'text-muted'
           }`}
         >
-          {o.label}
+          {o.icon}
         </button>
       ))}
     </div>

@@ -7,6 +7,7 @@ import type { CompletionStatus, DateKey, Routine } from '../../domain/types'
 import { ROUTINE_COLORS } from '../../design/palette'
 import { store } from '../../data/store'
 import { Button } from './components/Button'
+import { FocusBanner } from './components/FocusBanner'
 import { Hero } from './components/Hero'
 import { RoutineRow } from './components/RoutineRow'
 import { Sheet } from './components/Sheet'
@@ -121,17 +122,28 @@ export function TodayPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-3 p-4">
-      <header className="flex items-end justify-between gap-3">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-footnote text-muted">{dateLabel(today)}</p>
           <h1 className="text-large-title font-bold">Bugün</h1>
         </div>
-        <WakeChip
-          wokeAt={dayLog.wokeAt}
-          onWake={() => void store.saveDayLog({ ...dayLog, wokeAt: toClockTime(new Date()) })}
-          onChange={(t) => void store.saveDayLog({ ...dayLog, wokeAt: t })}
-        />
+        <div className="flex items-center gap-2">
+          <WakeChip
+            wokeAt={dayLog.wokeAt}
+            onWake={() => void store.saveDayLog({ ...dayLog, wokeAt: toClockTime(new Date()) })}
+            onChange={(t) => void store.saveDayLog({ ...dayLog, wokeAt: t })}
+          />
+          <ViewToggle
+            value={view}
+            onChange={(v) => {
+              setView(v)
+              saveView(v)
+            }}
+          />
+        </div>
       </header>
+
+      <FocusBanner routines={routines} />
 
       {morningNote(yesterdayLog) && <MorningNote text={morningNote(yesterdayLog)!} />}
 
@@ -143,14 +155,6 @@ export function TodayPage() {
         next={next}
         nextTime={next ? routineTime(next, dayLog.wokeAt, settings) : null}
         onStart={() => next && navigate(focusPath(next.id))}
-      />
-
-      <ViewToggle
-        value={view}
-        onChange={(v) => {
-          setView(v)
-          saveView(v)
-        }}
       />
 
       {view === 'timeline' ? (

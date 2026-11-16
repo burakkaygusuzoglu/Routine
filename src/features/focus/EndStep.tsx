@@ -9,9 +9,11 @@ export interface EndStepProps {
   preselected: 'full' | 'min'
   onChoose: (status: 'full' | 'min') => void
   saving: boolean
+  /** Called when the user leaves without saving. */
+  onDiscard: () => void
 }
 
-export function EndStep({ routine, minutes, drifts, preselected, onChoose, saving }: EndStepProps) {
+export function EndStep({ routine, minutes, drifts, preselected, onChoose, saving, onDiscard }: EndStepProps) {
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col gap-6 px-4 pt-[calc(var(--safe-top)+48px)] pb-[calc(var(--safe-bottom)+16px)]">
       <div className="flex flex-col gap-2">
@@ -48,6 +50,7 @@ export function EndStep({ routine, minutes, drifts, preselected, onChoose, savin
         </Button>
         <a
           href="#/"
+          onClick={onDiscard}
           className="inline-flex min-h-[var(--tap)] items-center justify-center text-body text-muted focus-visible:outline-2 focus-visible:outline-accent"
         >
           Kaydetmeden çık

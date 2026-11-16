@@ -17,6 +17,12 @@ export interface RunningStepProps {
   startMs: number
   plannedMin: number
   intent: string
+  /** Drifts already counted when the session is resumed. */
+  initialDrifts?: number
+  /** Called whenever the drift count changes, so it can be stored. */
+  onDriftsChange?: (drifts: number) => void
+  /** Leave the screen and let the session keep running in the background. */
+  onLeave: () => void
   /** Called once, when time is up or "Bitir" is pressed. */
   onFinish: (result: { endMs: number; drifts: number }) => void
 }
@@ -48,7 +54,16 @@ function useWakeLock() {
   }, [])
 }
 
-export function RunningStep({ routine, startMs, plannedMin, intent, onFinish }: RunningStepProps) {
+export function RunningStep({
+  routine,
+  startMs,
+  plannedMin,
+  intent,
+  initialDrifts = 0,
+  onDriftsChange,
+  onLeave,
+  onFinish,
+}: RunningStepProps) {
   const color = ROUTINE_COLORS[routine.color]
   const [now, setNow] = useState(() => Date.now())
   const [dives, setDives] = useState(0)
@@ -56,11 +71,12 @@ export function RunningStep({ routine, startMs, plannedMin, intent, onFinish }: 
   const [parkOpen, setParkOpen] = useState(false)
   const [parkText, setParkText] = useState('')
   const [parkStatus, setParkStatus] = useState('')
+  const [leaveOpen, setLeaveOpen] = useState(false)
 
   // Check-in state machine lives in refs so the timer callback never reads stale values.
-  const nextCheckIn = useRef(nextCheckInAt(startMs, Math.random()))
+  const nextCheckIn = useRef(nextCheckInAt(Math.max(startMs, Date.now()), Math.random()))
   const shownAt = useRef<number | null>(null)
-  const drifts = useRef(0)
+  const drifts = useRef(initialDrifts)
   const finished = useRef(false)
 
   useWakeLock()
@@ -80,6 +96,7 @@ export function RunningStep({ routine, startMs, plannedMin, intent, onFinish }: 
       }
       if (shownAt.current !== null && checkInExpired(shownAt.current, t)) {
         drifts.current += 1
+        onDriftsChange?.(drifts.current)
         shownAt.current = null
         nextCheckIn.current = nextCheckInAt(t, Math.random())
         setCheckInShown(false)
@@ -91,7 +108,7 @@ export function RunningStep({ routine, startMs, plannedMin, intent, onFinish }: 
     tick()
     const timer = window.setInterval(tick, 500)
     return () => window.clearInterval(timer)
-  }, [startMs, plannedMin, onFinish])
+  }, [startMs, plannedMin, onFinish, onDriftsChange])
 
   function answerCheckIn() {
     shownAt.current = null
@@ -121,6 +138,13 @@ export function RunningStep({ routine, startMs, plannedMin, intent, onFinish }: 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-4 pt-[calc(var(--safe-top)+8px)] pb-[calc(var(--safe-bottom)+16px)]">
       <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => setLeaveOpen(true)}
+          className="min-h-[var(--tap)] min-w-[var(--tap)] cursor-pointer border-0 bg-transparent pr-2 text-left text-body text-muted focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          Geri
+        </button>
         <span className="text-footnote text-muted">Odak seansı · {plannedMin} dk</span>
         <button
           type="button"
@@ -180,6 +204,7 @@ export function RunningStep({ routine, startMs, plannedMin, intent, onFinish }: 
           onClick={() => {
             // A self-reported drift is saved with the session, like a missed check-in.
             drifts.current += 1
+            onDriftsChange?.(drifts.current)
             setDives((n) => n + 1)
           }}
           className="flex min-h-[var(--tap)] cursor-pointer flex-col items-center gap-1 rounded-card border border-line bg-surface px-2 py-4 text-text focus-visible:outline-2 focus-visible:outline-accent"
@@ -199,6 +224,22 @@ export function RunningStep({ routine, startMs, plannedMin, intent, onFinish }: 
           <span className="text-footnote text-muted">aklına geleni not al</span>
         </button>
       </div>
+
+      <Sheet open={leaveOpen} onClose={() => setLeaveOpen(false)} title="Seans arka planda sürsün mü?">
+        <div className="flex flex-col gap-3">
+          <p className="m-0 text-body text-muted">Sürsün dersen süre işler, Bugün sayfasından devam edersin.</p>
+          <Button onClick={onLeave}>Sürsün</Button>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setLeaveOpen(false)
+              finishNow()
+            }}
+          >
+            Seansı bitir
+          </Button>
+        </div>
+      </Sheet>
 
       <Sheet open={parkOpen} onClose={() => setParkOpen(false)} title="Park et">
         <form
