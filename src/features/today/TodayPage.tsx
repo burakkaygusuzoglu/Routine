@@ -7,6 +7,7 @@ import type { CompletionStatus, DateKey, Routine } from '../../domain/types'
 import { ROUTINE_COLORS } from '../../design/palette'
 import { store } from '../../data/store'
 import { Button } from './components/Button'
+import { FocusBanner } from './components/FocusBanner'
 import { Hero } from './components/Hero'
 import { RoutineRow } from './components/RoutineRow'
 import { Sheet } from './components/Sheet'
@@ -141,6 +142,8 @@ export function TodayPage() {
           />
         </div>
       </header>
+
+      <FocusBanner routines={routines} />
 
       {morningNote(yesterdayLog) && <MorningNote text={morningNote(yesterdayLog)!} />}
 
