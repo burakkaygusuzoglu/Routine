@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState, type ReactNode } from 'react'
 import { ROUTINE_COLORS } from '../../design/palette'
 import { RoutineIcon } from '../../design/routineIcons'
-import { useAccount } from '../../data/account'
+import { deleteAllData, useAccount, type SyncKind } from '../../data/account'
 import { store } from '../../data/store'
 import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
 import type { Backup, Routine } from '../../domain/types'
@@ -16,6 +16,8 @@ import {
   CALENDAR_EMPTY_REASON,
   CALENDAR_FILE_NAME,
   calendarOutdated,
+  DELETE_CONFIRM_WORD,
+  isDeleteConfirmed,
   lastBackupText,
   lastCalendarExportText,
   moveId,
@@ -34,6 +36,13 @@ function Group({ title, children, footer }: { title: string; children: ReactNode
       {footer && <div className="px-1 text-footnote text-muted">{footer}</div>}
     </section>
   )
+}
+
+const SYNC_DOT: Record<SyncKind, string> = {
+  synced: 'bg-routine-green',
+  syncing: 'bg-routine-amber',
+  offline: 'bg-muted',
+  error: 'bg-danger',
 }
 
 const ICON_BTN =
@@ -60,6 +69,9 @@ export function SettingsPage() {
   const [editing, setEditing] = useState<Editing>(null)
   const [pending, setPending] = useState<Backup | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<'warn' | 'confirm' | null>(null)
+  const [typed, setTyped] = useState('')
+  const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const active = (all ?? []).filter((r) => r.archivedAt === null)
@@ -133,6 +145,26 @@ export function SettingsPage() {
       })
       return 'Takvim dosyası indirildi.'
     })
+
+  const closeDelete = () => {
+    setDeleting(null)
+    setTyped('')
+  }
+
+  const confirmDelete = async () => {
+    setBusy(true)
+    setMessage(null)
+    try {
+      await deleteAllData()
+      closeDelete()
+      setMessage('Tüm verilerin silindi.')
+    } catch (e) {
+      setMessage(sheetErrorText(e))
+      closeDelete()
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const hint = settings ? backupHint(settings.lastBackupAt, new Date()) : null
   const account = useAccount()
@@ -256,13 +288,32 @@ export function SettingsPage() {
               {settings?.displayName && <span className="truncate text-body font-semibold">{settings.displayName}</span>}
               <span className={`truncate ${settings?.displayName ? 'text-footnote text-muted' : 'text-body'}`}>{account.email ?? 'Giriş yapılmadı'}</span>
               {account.evalDaysLeft !== null && (
-                <span className="text-footnote text-muted">Deneme hesabı · {account.evalDaysLeft} gün kaldı</span>
+                <>
+                  <span className="text-footnote text-muted">Deneme hesabı · {account.evalDaysLeft} gün kaldı</span>
+                  <span className="text-footnote text-muted">
+                    Kalıcı hesap için manager.dexie.cloud üzerinden hesabını üretim kullanıcısına çevir.
+                  </span>
+                </>
               )}
             </div>
             <Button variant="danger" onClick={() => void account.logout()}>
               Çıkış yap
             </Button>
           </div>
+          {account.sync && (
+            <div className="flex items-center justify-between gap-3 px-2">
+              <div className="flex min-w-0 flex-col">
+                <span role="status" className="flex items-center gap-2 text-body">
+                  <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${SYNC_DOT[account.sync.kind]}`} />
+                  {account.sync.text}
+                </span>
+                {account.sync.detail && <span className="text-footnote text-muted">{account.sync.detail}</span>}
+              </div>
+              <Button onClick={() => void account.syncNow()} disabled={account.sync.kind === 'syncing'}>
+                Şimdi eşitle
+              </Button>
+            </div>
+          )}
         </Group>
       )}
 
@@ -287,6 +338,25 @@ export function SettingsPage() {
         </Group>
       )}
 
+      <Group title="Hakkında">
+        <div className="flex min-h-[var(--tap)] items-center justify-between gap-3 px-2">
+          <span className="text-body">Sürüm</span>
+          <span className="text-body text-muted">{import.meta.env.VITE_APP_VERSION ?? 'dev'}</span>
+        </div>
+        <a
+          href="https://github.com/burakkaygusuzoglu/Routine"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex min-h-[var(--tap)] items-center rounded-row px-2 text-body font-semibold text-accent"
+        >
+          Kaynak kod
+        </a>
+      </Group>
+
+      <Button variant="danger" onClick={() => setDeleting('warn')}>
+        Tüm verilerimi sil
+      </Button>
+
       {editing && (
         <RoutineEditSheet
           key={editing.routine?.id ?? 'new'}
@@ -294,6 +364,49 @@ export function SettingsPage() {
           all={all ?? []}
           onClose={() => setEditing(null)}
         />
+      )}
+
+      {deleting === 'warn' && (
+        <Sheet open onClose={closeDelete} title="Tüm verilerimi sil">
+          <div className="flex flex-col gap-3">
+            <p className="text-body">
+              Rutinlerin, işaretlerin, notların ve günlük değerlendirmelerin
+              {account.cloud ? ' giriş yaptığın tüm cihazlarda' : ''} silinecek. Bu geri alınamaz.
+            </p>
+            <p className="text-body text-muted">Önce bir yedek indirmeni öneririz.</p>
+            <Button onClick={() => void download()}>Önce yedek indir</Button>
+            {message && (
+              <p role="status" className="text-footnote text-muted">
+                {message}
+              </p>
+            )}
+            <Button variant="danger" onClick={() => setDeleting('confirm')}>
+              Devam et
+            </Button>
+          </div>
+        </Sheet>
+      )}
+
+      {deleting === 'confirm' && (
+        <Sheet open onClose={closeDelete} title="Silmeyi onayla">
+          <div className="flex flex-col gap-3">
+            <label htmlFor="delete-confirm" className="text-body">
+              Onaylamak için {DELETE_CONFIRM_WORD} yaz.
+            </label>
+            <input
+              id="delete-confirm"
+              type="text"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              autoComplete="off"
+              autoCapitalize="characters"
+              className="min-h-[var(--tap)] rounded-control border border-field-line bg-bg px-3 text-body"
+            />
+            <Button variant="danger" disabled={!isDeleteConfirmed(typed) || busy} onClick={() => void confirmDelete()}>
+              {busy ? 'Siliniyor…' : 'Her şeyi sil'}
+            </Button>
+          </div>
+        </Sheet>
       )}
 
       {pending && (
