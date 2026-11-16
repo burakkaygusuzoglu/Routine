@@ -23,3 +23,12 @@ export function minTone(color: RoutineColor): string {
 export function tint(color: RoutineColor): string {
   return `${ROUTINE_COLORS[color]}24`
 }
+
+/**
+ * Routine colour for text and icons on the ground. A CSS variable reference:
+ * identical to the routine colour in dark, a darker shade in light so text
+ * keeps 4.5:1. Use for text and thin strokes; fills keep ROUTINE_COLORS.
+ */
+export function routineInk(color: RoutineColor): string {
+  return `var(--color-routine-${color}-ink)`
+}
