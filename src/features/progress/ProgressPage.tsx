@@ -10,6 +10,7 @@ import { RoutineSheet } from './components/RoutineSheet'
 import { IdentityVotes } from './components/IdentityVotes'
 import { nextMilestoneText, reachedMilestones } from './milestones'
 import { hasAnyIdentity, identityVotes } from './identity'
+import { MonthView } from './components/MonthView'
 import { WeekBars } from './components/WeekBars'
 
 const WEEKS = 12
@@ -81,6 +82,7 @@ export function ProgressPage() {
       {derived && hasHistory(data?.completions) && (
         <>
           <WeekBars days={derived.days} today={today} average={derived.average} />
+          <MonthView routines={data!.routines} completions={data!.completions} today={today} />
           <div className="grid grid-cols-2 gap-3">
             {derived.cards.map(({ routine, streak, cells }) => (
               <RoutineCard
