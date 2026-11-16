@@ -19,7 +19,7 @@ import { Timeline } from './components/Timeline'
 import { ViewToggle } from './components/ViewToggle'
 import { WeekStrip } from './components/WeekStrip'
 import type { CellState } from './components/DayDots'
-import { lastCelebrated, markCelebrated, shouldCelebrate, type Progress } from './celebration'
+import { completedJustNow, lastCelebrated, markCelebrated, shouldCelebrate, type Progress } from './celebration'
 import { focusPath, morningNote, showNightEntry } from './entries'
 import { missedYesterday } from './missed'
 import { LOOKBACK_DAYS, doneKey, routineStreak, toDoneMap } from './streak'
@@ -78,12 +78,12 @@ export function TodayPage() {
   useEffect(() => {
     if (!loaded || !progressNow) return
     const prev = prevProgress.current?.day === today ? prevProgress.current.progress : null
-    if (shouldCelebrate(prev, progressNow, today, lastCelebrated())) {
+    if (shouldCelebrate(prev, progressNow, today, lastCelebrated(), completedJustNow(completions ?? [], today, Date.now()))) {
       markCelebrated(today)
       setCelebrating(progressNow)
     }
     prevProgress.current = { day: today, progress: progressNow }
-  }, [loaded, progressNow, today])
+  }, [loaded, progressNow, today, completions])
 
   if (!routines || !settings || !dayLog || !completions) return null
 
