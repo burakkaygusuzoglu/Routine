@@ -1,17 +1,19 @@
 import { memo } from 'react'
 import { ROUTINE_COLORS, type RoutineColor } from '../../../design/palette'
+import { RoutineIcon, type RoutineIconName } from '../../../design/routineIcons'
 import type { CellState } from '../../../domain/streak'
 import { HeatGrid } from './HeatGrid'
 
 interface RoutineCardProps {
   name: string
   color: RoutineColor
+  icon?: RoutineIconName
   streak: number
   cells: CellState[]
   onOpen: () => void
 }
 
-export const RoutineCard = memo(function RoutineCard({ name, color, streak, cells, onOpen }: RoutineCardProps) {
+export const RoutineCard = memo(function RoutineCard({ name, color, icon, streak, cells, onOpen }: RoutineCardProps) {
   const streakText = `${streak} gün seri`
   return (
     <button
@@ -21,7 +23,12 @@ export const RoutineCard = memo(function RoutineCard({ name, color, streak, cell
       className="flex min-h-11 w-full flex-col gap-2 rounded-card bg-surface p-4 text-left focus-visible:outline-2 focus-visible:outline-accent"
     >
       <span className="block">
-        <span className="block text-footnote font-semibold text-text">{name}</span>
+        <span className="flex items-center gap-2 text-footnote font-semibold text-text">
+          <span aria-hidden="true" className="shrink-0" style={{ color: ROUTINE_COLORS[color] }}>
+            <RoutineIcon name={icon} size={16} />
+          </span>
+          <span className="min-w-0 truncate">{name}</span>
+        </span>
         <span className="block text-footnote font-semibold" style={{ color: ROUTINE_COLORS[color] }}>
           {streakText}
         </span>

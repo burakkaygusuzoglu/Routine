@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState, type ReactNode } from 'react'
 import { ROUTINE_COLORS } from '../../design/palette'
+import { RoutineIcon } from '../../design/routineIcons'
 import { useAccount } from '../../data/account'
 import { store } from '../../data/store'
 import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
@@ -147,11 +148,9 @@ export function SettingsPage() {
               onClick={() => setEditing({ routine: r })}
               className="flex min-h-[var(--tap)] flex-1 items-center gap-3 rounded-row px-2 text-left"
             >
-              <span
-                aria-hidden="true"
-                className="size-3 shrink-0 rounded-full"
-                style={{ backgroundColor: ROUTINE_COLORS[r.color] }}
-              />
+              <span aria-hidden="true" className="shrink-0" style={{ color: ROUTINE_COLORS[r.color] }}>
+                <RoutineIcon name={r.icon} size={20} />
+              </span>
               <span className="min-w-0">
                 <span className="block truncate text-body font-semibold">{r.name}</span>
                 <span className="block truncate text-footnote text-muted">{timeSummary(r)}</span>
@@ -270,11 +269,9 @@ export function SettingsPage() {
         <Group title="Arşiv">
           {archived.map((r) => (
             <div key={r.id} className="flex items-center gap-3 px-2">
-              <span
-                aria-hidden="true"
-                className="size-3 shrink-0 rounded-full"
-                style={{ backgroundColor: ROUTINE_COLORS[r.color] }}
-              />
+              <span aria-hidden="true" className="shrink-0" style={{ color: ROUTINE_COLORS[r.color] }}>
+                <RoutineIcon name={r.icon} size={20} />
+              </span>
               <span className="min-w-0 flex-1 truncate text-body text-muted">{r.name}</span>
               <button
                 type="button"

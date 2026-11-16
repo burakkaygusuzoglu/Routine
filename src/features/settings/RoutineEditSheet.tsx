@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { ROUTINE_COLORS, ROUTINE_COLOR_KEYS, type RoutineColor } from '../../design/palette'
+import { ROUTINE_ICON_LABELS, ROUTINE_ICON_NAMES, RoutineIcon } from '../../design/routineIcons'
 import { store } from '../../data/store'
 import type { AnchorType, Routine } from '../../domain/types'
 import { Button } from './components/Button'
@@ -10,6 +11,7 @@ import { Switch } from './components/Switch'
 import {
   DAY_LONG,
   DAY_SHORT,
+  MAX_IDENTITY_LENGTH,
   applyDraft,
   createRoutine,
   draftFromRoutine,
@@ -58,6 +60,7 @@ export function RoutineEditSheet({ routine, all, onClose }: Props) {
   const timeId = useId()
   const offsetId = useId()
   const minId = useId()
+  const identityId = useId()
 
   const set = <K extends keyof RoutineDraft>(key: K, value: RoutineDraft[K]) => setDraft((d) => ({ ...d, [key]: value }))
   const errors = validateDraft(draft)
@@ -131,6 +134,43 @@ export function RoutineEditSheet({ routine, all, onClose }: Props) {
               </button>
             ))}
           </div>
+          <p className="mt-4 text-footnote font-semibold text-muted" id={`${nameId}-icon`}>
+            İkon
+          </p>
+          <div role="group" aria-labelledby={`${nameId}-icon`} className="mt-2 grid grid-cols-4">
+            {ROUTINE_ICON_NAMES.map((n) => {
+              const on = draft.icon === n
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  aria-label={ROUTINE_ICON_LABELS[n]}
+                  aria-pressed={on}
+                  onClick={() => set('icon', n)}
+                  className="flex min-h-[var(--tap)] items-center justify-center"
+                >
+                  <span
+                    className={`flex size-10 items-center justify-center rounded-control ${on ? 'text-on-accent' : 'bg-bg text-muted'}`}
+                    style={on ? { backgroundColor: ROUTINE_COLORS[draft.color] } : undefined}
+                  >
+                    <RoutineIcon name={n} size={22} />
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <label htmlFor={identityId} className="mt-4 block text-footnote font-semibold text-muted">
+            Bu rutinle nasıl biri oluyorsun?
+          </label>
+          <input
+            id={identityId}
+            value={draft.identity}
+            onChange={(e) => set('identity', e.target.value)}
+            maxLength={MAX_IDENTITY_LENGTH}
+            placeholder="örn. disiplinli biri"
+            className={`${FIELD} mt-2`}
+            autoComplete="off"
+          />
         </section>
 
         <section className="rounded-card bg-surface p-4">

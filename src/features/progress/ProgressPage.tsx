@@ -7,6 +7,8 @@ import type { Completion } from '../../domain/types'
 import { Card } from './components/Card'
 import { RoutineCard } from './components/RoutineCard'
 import { RoutineSheet } from './components/RoutineSheet'
+import { IdentityVotes } from './components/IdentityVotes'
+import { hasAnyIdentity, identityVotes } from './identity'
 import { WeekBars } from './components/WeekBars'
 
 const WEEKS = 12
@@ -51,6 +53,8 @@ export function ProgressPage() {
       cards,
       days: weekSummary(data.routines, data.completions, thisWeek, today),
       average: completionRate(data.routines, data.completions, thisWeek, today),
+      votes: identityVotes(data.routines, data.completions, thisWeek, addDays(thisWeek, 6)),
+      hasIdentity: hasAnyIdentity(data.routines),
     }
   }, [data, today, thisWeek, gridFrom, gridTo])
 
@@ -62,6 +66,8 @@ export function ProgressPage() {
         <p className="text-footnote text-muted">Son {WEEKS} hafta</p>
         <h1 className="text-large-title font-bold">İlerleme</h1>
       </header>
+
+      {derived && <IdentityVotes rows={derived.votes} hasIdentity={derived.hasIdentity} />}
 
       {derived && !hasHistory(data?.completions) && (
         <Card>
@@ -80,6 +86,7 @@ export function ProgressPage() {
                 key={routine.id}
                 name={routine.name}
                 color={routine.color}
+                icon={routine.icon}
                 streak={streak}
                 cells={cells}
                 onOpen={() => setOpenId(routine.id)}
