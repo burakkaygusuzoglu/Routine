@@ -9,17 +9,19 @@ interface RoutineCardProps {
   color: RoutineColor
   icon?: RoutineIconName
   streak: number
+  /** "66 güne 12 gün", or null when every milestone is reached. */
+  nextText?: string | null
   cells: CellState[]
   onOpen: () => void
 }
 
-export const RoutineCard = memo(function RoutineCard({ name, color, icon, streak, cells, onOpen }: RoutineCardProps) {
+export const RoutineCard = memo(function RoutineCard({ name, color, icon, streak, nextText = null, cells, onOpen }: RoutineCardProps) {
   const streakText = `${streak} gün seri`
   return (
     <button
       type="button"
       onClick={onOpen}
-      aria-label={`${name}, ${streakText}. Ayrıntıları aç`}
+      aria-label={`${name}, ${streakText}${nextText ? `, sonraki hedef ${nextText}` : ''}. Ayrıntıları aç`}
       className="flex min-h-11 w-full flex-col gap-2 rounded-card bg-surface p-4 text-left focus-visible:outline-2 focus-visible:outline-accent"
     >
       <span className="block">
@@ -32,6 +34,7 @@ export const RoutineCard = memo(function RoutineCard({ name, color, icon, streak
         <span className="block text-footnote font-semibold" style={{ color: ROUTINE_COLORS[color] }}>
           {streakText}
         </span>
+        {nextText && <span className="block text-caption text-muted">{nextText}</span>}
       </span>
       <span className="block" aria-hidden="true">
         <HeatGrid cells={cells} color={color} label="" />
