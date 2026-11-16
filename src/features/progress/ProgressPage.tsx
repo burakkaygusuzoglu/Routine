@@ -86,6 +86,7 @@ export function ProgressPage() {
                 key={routine.id}
                 name={routine.name}
                 color={routine.color}
+                icon={routine.icon}
                 streak={streak}
                 cells={cells}
                 onOpen={() => setOpenId(routine.id)}
