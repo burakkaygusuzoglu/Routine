@@ -51,3 +51,29 @@ day log, or settings change, and on every app start. Window: now to now + 7 days
 - Routines already done today (full or min) or skipped get no items today.
 - Nothing between target bedtime and target wake except routines anchored to
   bedtime.
+
+## Payload (what the server sends, what the service worker reads)
+
+Each Web Push message is aes128gcm encrypted (RFC 8291) with a VAPID header
+(RFC 8292, `Authorization: vapid t=..., k=...`), TTL 900 s (60 s for the test),
+`Urgency: high`. The decrypted plaintext is UTF-8 JSON with exactly these keys,
+copied from the `Item`:
+
+    { "title": string, "body": string, "tag": string, "url": string }
+
+`url` is a hash route such as `#/`, resolved by the service worker against
+`/Routine/`. `POST /v1/test` sends
+`{"title":"Routine","body":"Bildirimler çalışıyor","tag":"routine-test","url":"#/settings"}`.
+
+## Server details (clarifications)
+
+- `/v1/subscribe` and `/v1/schedule` claim an unknown `accountId`; `/v1/unsubscribe`
+  and `/v1/test` never create an account (unknown id: 204 and `{ "sent": 0 }`).
+- Errors are `{ "error": "<code>" }`: 400 invalid input or limit exceeded, 403 wrong
+  secret or origin, 413 body over 64 KB.
+- `PUT /v1/schedule` rejects items more than 14 days ahead and silently drops items
+  that are already more than 15 minutes late. Item ids must be unique.
+- Field limits: id 100, title 200, body 500, tag 100, url 200 characters; `url`
+  must start with `#/`.
+- A cron run sends at most about 45 pushes (free plan subrequest limit); the rest
+  is sent in the next minute while still inside the 15 minute window.

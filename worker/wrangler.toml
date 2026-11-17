@@ -1,0 +1,20 @@
+name = "routine-push"
+main = "src/index.ts"
+compatibility_date = "2026-06-01"
+workers_dev = true
+
+[triggers]
+crons = ["* * * * *"]
+
+# The real namespace id is substituted by .github/workflows/worker.yml from the
+# repository variable KV_NAMESPACE_ID. Do not commit the real id here.
+[[kv_namespaces]]
+binding = "PUSH"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# VAPID_PUBLIC_KEY and VAPID_SUBJECT are overridden at deploy time with
+# `--var` from GitHub repository variables. The private key is a secret
+# (`wrangler secret put VAPID_PRIVATE_KEY`).
+[vars]
+VAPID_PUBLIC_KEY = ""
+VAPID_SUBJECT = "mailto:change-me@example.com"
