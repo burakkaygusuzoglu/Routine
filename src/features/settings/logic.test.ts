@@ -10,6 +10,7 @@ import {
   isChanged,
   isDeleteConfirmed,
   isValid,
+  pushStateText,
   lastBackupText,
   moveId,
   newDraft,
@@ -209,5 +210,20 @@ describe('isDeleteConfirmed', () => {
     expect(isDeleteConfirmed(' sil ')).toBe(true)
     expect(isDeleteConfirmed('SIL')).toBe(true)
     expect(isDeleteConfirmed('')).toBe(false)
+  })
+})
+
+describe('pushStateText', () => {
+  it('says push is not set up when the build has no push server', () => {
+    expect(pushStateText('unsupported', false)).toBe('Bildirimler henüz kurulmadı.')
+  })
+  it('describes each device state', () => {
+    expect(pushStateText('on', true)).toBe('Bu cihazda açık')
+    expect(pushStateText('default', true)).toBe('Kapalı')
+    expect(pushStateText('granted-off', true)).toBe('Kapalı')
+    expect(pushStateText('denied', true)).toBe('İzin verilmedi: telefon ayarlarından aç')
+    expect(pushStateText('needs-install', true)).toBe("iPhone'da önce Ana Ekrana Ekle, sonra buradan aç")
+    expect(pushStateText('unsupported', true)).toBe('Bu tarayıcı bildirimleri desteklemiyor.')
+    expect(pushStateText(null, true)).toBe('')
   })
 })

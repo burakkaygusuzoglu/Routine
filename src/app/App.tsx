@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { openDatabase, useAuthState } from '../data/auth'
+import { usePushSync } from '../data/push'
 import { store } from '../data/store'
 import { AuthScreen, PENDING_NAME_KEY } from '../features/auth/AuthScreen'
 import { FocusPage } from '../features/focus/FocusPage'
@@ -24,6 +25,12 @@ const NAV: NavItem[] = [
 /** Keeps the home-screen icon badge in sync; mounted only once signed in. */
 function BadgeSync() {
   useAppBadge()
+  return null
+}
+
+/** Keeps the push reminder schedule on the server current; mounted only once signed in. */
+function PushSync() {
+  usePushSync()
   return null
 }
 
@@ -134,6 +141,7 @@ export function App() {
   return (
     <HashRouter>
       <BadgeSync />
+      <PushSync />
       <Routes>
         {/* Full-screen modes: no tab bar, no sidebar. */}
         <Route path="/focus/:routineId" element={<FocusPage />} />

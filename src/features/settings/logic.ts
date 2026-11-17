@@ -1,6 +1,7 @@
 import type { RoutineColor } from '../../design/palette'
 import { DEFAULT_ROUTINE_ICON, type RoutineIconName } from '../../design/routineIcons'
 import { fromDateKey, toDateKey, todayKey } from '../../domain/date'
+import type { PushState } from '../../data/push'
 import type { AnchorType, Backup, ClockTime, Routine } from '../../domain/types'
 
 /** Short weekday names, 0 = Monday ... 6 = Sunday. */
@@ -229,7 +230,26 @@ export function calendarOutdated(saved: { signature: string } | undefined, curre
 }
 
 export const CALENDAR_FILE_NAME = 'routine.ics'
-export const CALENDAR_EMPTY_REASON = 'Takvim alarmı açık bir rutin yok. Rutini düzenlerken "Takvim alarmı"nı aç.'
+export const CALENDAR_EMPTY_REASON = 'Hatırlatması açık bir rutin yok. Rutini düzenlerken "Hatırlatma"yı aç.'
+
+/** The state line of the Bildirimler group (Turkish, never blaming). */
+export function pushStateText(state: PushState | null, configured: boolean): string {
+  if (!configured) return 'Bildirimler henüz kurulmadı.'
+  switch (state) {
+    case null:
+      return ''
+    case 'unsupported':
+      return 'Bu tarayıcı bildirimleri desteklemiyor.'
+    case 'needs-install':
+      return "iPhone'da önce Ana Ekrana Ekle, sonra buradan aç"
+    case 'denied':
+      return 'İzin verilmedi: telefon ayarlarından aç'
+    case 'on':
+      return 'Bu cihazda açık'
+    default:
+      return 'Kapalı'
+  }
+}
 
 /** The word that must be typed to confirm deleting all data. */
 export const DELETE_CONFIRM_WORD = 'SİL'

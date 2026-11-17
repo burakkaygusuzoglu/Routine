@@ -7,8 +7,8 @@ import { VitePWA } from 'vite-plugin-pwa'
 // GitHub Pages serves the app under /Routine/.
 // Content Security Policy for the production build only (dev needs inline
 // scripts for hot reload). Network access is limited to this site and the
-// Dexie Cloud sync service.
-const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.dexie.cloud wss://*.dexie.cloud; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+// Dexie Cloud sync service and the push reminder server (Cloudflare Workers).
+const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://*.dexie.cloud wss://*.dexie.cloud https://*.workers.dev; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
 
 const securityHeaders: Plugin = {
   name: 'routine-security-meta',
@@ -51,6 +51,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
         navigateFallback: '/Routine/index.html',
         cleanupOutdatedCaches: true,
+        // Push and notification-click handlers (public/push-sw.js).
+        importScripts: ['push-sw.js'],
       },
     }),
   ],
