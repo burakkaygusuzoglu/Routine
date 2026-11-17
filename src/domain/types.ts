@@ -66,6 +66,11 @@ export interface Settings {
   displayName?: string
   /** Last iPhone Calendar export: when, and a signature of the exported schedule. */
   calendarExport?: { at: string; signature: string }
+  /**
+   * Push reminders, shared by every device of the account (settings sync).
+   * accountId and secret are random and identify the account to the push server.
+   */
+  push?: { accountId: string; secret: string; followUp: boolean }
 }
 
 /** Faz 3. */
