@@ -267,10 +267,10 @@ export function RoutineEditSheet({ routine, all, onClose }: Props) {
 
         <section className="flex items-center justify-between gap-3 rounded-card bg-surface p-4">
           <div>
-            <p className="text-body font-semibold">Takvim alarmı</p>
-            <p className="text-footnote text-muted">Saatinde iPhone Takvim çalar</p>
+            <p className="text-body font-semibold">Hatırlatma</p>
+            <p className="text-footnote text-muted">Saatinde bildirim gelir</p>
           </div>
-          <Switch label="Takvim alarmı" checked={draft.calendarAlarm} onChange={(v) => set('calendarAlarm', v)} />
+          <Switch label="Hatırlatma" checked={draft.calendarAlarm} onChange={(v) => set('calendarAlarm', v)} />
         </section>
 
         {error && (

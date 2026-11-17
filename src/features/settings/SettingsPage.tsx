@@ -4,12 +4,14 @@ import { routineInk } from '../../design/palette'
 import { RoutineIcon } from '../../design/routineIcons'
 import { ThemePicker } from '../../design/ThemePicker'
 import { deleteAllData, useAccount, type SyncKind } from '../../data/account'
+import { disablePush, enablePush, pushConfigured, sendTest, setFollowUp, usePushState } from '../../data/push'
 import { store } from '../../data/store'
 import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
 import type { Backup, Routine } from '../../domain/types'
 import { Button } from './components/Button'
 import { ChevronDown, ChevronUp, Plus } from './components/icons'
 import { Sheet } from './components/Sheet'
+import { Switch } from './components/Switch'
 import { RoutineEditSheet } from './RoutineEditSheet'
 import {
   backupFileName,
@@ -23,6 +25,7 @@ import {
   lastCalendarExportText,
   moveId,
   parseBackup,
+  pushStateText,
   timeSummary,
 } from './logic'
 import { sheetErrorText } from './messages'
@@ -74,6 +77,9 @@ export function SettingsPage() {
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const { state: pushState, refresh: refreshPush } = usePushState()
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushMessage, setPushMessage] = useState<string | null>(null)
 
   const active = (all ?? []).filter((r) => r.archivedAt === null)
   const archived = (all ?? []).filter((r) => r.archivedAt !== null)
@@ -146,6 +152,26 @@ export function SettingsPage() {
       })
       return 'Takvim dosyası indirildi.'
     })
+
+  async function runPush(task: () => Promise<string | void>) {
+    setPushBusy(true)
+    setPushMessage(null)
+    try {
+      const done = await task()
+      if (done) setPushMessage(done)
+    } catch (e) {
+      setPushMessage(sheetErrorText(e))
+    } finally {
+      await refreshPush()
+      setPushBusy(false)
+    }
+  }
+
+  const testText = (sent: number) =>
+    sent > 0 ? 'Deneme bildirimi gönderildi.' : 'Bildirim gönderildi ama hiçbir cihaza ulaşmadı. Bildirimleri kapatıp yeniden açmayı dene.'
+
+  const configured = pushConfigured()
+  const canToggle = pushState === 'default' || pushState === 'granted-off' || pushState === 'on'
 
   const closeDelete = () => {
     setDeleting(null)
@@ -232,29 +258,69 @@ export function SettingsPage() {
         </div>
       </Group>
 
-      <Group
-        title="Hatırlatmalar"
-        footer={
+      <Group title="Bildirimler">
+        <p role="status" className="px-2 py-1 text-body">
+          {pushStateText(pushState, configured)}
+        </p>
+        {configured && canToggle && (
           <>
-            <p>
-              iPhone'da dosyayı açınca 'Tümünü Ekle' de. Saat değiştirirsen yeniden aktar; önce eski 'Routine'
-              etkinliklerini sil.
-            </p>
-            {settings?.calendarExport && <p>{lastCalendarExportText(settings.calendarExport.at)}</p>}
+            {pushState === 'on' ? (
+              <Button disabled={pushBusy} onClick={() => void runPush(disablePush)}>
+                Bu cihazda kapat
+              </Button>
+            ) : (
+              <Button variant="primary" disabled={pushBusy} onClick={() => void runPush(enablePush)}>
+                Bildirimleri aç
+              </Button>
+            )}
+            {pushState === 'on' && (
+              <Button disabled={pushBusy} onClick={() => void runPush(async () => testText(await sendTest()))}>
+                Deneme bildirimi gönder
+              </Button>
+            )}
+            <div className="flex min-h-[var(--tap)] items-center justify-between gap-3 px-2">
+              <span className="text-body">20 dk sonra tekrar hatırlat</span>
+              <Switch
+                label="20 dk sonra tekrar hatırlat"
+                checked={settings?.push?.followUp ?? true}
+                onChange={(v) => void runPush(() => setFollowUp(v))}
+              />
+            </div>
           </>
-        }
-      >
-        {outdated && (
-          <p role="status" className="px-2 py-1 text-footnote font-semibold text-accent-ink">
-            Saatler değişti. Takvim'i güncellemek için yeniden aktar.
+        )}
+        {pushMessage && (
+          <p role="status" className="px-2 py-1 text-footnote text-muted">
+            {pushMessage}
           </p>
         )}
-        <Button onClick={exportCalendar} disabled={!settings || exportable.length === 0}>
-          Takvim'e aktar
-        </Button>
-        {settings && exportable.length === 0 && (
-          <p className="px-2 py-1 text-footnote text-muted">{CALENDAR_EMPTY_REASON}</p>
-        )}
+        <p className="px-2 text-footnote text-muted">
+          Bildirimler her rutinin "Hatırlatma" ayarına göre, saatinde gelir.
+        </p>
+        <div className="mt-1 flex flex-col gap-1 border-t border-line pt-2">
+          {outdated && (
+            <p role="status" className="px-2 py-1 text-footnote font-semibold text-accent-ink">
+              Saatler değişti. Takvim'i güncellemek için yeniden aktar.
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => void exportCalendar()}
+            disabled={!settings || exportable.length === 0}
+            className="flex min-h-[var(--tap)] items-center rounded-row px-2 text-left text-footnote font-semibold text-accent-ink disabled:opacity-40"
+          >
+            Takvim'e de aktar (isteğe bağlı)
+          </button>
+          {settings && exportable.length === 0 && (
+            <p className="px-2 text-footnote text-muted">{CALENDAR_EMPTY_REASON}</p>
+          )}
+          <p className="px-2 text-footnote text-muted">
+            iPhone'da dosyayı açınca 'Tümünü Ekle' de. Saat değiştirirsen yeniden aktar; önce eski 'Routine'
+            etkinliklerini sil.
+          </p>
+          {settings?.calendarExport && (
+            <p className="px-2 text-footnote text-muted">{lastCalendarExportText(settings.calendarExport.at)}</p>
+          )}
+        </div>
       </Group>
 
       <Group

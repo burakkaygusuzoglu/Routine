@@ -153,6 +153,11 @@ function hasPushApis(): boolean {
   )
 }
 
+/** True when a push server and VAPID key are configured in this build. */
+export function pushConfigured(): boolean {
+  return Boolean(pushUrl() && vapidKey())
+}
+
 /** True when a push server is configured and this browser can receive push. */
 export function pushSupported(): boolean {
   if (!pushUrl() || !vapidKey()) return false
