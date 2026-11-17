@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Completion, DayLog, Routine, Settings } from '../domain/types'
-import { buildSchedule, FOLLOW_UP_MIN } from './push'
+import { buildSchedule, FOLLOW_UP_MIN, pushState, pushSupported } from './push'
+import { store } from './store'
 
 const settings: Pick<Settings, 'targetWake' | 'targetBed' | 'push'> = {
   targetWake: '08:00',
@@ -151,5 +152,83 @@ describe('buildSchedule', () => {
     const items = buildSchedule(many, [], null, settings, NOW)
     expect(items).toHaveLength(300)
     expect(items.every((it, i) => i === 0 || items[i - 1].at <= it.at)).toBe(true)
+  })
+})
+
+describe('pushState', () => {
+  const IPHONE_SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
+  const CHROME = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36'
+
+  function mockBrowser(opts: { ua?: string; standalone?: boolean; permission?: string; sub?: object | null; apis?: boolean }) {
+    const { ua = CHROME, standalone = false, permission = 'default', sub = null, apis = true } = opts
+    const nav: Record<string, unknown> = { userAgent: ua, maxTouchPoints: 5, standalone }
+    if (apis) {
+      nav.serviceWorker = { getRegistration: async () => ({ pushManager: { getSubscription: async () => sub } }) }
+      vi.stubGlobal('window', { PushManager: class {}, matchMedia: () => ({ matches: standalone }) })
+      vi.stubGlobal('Notification', { permission })
+    } else {
+      vi.stubGlobal('window', { matchMedia: () => ({ matches: standalone }) })
+    }
+    vi.stubGlobal('navigator', nav)
+  }
+
+  beforeEach(() => {
+    vi.stubEnv('VITE_PUSH_URL', 'https://routine-push.example.workers.dev')
+    vi.stubEnv('VITE_VAPID_PUBLIC_KEY', 'BKey')
+  })
+  afterEach(async () => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+    await store.saveSettings({ ...(await store.getSettings()), push: undefined })
+  })
+
+  it('is unsupported and never throws without a push URL or key', async () => {
+    mockBrowser({ permission: 'granted' })
+    vi.stubEnv('VITE_PUSH_URL', '')
+    expect(await pushState()).toBe('unsupported')
+    expect(pushSupported()).toBe(false)
+    vi.stubEnv('VITE_PUSH_URL', 'https://x.workers.dev')
+    vi.stubEnv('VITE_VAPID_PUBLIC_KEY', '')
+    expect(await pushState()).toBe('unsupported')
+  })
+
+  it('is unsupported when the browser has no push APIs', async () => {
+    mockBrowser({ apis: false })
+    expect(await pushState()).toBe('unsupported')
+    expect(pushSupported()).toBe(false)
+  })
+
+  it('needs install on iPhone Safari outside the home-screen app, even without push APIs', async () => {
+    mockBrowser({ ua: IPHONE_SAFARI, apis: false })
+    expect(await pushState()).toBe('needs-install')
+  })
+
+  it('continues normally on iPhone once installed', async () => {
+    mockBrowser({ ua: IPHONE_SAFARI, standalone: true, permission: 'default' })
+    expect(await pushState()).toBe('default')
+    expect(pushSupported()).toBe(true)
+  })
+
+  it('reports default and denied from the permission', async () => {
+    mockBrowser({ permission: 'default' })
+    expect(await pushState()).toBe('default')
+    mockBrowser({ permission: 'denied' })
+    expect(await pushState()).toBe('denied')
+  })
+
+  it('is granted-off when allowed but not subscribed on this device', async () => {
+    mockBrowser({ permission: 'granted', sub: null })
+    expect(await pushState()).toBe('granted-off')
+  })
+
+  it('is granted-off when subscribed but the account has no push settings', async () => {
+    mockBrowser({ permission: 'granted', sub: { endpoint: 'e' } })
+    expect(await pushState()).toBe('granted-off')
+  })
+
+  it('is on when allowed, subscribed and the account has push settings', async () => {
+    await store.saveSettings({ ...(await store.getSettings()), push: { accountId: 'a', secret: 's', followUp: true } })
+    mockBrowser({ permission: 'granted', sub: { endpoint: 'e' } })
+    expect(await pushState()).toBe('on')
   })
 })
