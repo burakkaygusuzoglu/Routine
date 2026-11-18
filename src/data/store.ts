@@ -1,4 +1,5 @@
 import type { Backup, Completion, CompletionStatus, DateKey, DayLog, FocusSession, Note, Routine, Settings } from '../domain/types'
+import { stripCloudFields, validateBackup } from './backupValidate'
 import { db as defaultDb, type RoutineDB } from './db'
 import { DEFAULT_SETTINGS, seedRoutines } from './seed'
 
@@ -214,20 +215,39 @@ export function createStore(db: RoutineDB = defaultDb): RoutineStore {
         db.focusSessions.toArray(),
         db.notes.toArray(),
       ])
-      const dayLogs = dayLogRows.map(({ id: _id, ...log }) => log)
-      return { app: 'routine', version: 1, exportedAt: new Date().toISOString(), routines, completions, dayLogs, settings, focusSessions, notes }
+      const dayLogs = dayLogRows.map(({ id: _id, ...log }) => stripCloudFields(log))
+      return {
+        app: 'routine',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        routines: routines.map(stripCloudFields),
+        completions: completions.map(stripCloudFields),
+        dayLogs,
+        // The push secret identifies this account to the push server: it never goes into a file.
+        settings: settings.map((st) => {
+          const { push: _push, ...rest } = stripCloudFields(st)
+          return rest
+        }),
+        focusSessions: focusSessions.map(stripCloudFields),
+        notes: notes.map(stripCloudFields),
+      }
     },
     async importBackup(backup) {
-      if (backup.app !== 'routine' || backup.version !== 1) throw new Error('Bu dosya bir Routine yedeği değil.')
+      // Validate everything first: a bad file must fail before a single row is deleted.
+      const clean = validateBackup(backup)
       await db.transaction('rw', db.dataTables, async () => {
+        // Push reminders and the calendar export belong to this device's account, not to the file.
+        const current = await db.settings.get(DEFAULT_SETTINGS.id)
         await Promise.all(db.dataTables.map((t) => t.clear()))
-        await db.routines.bulkPut(backup.routines)
-        await db.completions.bulkPut(backup.completions)
-        await db.dayLogs.bulkPut(backup.dayLogs.map((log) => ({ ...log, id: dayLogId(log.date) })))
-        // Backups made before cloud sync stored settings under 'me'.
-        await db.settings.bulkPut(backup.settings.map((st) => ({ ...st, id: DEFAULT_SETTINGS.id })))
-        await db.focusSessions.bulkPut(backup.focusSessions ?? [])
-        await db.notes.bulkPut(backup.notes ?? [])
+        await db.routines.bulkPut(clean.routines)
+        await db.completions.bulkPut(clean.completions)
+        await db.dayLogs.bulkPut(clean.dayLogs.map((log) => ({ ...log, id: dayLogId(log.date) })))
+        const next: Settings = { ...clean.settings[0], id: DEFAULT_SETTINGS.id }
+        if (current?.push) next.push = current.push
+        if (current?.calendarExport) next.calendarExport = current.calendarExport
+        await db.settings.put(next)
+        await db.focusSessions.bulkPut(clean.focusSessions)
+        await db.notes.bulkPut(clean.notes)
       })
     },
   }

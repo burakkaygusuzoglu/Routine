@@ -1,6 +1,7 @@
 import type { RoutineColor } from '../../design/palette'
 import { DEFAULT_ROUTINE_ICON, type RoutineIconName } from '../../design/routineIcons'
 import { zonedParts, fromDateKey, toDateKey, todayKey } from '../../domain/date'
+import { validateBackup } from '../../data/backupValidate'
 import type { PushState } from '../../data/push'
 import type { AnchorType, Backup, ClockTime, Routine } from '../../domain/types'
 
@@ -206,17 +207,7 @@ export function parseBackup(text: string): Backup {
   } catch {
     throw new Error(BAD_FILE)
   }
-  if (typeof data !== 'object' || data === null) throw new Error(BAD_FILE)
-  const b = data as Record<string, unknown>
-  if (b.app !== 'routine' || b.version !== 1) throw new Error(BAD_FILE)
-  for (const key of ['routines', 'completions', 'dayLogs', 'settings']) {
-    if (!Array.isArray(b[key])) throw new Error(BAD_FILE)
-  }
-  const routinesOk = (b.routines as unknown[]).every(
-    (r) => typeof r === 'object' && r !== null && typeof (r as Routine).id === 'string' && Array.isArray((r as Routine).days),
-  )
-  if (!routinesOk) throw new Error(BAD_FILE)
-  return data as Backup
+  return validateBackup(data) as Backup
 }
 
 export function lastCalendarExportText(iso: string): string {
