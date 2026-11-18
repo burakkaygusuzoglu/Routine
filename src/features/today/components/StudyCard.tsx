@@ -29,9 +29,9 @@ export function StudyCard({ today }: { today: DateKey }) {
         </span>
         <span className="min-w-0">
           <span className="block text-headline font-semibold tabular-nums">
-            Çalışma · {over ? `+${formatHms(remaining)} fazladan` : `${formatHms(remaining)} kaldı`}
+            {over ? `+${formatHms(remaining)} fazladan` : `${formatHms(remaining)} kaldı`}
           </span>
-          <span className="block text-footnote text-muted">Bugün {formatShort(elapsedMs(study, now))} çalıştın</span>
+          <span className="block text-footnote text-muted">Çalışma · {formatShort(elapsedMs(study, now))} çalıştın</span>
         </span>
       </Link>
       <Button

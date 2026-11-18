@@ -31,7 +31,8 @@ export function WeekBars({ today, study, now }: WeekBarsProps) {
   })
 
   const targetMs = study.targetMin * 60_000
-  const scale = Math.max(targetMs, ...days.map((d) => d.ms))
+  // A little headroom so the target line never sits on the top edge.
+  const scale = Math.max(targetMs, ...days.map((d) => d.ms)) * 1.15
   const pct = (ms: number) => `${Math.min(100, (ms / scale) * 100)}%`
 
   return (
