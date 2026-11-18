@@ -1,0 +1,57 @@
+import { expect, test } from '@playwright/test'
+import { openApp, trackErrors } from './helpers'
+
+const ROUTES = ['/', '/study', '/progress', '/weekly', '/settings', '/night', '/no-such-page']
+
+test.describe('routes', () => {
+  for (const route of ROUTES) {
+    test(`loads ${route} without errors or horizontal overflow`, async ({ page }) => {
+      const errors = trackErrors(page)
+      await openApp(page, route)
+      await page.waitForTimeout(500)
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      expect(overflow).toBeLessThanOrEqual(0)
+      expect(errors).toEqual([])
+    })
+  }
+})
+
+test('a ticked routine persists after reload', async ({ page }) => {
+  await openApp(page, '/')
+  const tick = page.getByRole('button', { name: /: tamamla$/ }).first()
+  await expect(tick).toBeVisible()
+  const label = (await tick.getAttribute('aria-label')) ?? ''
+  const name = label.replace(/: tamamla$/, '')
+  await tick.click()
+  await expect(page.getByRole('button', { name: `${name}: işareti kaldır` })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('button', { name: `${name}: işareti kaldır` })).toBeVisible()
+})
+
+test('time zone choice persists after reload', async ({ page }) => {
+  await openApp(page, '/settings')
+  const group = page.getByRole('radiogroup', { name: 'Saat dilimi' })
+  await group.getByRole('radio', { name: /İstanbul/ }).click()
+  await expect(group.getByRole('radio', { name: /İstanbul/ })).toBeChecked()
+  await page.reload()
+  await expect(page.getByRole('radiogroup', { name: 'Saat dilimi' }).getByRole('radio', { name: /İstanbul/ })).toBeChecked()
+})
+
+test('buttons on Today and Study are at least 44x44', async ({ page }) => {
+  for (const route of ['/', '/study']) {
+    await openApp(page, route)
+    await page.waitForTimeout(500)
+    const small = await page.evaluate(() =>
+      [...document.querySelectorAll('button')]
+        .filter((b) => {
+          const r = b.getBoundingClientRect()
+          const cs = getComputedStyle(b)
+          return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none'
+        })
+        .map((b) => ({ r: b.getBoundingClientRect(), t: b.getAttribute('aria-label') ?? b.textContent?.trim() ?? '' }))
+        .filter(({ r }) => r.width < 43.5 || r.height < 43.5)
+        .map(({ r, t }) => `${t} ${Math.round(r.width)}x${Math.round(r.height)}`),
+    )
+    expect(small, `small buttons on ${route}`).toEqual([])
+  }
+})
