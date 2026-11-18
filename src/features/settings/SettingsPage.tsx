@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { routineInk } from '../../design/palette'
 import { RoutineIcon } from '../../design/routineIcons'
 import { ThemePicker } from '../../design/ThemePicker'
@@ -69,6 +69,12 @@ function downloadBlob(name: string, blob: Blob) {
 }
 
 export function SettingsPage() {
+  // Re-render every 30 s so the time-zone clocks stay current.
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    const t = window.setInterval(() => setTick((n) => n + 1), 30_000)
+    return () => window.clearInterval(t)
+  }, [])
   const all = useLiveQuery(() => store.listRoutines({ includeArchived: true }), [])
   const settings = useLiveQuery(() => store.getSettings(), [])
   const [editing, setEditing] = useState<Editing>(null)

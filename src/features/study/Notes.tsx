@@ -89,7 +89,7 @@ export function Notes({ study, now, onAdd, onRemove }: NotesProps) {
           {entries.map((e) => (
             <li key={e.id} className="flex items-center gap-3 rounded-row bg-raised py-1 pr-1 pl-3">
               <div className="min-w-0 flex-1">
-                <p className="m-0 truncate text-body font-semibold">{e.text}</p>
+                <p className="m-0 line-clamp-3 text-body font-semibold [overflow-wrap:anywhere]">{e.text}</p>
                 <p className="m-0 text-footnote text-muted">
                   {e.minutes !== null ? `${formatMinutes(e.minutes)} · ` : ''}
                   {toClockTime(new Date(e.at))}

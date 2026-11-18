@@ -31,8 +31,11 @@ function TargetForm({ targetMin, defaultMin, onApply, onMakeDefault }: Omit<Targ
   const [hours, setHours] = useState(String(Math.floor(targetMin / 60)))
   const [minutes, setMinutes] = useState(String(targetMin % 60))
 
-  const total = (Number(hours) || 0) * 60 + (Number(minutes) || 0)
-  const valid = total >= 1 && total <= 24 * 60
+  const h = hours.trim() === '' ? 0 : Number(hours)
+  const m = minutes.trim() === '' ? 0 : Number(minutes)
+  const partsOk = Number.isInteger(h) && Number.isInteger(m) && h >= 0 && m >= 0 && m <= 59
+  const total = partsOk ? h * 60 + m : 0
+  const valid = partsOk && total >= 1 && total <= 24 * 60
   const pick = (h: number) => {
     setHours(String(h))
     setMinutes('0')
@@ -88,7 +91,7 @@ function TargetForm({ targetMin, defaultMin, onApply, onMakeDefault }: Omit<Targ
       </div>
 
       <p className="m-0 text-footnote text-muted" aria-live="polite">
-        {valid ? `Hedef: ${formatMinutes(total)} · yeni günlerde varsayılan: ${formatMinutes(defaultMin)}` : 'En az 1 dakika, en fazla 24 saat.'}
+        {valid ? `Hedef: ${formatMinutes(total)} · yeni günlerde varsayılan: ${formatMinutes(defaultMin)}` : 'Tam sayı gir: dakika 0–59, toplam 1 dakika ile 24 saat arası.'}
       </p>
 
       <Button disabled={!valid} onClick={() => onApply(total)}>

@@ -65,8 +65,8 @@ export function StudyPage() {
         <h1 className="m-0 text-large-title font-bold">Çalışma</h1>
       </header>
 
-      <div className="grid gap-3 px-4 min-[900px]:grid-cols-2 min-[900px]:items-start">
-        <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-3 px-4 min-[900px]:grid-cols-[repeat(2,minmax(0,1fr))] min-[900px]:items-start">
+        <div className="flex min-w-0 flex-col gap-3">
           <Card className="flex flex-col items-center gap-3 py-6">
             <ProgressRing value={share} size={240} thickness={14} aria-label="Çalışma sayacı">
               <div className="flex flex-col items-center">

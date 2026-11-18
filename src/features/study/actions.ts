@@ -15,6 +15,7 @@ export async function defaultTargetMin(): Promise<number> {
  * time. Safe to call often and from several places: once yesterday is paused it does nothing.
  */
 export async function ensureRollover(today: DateKey = todayKey()): Promise<void> {
+  await pullBackFutureTimer(today)
   const logs = await store.listDayLogs(addDays(today, -LOOKBACK_DAYS), addDays(today, -1))
   const first = logs.find((l) => l.study?.runningSince != null)
   if (!first) return
@@ -29,13 +30,42 @@ export async function ensureRollover(today: DateKey = todayKey()): Promise<void>
   }
 }
 
+/**
+ * A timer can sit on a day after "today" when the time zone is switched to one that is
+ * behind (İstanbul -> Üsküp near midnight). Move its running stretch back to today so it
+ * stays visible and is never counted twice.
+ */
+async function pullBackFutureTimer(today: DateKey): Promise<void> {
+  const future = await store.listDayLogs(addDays(today, 1), addDays(today, 2))
+  for (const f of future) {
+    const running = f.study?.runningSince
+    if (running == null || !f.study) continue
+    const log = await store.getDayLog(today)
+    const current = log.study ?? newStudy(await defaultTargetMin())
+    await store.saveDayLog({ ...f, study: { ...f.study, runningSince: null } })
+    if (current.runningSince == null) {
+      await store.saveDayLog({ ...log, study: { ...current, runningSince: Math.max(running, zonedEpoch(today, '00:00')) } })
+    }
+  }
+}
+
+// Writes are serialized so a quick "add note" + "pause" never overwrite each other.
+let queue: Promise<unknown> = Promise.resolve()
+function serialized<T>(task: () => Promise<T>): Promise<T> {
+  const run = queue.then(task, task)
+  queue = run.catch(() => undefined)
+  return run
+}
+
 /** Reads today's log fresh, applies `change` to its study and writes it back at once. */
-export async function updateStudyToday(change: (study: StudyDay) => StudyDay): Promise<void> {
-  const today = todayKey()
-  await ensureRollover(today)
-  const log = await store.getDayLog(today)
-  const current = log.study ?? newStudy(await defaultTargetMin())
-  await store.saveDayLog({ ...log, study: change(current) })
+export function updateStudyToday(change: (study: StudyDay) => StudyDay): Promise<void> {
+  return serialized(async () => {
+    const today = todayKey()
+    await ensureRollover(today)
+    const log = await store.getDayLog(today)
+    const current = log.study ?? newStudy(await defaultTargetMin())
+    await store.saveDayLog({ ...log, study: change(current) })
+  })
 }
 
 export async function saveDefaultTarget(minutes: number): Promise<void> {
