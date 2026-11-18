@@ -16,13 +16,24 @@ interface RoutineSheetProps {
   monthCells: CellState[]
   today: string
   milestones?: ReachedMilestone[]
+  /** Opens the routine editor. */
+  onEdit?: () => void
 }
 
-export function RoutineSheet({ routine, onClose, best, rate, monthStart, monthCells, today, milestones = [] }: RoutineSheetProps) {
+export function RoutineSheet({ routine, onClose, best, rate, monthStart, monthCells, today, milestones = [], onEdit }: RoutineSheetProps) {
   return (
     <Sheet open={routine !== null} onClose={onClose} title={routine?.name ?? ''}>
       {routine && (
         <div className="flex flex-col gap-4">
+          {onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="min-h-[var(--tap)] self-start rounded-control bg-raised px-4 text-body font-semibold text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              Rutini düzenle
+            </button>
+          )}
           <dl className="grid grid-cols-2 gap-3">
             <div className="rounded-row bg-raised p-3">
               <dt className="text-footnote text-muted">En uzun seri</dt>

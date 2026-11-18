@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { store } from '../../data/store'
 import { addDays, fromDateKey, toDateKey, todayKey, weekStart } from '../../domain/date'
 import { bestStreak, cellStates, completionRate, currentStreak, weekSummary } from '../../domain/streak'
-import type { Completion } from '../../domain/types'
+import type { Completion, Routine } from '../../domain/types'
 import { Card } from './components/Card'
 import { RoutineCard } from './components/RoutineCard'
 import { RoutineSheet } from './components/RoutineSheet'
@@ -12,6 +12,10 @@ import { nextMilestoneText, reachedMilestones } from './milestones'
 import { hasAnyIdentity, identityVotes } from './identity'
 import { MonthView } from './components/MonthView'
 import { WeekBars } from './components/WeekBars'
+import { StudySection } from './components/StudySection'
+import { monthStartKey, STUDY_DAYS, studyReport } from './studyStats'
+import { RoutineEditSheet } from '../settings'
+import { DEFAULT_TARGET_MIN } from '../study/logic'
 
 const WEEKS = 12
 const ALL_TIME = '1970-01-01'
@@ -33,6 +37,23 @@ export function ProgressPage() {
   }, [gridTo])
 
   const [openId, setOpenId] = useState<string | null>(null)
+  const [editing, setEditing] = useState<Routine | null>(null)
+
+  const studyFrom = [monthStartKey(today), addDays(today, -(STUDY_DAYS - 1))].sort()[0]
+  const study = useLiveQuery(async () => {
+    const [logs, settings] = await Promise.all([store.listDayLogs(studyFrom, today), store.getSettings()])
+    return { logs, target: settings.studyTargetMin ?? DEFAULT_TARGET_MIN }
+  }, [studyFrom, today])
+  // A running session moves on: re-count every 30 s.
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(Date.now()), 30_000)
+    return () => window.clearInterval(t)
+  }, [])
+  const studyStats = useMemo(
+    () => (study ? studyReport(study.logs, today, now, study.target) : null),
+    [study, today, now],
+  )
 
   const derived = useMemo(() => {
     if (!data) return null
@@ -69,6 +90,8 @@ export function ProgressPage() {
         <h1 className="text-large-title font-bold">İlerleme</h1>
       </header>
 
+      {studyStats && <StudySection report={studyStats} today={today} />}
+
       {derived && <IdentityVotes rows={derived.votes} hasIdentity={derived.hasIdentity} />}
 
       {derived && !hasHistory(data?.completions) && (
@@ -102,6 +125,10 @@ export function ProgressPage() {
       <RoutineSheet
         routine={open?.routine ?? null}
         onClose={() => setOpenId(null)}
+        onEdit={() => {
+          setEditing(open?.routine ?? null)
+          setOpenId(null)
+        }}
         best={open ? bestStreak(open.routine, open.own, today) : 0}
         rate={open ? completionRate([open.routine], open.own, gridFrom, today) : 0}
         monthStart={monthStart}
@@ -109,6 +136,9 @@ export function ProgressPage() {
         today={today}
         milestones={open ? reachedMilestones(open.routine, open.own, today) : []}
       />
+      {editing && (
+        <RoutineEditSheet key={editing.id} routine={editing} all={data?.routines ?? []} onClose={() => setEditing(null)} />
+      )}
     </div>
   )
 }

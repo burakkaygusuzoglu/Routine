@@ -9,6 +9,8 @@ import { Garden } from './Garden'
 import { deltaText, focusStats, formatDrift } from './focus'
 import { LifetimeGarden } from './LifetimeGarden'
 import { lifetimeStats } from './lifetime'
+import { weekStudy } from '../progress/studyStats'
+import { DEFAULT_TARGET_MIN, formatShort } from '../study/logic'
 import { canGoNext, dayName, focusMinutes, formatMinutes, shortDate, suggest, weekStats, weekTitle } from './logic'
 
 const pct = (rate: number) => `%${Math.round(rate * 100)}`
@@ -64,6 +66,7 @@ export function WeeklyPage() {
     return {
       stats,
       suggestion: suggest(stats, data.logs, data.settings.targetWake),
+      study: weekStudy(data.logs, start, Date.now(), data.settings.studyTargetMin ?? DEFAULT_TARGET_MIN),
       focus: focusMinutes(data.sessions, start),
       focusStats: focusStats(data.sessions, start),
       reflections: data.logs.filter((l) => l.reflection).reverse(),
@@ -128,6 +131,23 @@ export function WeeklyPage() {
               <Stat label="Ortalama dağılma" value={formatDrift(derived.focusStats.avgDrift)} />
             </div>
             <p className="mt-3 text-footnote text-muted">{deltaText(derived.focusStats)}</p>
+          </Card>
+
+          <Card>
+            <h2 className="mb-3 text-headline font-semibold">Çalışma</h2>
+            {derived.study.totalMs === 0 && !derived.study.top ? (
+              <p className="text-body text-muted">Bu hafta çalışma sayacı kullanılmadı.</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <Stat label="Toplam" value={formatShort(derived.study.totalMs)} />
+                <Stat label="Haftalık hedef" value={formatShort(derived.study.targetMs)} />
+                <Stat label="Hedefe ulaşılan gün" value={`${derived.study.daysHit} / 7`} />
+                <Stat
+                  label="En çok konu"
+                  value={derived.study.top ? `${derived.study.top.subject} (${formatShort(derived.study.top.minutes * 60_000)})` : '-'}
+                />
+              </div>
+            )}
           </Card>
 
           <Card>
