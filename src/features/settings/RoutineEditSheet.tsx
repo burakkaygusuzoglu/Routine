@@ -4,10 +4,9 @@ import { ROUTINE_ICON_LABELS, ROUTINE_ICON_NAMES, RoutineIcon } from '../../desi
 import { store } from '../../data/store'
 import type { AnchorType, Routine } from '../../domain/types'
 import { Button } from './components/Button'
-import { SegmentedControl } from './components/SegmentedControl'
+import { SegmentedControl, Switch } from '../../ui'
 import { sheetErrorText } from './messages'
 import { Sheet } from './components/Sheet'
-import { Switch } from '../../ui'
 import {
   DAY_LONG,
   DAY_SHORT,
@@ -183,7 +182,7 @@ export function RoutineEditSheet({ routine, all, onClose, onArchived }: Props) {
 
         <section className="rounded-card bg-surface p-4">
           <p className="mb-2 text-footnote font-semibold text-muted">Ne zaman</p>
-          <SegmentedControl label="Ne zaman" options={ANCHORS} value={draft.anchor} onChange={(v) => set('anchor', v)} />
+          <SegmentedControl mode="toggle" aria-label="Ne zaman" options={ANCHORS} value={draft.anchor} onChange={(v) => set('anchor', v)} />
           {draft.anchor === 'fixed' ? (
             <div className="mt-3 flex items-center justify-between gap-3">
               <label htmlFor={timeId} className="text-body">
