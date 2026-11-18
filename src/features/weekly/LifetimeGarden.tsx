@@ -35,8 +35,8 @@ export function LifetimeGarden({ stats }: { stats: LifetimeStats }) {
                 strokeLinecap="round"
                 className="stroke-muted"
               />
-              <ellipse cx={cx - 9} cy={LIFETIME_GROUND_Y - 26} rx={9} ry={5} transform={`rotate(-25 ${cx - 9} ${LIFETIME_GROUND_Y - 26})`} className="fill-accent" />
-              <ellipse cx={cx + 9} cy={LIFETIME_GROUND_Y - 30} rx={9} ry={5} transform={`rotate(25 ${cx + 9} ${LIFETIME_GROUND_Y - 30})`} className="fill-accent" />
+              <ellipse cx={cx - 9} cy={LIFETIME_GROUND_Y - 26} rx={9} ry={5} transform={`rotate(-25 ${cx - 9} ${LIFETIME_GROUND_Y - 26})`} className="fill-accent-graphic" />
+              <ellipse cx={cx + 9} cy={LIFETIME_GROUND_Y - 30} rx={9} ry={5} transform={`rotate(25 ${cx + 9} ${LIFETIME_GROUND_Y - 30})`} className="fill-accent-graphic" />
             </g>
           )}
           {trees.map((t, i) => {
@@ -44,9 +44,9 @@ export function LifetimeGarden({ stats }: { stats: LifetimeStats }) {
             return (
               <g key={i}>
                 <rect x={t.x - 3} y={top} width={6} height={t.trunk} rx={3} className="fill-muted" />
-                <circle cx={t.x} cy={top - t.crown * 0.35} r={t.crown} className="fill-accent" fillOpacity={0.55 + (i % 3) * 0.15} />
-                <circle cx={t.x - t.crown * 0.45} cy={top - t.crown * 0.1} r={t.crown * 0.6} className="fill-accent" fillOpacity={0.45} />
-                <circle cx={t.x + t.crown * 0.45} cy={top - t.crown * 0.1} r={t.crown * 0.6} className="fill-accent" fillOpacity={0.45} />
+                <circle cx={t.x} cy={top - t.crown * 0.35} r={t.crown} className="fill-accent-graphic" fillOpacity={0.55 + (i % 3) * 0.15} />
+                <circle cx={t.x - t.crown * 0.45} cy={top - t.crown * 0.1} r={t.crown * 0.6} className="fill-accent-graphic" fillOpacity={0.45} />
+                <circle cx={t.x + t.crown * 0.45} cy={top - t.crown * 0.1} r={t.crown * 0.6} className="fill-accent-graphic" fillOpacity={0.45} />
               </g>
             )
           })}

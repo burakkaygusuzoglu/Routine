@@ -104,16 +104,16 @@ export function NightPage() {
       <div className="mx-auto flex w-full max-w-[480px] flex-1 flex-col gap-3 px-4 pb-[calc(var(--safe-bottom)+16px)] pt-[calc(var(--safe-top)+16px)]">
         <header>
           <div className="flex items-start justify-between gap-3">
+            <Link
+              to="/"
+              className="-ml-2 -mt-2 flex min-h-[var(--tap)] min-w-[var(--tap)] items-center justify-center px-2 text-body text-night-muted underline-offset-4 hover:text-night-text focus-visible:outline-2 focus-visible:outline-night-accent"
+            >
+              Geri
+            </Link>
             <p className="text-footnote text-night-muted">
               {toClockTime(now)}
               {data ? ` · hedef yatış ${data.settings.targetBed}` : ''}
             </p>
-            <Link
-              to="/"
-              className="-mr-2 -mt-2 flex min-h-[var(--tap)] min-w-[var(--tap)] items-center justify-center px-2 text-footnote text-night-muted underline-offset-4 hover:text-night-text"
-            >
-              Geri
-            </Link>
           </div>
           <h1 className="text-large-title font-bold">Gece modu</h1>
           <p className="text-body text-night-muted">Günü kapat. Yarın için tek şey yeter.</p>
@@ -197,7 +197,7 @@ export function NightPage() {
               <button
                 type="submit"
                 disabled={note.trim() === ''}
-                className="min-h-[var(--tap)] min-w-[var(--tap)] rounded-control px-3 text-body font-semibold text-night-accent disabled:opacity-40"
+                className="min-h-[var(--tap)] min-w-[var(--tap)] rounded-control px-3 text-body font-semibold text-night-accent disabled:bg-night-surface disabled:text-night-muted disabled:opacity-100"
               >
                 Bırak
               </button>

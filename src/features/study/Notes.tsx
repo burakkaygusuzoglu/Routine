@@ -97,14 +97,14 @@ export function Notes({ study, now, subjects, onAdd, onUpdate, onRemove, onResto
             Süresiz
           </button>
         </div>
-        <Button type="submit" disabled={!canAdd}>
+        <Button type="submit" className="disabled:bg-raised disabled:text-muted disabled:opacity-100!" disabled={!canAdd}>
           <CheckIcon />
           Ekle
         </Button>
       </form>
 
       <p className="m-0 text-footnote text-muted">
-        Notlara yazılan: {formatMinutes(noted)} · Sayaç: {formatShort(elapsedMs(study, now))}
+        Notlarda {formatMinutes(noted)} · sayaçta {formatShort(elapsedMs(study, now))}
       </p>
 
       {undo && (

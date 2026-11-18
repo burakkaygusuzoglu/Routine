@@ -7,12 +7,6 @@ import { elapsedMs, formatShort } from './logic'
 
 const WEEKDAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
 
-/** "3:20" for a bar label: hours and minutes only. */
-function compact(ms: number): string {
-  const total = Math.floor(ms / 60_000)
-  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
-}
-
 export interface WeekBarsProps {
   today: DateKey
   /** Day of the live session (yesterday while a session runs past midnight). */
@@ -47,8 +41,8 @@ export function WeekBars({ today, liveDate, study, now }: WeekBarsProps) {
             aria-label={`${WEEKDAYS[weekdayIndex(d.date)]}: ${formatShort(d.ms)}`}
             className="flex min-w-0 flex-col items-center gap-1"
           >
-            <span aria-hidden="true" className="text-caption text-muted tabular-nums">
-              {d.ms > 0 ? compact(d.ms) : '·'}
+            <span aria-hidden="true" className="flex min-h-8 items-end text-balance text-center text-caption leading-tight text-muted tabular-nums">
+              {d.ms > 0 ? formatShort(d.ms) : '·'}
             </span>
             <div aria-hidden="true" className="relative flex h-24 w-full items-end overflow-hidden rounded-cell bg-raised">
               <div

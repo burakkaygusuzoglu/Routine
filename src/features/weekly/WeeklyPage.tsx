@@ -190,7 +190,7 @@ export function WeeklyPage() {
           </Card>
 
           <Card>
-            <h2 className="mb-3 text-headline font-semibold">Düşünceler</h2>
+            <h2 className="mb-3 text-headline font-semibold">Gece değerlendirmeleri</h2>
             {derived.reflections.length === 0 ? (
               <p className="text-body text-muted">Bu hafta gece modunda not düşmedin. Sorun değil.</p>
             ) : (

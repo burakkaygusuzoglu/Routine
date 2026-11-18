@@ -56,14 +56,14 @@ function TargetForm({
 
   return (
     <div className="flex flex-col gap-3">
-      <div role="group" aria-label="Hazır hedefler" className="flex flex-wrap gap-2">
+      <div role="group" aria-label="Hazır hedefler" className="grid grid-cols-5 gap-2">
         {CHIPS_H.map((h) => (
           <button
             key={h}
             type="button"
             aria-pressed={total === h * 60}
             onClick={() => pick(h)}
-            className="min-h-[var(--tap)] min-w-[var(--tap)] cursor-pointer rounded-control border-0 bg-raised px-4 text-body font-semibold text-text aria-pressed:bg-accent aria-pressed:text-on-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="min-h-[var(--tap)] min-w-0 cursor-pointer rounded-control border-0 bg-raised px-1 text-body font-semibold text-text aria-pressed:bg-accent aria-pressed:text-on-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             {h} sa
           </button>

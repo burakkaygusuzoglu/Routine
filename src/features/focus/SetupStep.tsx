@@ -26,7 +26,7 @@ export function SetupStep({ routine, onStart }: SetupStepProps) {
           href="#/"
           className="inline-flex min-h-[var(--tap)] items-center text-body text-muted focus-visible:outline-2 focus-visible:outline-accent"
         >
-          Vazgeç
+          Geri
         </a>
       </div>
       <div className="flex flex-col gap-1">

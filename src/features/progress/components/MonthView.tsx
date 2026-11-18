@@ -21,11 +21,11 @@ const HEADERS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
 /** Full class names so Tailwind can see them. Level 0 is the empty cell. */
 const LEVEL_CLASS: Record<Level, string> = {
   0: 'bg-empty text-muted',
-  1: 'bg-accent/20 text-text',
-  2: 'bg-accent/40 text-text',
-  3: 'bg-accent/60 text-text',
-  4: 'bg-accent/80 text-on-accent',
-  5: 'bg-accent text-on-accent',
+  1: 'bg-accent-graphic/30 text-text',
+  2: 'bg-accent-graphic/45 text-text',
+  3: 'bg-accent-graphic/65 text-on-accent',
+  4: 'bg-accent-graphic/80 text-on-accent',
+  5: 'bg-accent-graphic text-on-accent',
 }
 
 const NAV_BTN =
@@ -58,8 +58,8 @@ export function MonthView({ routines, completions, today }: MonthViewProps) {
     : ''
 
   return (
-    <Card>
-      <div className="mb-3 flex items-center justify-between gap-2">
+    <Card className="max-[359px]:-mx-4 max-[359px]:rounded-none max-[359px]:px-0">
+      <div className="mb-3 flex max-[359px]:px-4 items-center justify-between gap-2">
         <h2 className="min-w-0 truncate text-headline font-bold capitalize">{title}</h2>
         <div className="flex gap-2">
           <button type="button" aria-label="Önceki ay" className={NAV_BTN} onClick={() => setMonth(shiftMonth(month, -1))}>
@@ -95,10 +95,10 @@ export function MonthView({ routines, completions, today }: MonthViewProps) {
                 aria-label={dayCellLabel(day)}
                 aria-current={isToday ? 'date' : undefined}
                 onClick={() => setOpenDay(day.date)}
-                className="flex min-h-11 w-full items-center justify-center focus-visible:outline-2 focus-visible:outline-accent"
+                className="flex min-h-11 min-w-11 w-full items-center justify-center focus-visible:outline-2 focus-visible:outline-accent"
               >
                 <span
-                  className={`m-0.5 flex size-9 items-center justify-center rounded-cell text-footnote ${LEVEL_CLASS[day.level]} ${
+                  className={`flex size-9 items-center justify-center rounded-cell text-footnote ${LEVEL_CLASS[day.level]} ${
                     isToday ? 'font-bold ring-2 ring-inset ring-text' : ''
                   }`}
                 >
