@@ -7,6 +7,7 @@ import { TIME_ZONE_CHOICES, toClockTime } from '../../domain/date'
 import { deleteAllData, useAccount, type SyncKind } from '../../data/account'
 import { disablePush, enablePush, pushConfigured, sendTest, setFollowUp, usePushState } from '../../data/push'
 import { store } from '../../data/store'
+import { applyUpdate, checkForUpdate } from '../../pwa'
 import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
 import type { Backup, Routine } from '../../domain/types'
 import { Button } from './components/Button'
@@ -451,6 +452,7 @@ export function SettingsPage() {
           <span className="text-body">Sürüm</span>
           <span className="text-body text-muted">{import.meta.env.VITE_APP_VERSION ?? 'dev'}</span>
         </div>
+        <UpdateCheck />
         <a
           href="https://github.com/burakkaygusuzoglu/Routine"
           target="_blank"
@@ -552,6 +554,35 @@ function TimeRow({ label, value, onChange }: { label: string; value: string; onC
         onChange={(e) => onChange(e.target.value)}
         className="min-h-[var(--tap)] rounded-control border border-field-line bg-bg px-3 text-right text-headline font-semibold"
       />
+    </div>
+  )
+}
+
+/** "Güncellemeleri denetle": looks for a new version and offers to load it. */
+function UpdateCheck() {
+  const [state, setState] = useState<'idle' | 'checking' | 'ready' | 'latest'>('idle')
+  return (
+    <div className="flex min-h-[var(--tap)] items-center justify-between gap-3 px-2">
+      <span className="text-footnote text-muted" role="status">
+        {state === 'checking' ? 'Denetleniyor…' : state === 'ready' ? 'Yeni sürüm hazır. Sayacın korunur.' : state === 'latest' ? 'En güncel sürümü kullanıyorsun.' : ''}
+      </span>
+      {state === 'ready' ? (
+        <button type="button" onClick={applyUpdate} className="min-h-[var(--tap)] shrink-0 rounded-control bg-accent px-4 text-body font-semibold text-on-accent">
+          Yenile
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={state === 'checking'}
+          onClick={() => {
+            setState('checking')
+            void checkForUpdate().then((ready) => setState(ready ? 'ready' : 'latest'))
+          }}
+          className="min-h-[var(--tap)] shrink-0 px-2 text-body font-semibold text-accent-ink"
+        >
+          Güncellemeleri denetle
+        </button>
+      )}
     </div>
   )
 }

@@ -27,6 +27,22 @@ export function applyUpdate(): void {
 }
 
 let registered = false
+let registration: ServiceWorkerRegistration | undefined
+
+/** Asks the server for a newer version now. Resolves true when one is waiting. */
+export async function checkForUpdate(): Promise<boolean> {
+  try {
+    await registration?.update()
+  } catch {
+    // Offline: try again later.
+  }
+  // An update found by this check installs in the background; give it a moment.
+  await new Promise((r) => setTimeout(r, 1500))
+  return updateWaiting
+}
+
+/** How often an open app looks for a new version (an installed iPhone app can stay open for days). */
+const UPDATE_CHECK_MS = 30 * 60_000
 
 /** Registers the service worker and asks the browser to keep our storage. */
 export function registerPwa(): void {
@@ -38,6 +54,14 @@ export function registerPwa(): void {
       onNeedRefresh() {
         updateWaiting = true
         emit()
+      },
+      onRegisteredSW(_url, r) {
+        registration = r
+        if (!r) return
+        setInterval(() => void r.update().catch(() => undefined), UPDATE_CHECK_MS)
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') void r.update().catch(() => undefined)
+        })
       },
     })
   }

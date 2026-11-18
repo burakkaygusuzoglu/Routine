@@ -11,7 +11,7 @@ export function UpdatePrompt() {
       role="status"
       className="pointer-events-auto flex items-center justify-between gap-3 rounded-card border border-line bg-raised p-4 text-text"
     >
-      <p className="text-footnote">Yeni sürüm hazır</p>
+      <p className="text-footnote">Yeni sürüm hazır. Sayacın ve verilerin korunur.</p>
       <button
         type="button"
         onClick={applyUpdate}
