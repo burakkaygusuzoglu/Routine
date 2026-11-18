@@ -8,14 +8,13 @@ import { deleteAllData, useAccount, type SyncKind } from '../../data/account'
 import { disablePush, enablePush, pushConfigured, sendTest, setFollowUp, usePushState } from '../../data/push'
 import { useAuthState } from '../../data/auth'
 import { store } from '../../data/store'
-import { PageHeader } from '../../ui'
+import { PageHeader, Switch } from '../../ui'
 import { applyUpdate, checkForUpdate } from '../../pwa'
 import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
 import type { Backup, Routine } from '../../domain/types'
 import { Button } from './components/Button'
 import { ChevronDown, ChevronRight, ChevronUp, Plus } from './components/icons'
 import { Sheet } from './components/Sheet'
-import { Switch } from './components/Switch'
 import { RoutineEditSheet } from './RoutineEditSheet'
 import { downloadBackup, downloadBlob } from './downloadBackup'
 import {
@@ -356,6 +355,7 @@ export function SettingsPage() {
             <div className="flex min-h-[var(--tap)] items-center justify-between gap-3 px-2">
               <span className="text-body">20 dk sonra tekrar hatırlat</span>
               <Switch
+                variant="wide"
                 label="20 dk sonra tekrar hatırlat"
                 checked={settings?.push?.followUp ?? true}
                 onChange={(v) => void runPush(() => setFollowUp(v))}

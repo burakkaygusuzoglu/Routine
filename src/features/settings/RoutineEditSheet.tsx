@@ -7,7 +7,7 @@ import { Button } from './components/Button'
 import { SegmentedControl } from './components/SegmentedControl'
 import { sheetErrorText } from './messages'
 import { Sheet } from './components/Sheet'
-import { Switch } from './components/Switch'
+import { Switch } from '../../ui'
 import {
   DAY_LONG,
   DAY_SHORT,
@@ -278,7 +278,7 @@ export function RoutineEditSheet({ routine, all, onClose, onArchived }: Props) {
             <p className="text-body font-semibold">Hatırlatma</p>
             <p className="text-footnote text-muted">Saatinde bildirim gelir</p>
           </div>
-          <Switch label="Hatırlatma" checked={draft.calendarAlarm} onChange={(v) => set('calendarAlarm', v)} />
+          <Switch variant="wide" label="Hatırlatma" checked={draft.calendarAlarm} onChange={(v) => set('calendarAlarm', v)} />
         </section>
 
         {error && (

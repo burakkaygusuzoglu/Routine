@@ -3,9 +3,32 @@ export interface SwitchProps {
   onChange: (checked: boolean) => void
   /** Accessible name. */
   label: string
+  /** `ios` is the compact 51x31 switch; `wide` is the larger 56x32 one used in settings. */
+  variant?: 'ios' | 'wide'
 }
 
-export function Switch({ checked, onChange, label }: SwitchProps) {
+export function Switch({ checked, onChange, label, variant = 'ios' }: SwitchProps) {
+  if (variant === 'wide') {
+    return (
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={() => onChange(!checked)}
+        className="flex min-h-[var(--tap)] min-w-[var(--tap)] items-center justify-center"
+      >
+        <span
+          aria-hidden="true"
+          className={`flex h-8 w-14 items-center rounded-full p-1 transition-colors motion-reduce:transition-none ${
+            checked ? 'justify-end bg-accent-graphic' : 'justify-start bg-raised'
+          }`}
+        >
+          <span className="size-6 rounded-full bg-bg" />
+        </span>
+      </button>
+    )
+  }
   return (
     <button
       type="button"
