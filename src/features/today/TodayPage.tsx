@@ -6,6 +6,7 @@ import { dayProgress, nextUp, routineTime, todaysRoutines } from '../../domain/s
 import type { CompletionStatus, DateKey, Routine } from '../../domain/types'
 import { ROUTINE_COLORS } from '../../design/palette'
 import { store } from '../../data/store'
+import { BackupReminder, RoutineEditSheet } from '../settings'
 import { Button } from './components/Button'
 import { FocusBanner } from './components/FocusBanner'
 import { Hero } from './components/Hero'
@@ -52,6 +53,7 @@ export function TodayPage() {
   const navigate = useNavigate()
   const nowMinutes = useNowMinutes()
   const [actionFor, setActionFor] = useState<Routine | null>(null)
+  const [editing, setEditing] = useState<Routine | null>(null)
   const [undo, setUndo] = useState<UndoEntry | null>(null)
   const [view, setView] = useState<TodayView>(loadView)
   const undoKey = useRef(0)
@@ -160,6 +162,8 @@ export function TodayPage() {
 
       <StudyCard today={today} />
 
+      <BackupReminder />
+
       {view === 'timeline' ? (
         <Timeline
           entries={list.map((r) => ({
@@ -206,7 +210,19 @@ export function TodayPage() {
         <Button variant="ghost" onClick={() => choose(null)}>
           Temizle
         </Button>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            const r = actionFor
+            setActionFor(null)
+            setEditing(r)
+          }}
+        >
+          Rutini düzenle
+        </Button>
       </Sheet>
+
+      {editing && routines && <RoutineEditSheet routine={editing} all={routines} onClose={() => setEditing(null)} />}
 
       {celebrating && (
         <Celebration
