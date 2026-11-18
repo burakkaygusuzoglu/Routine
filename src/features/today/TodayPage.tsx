@@ -7,6 +7,7 @@ import type { CompletionStatus, DateKey, Routine } from '../../domain/types'
 import { ROUTINE_COLORS } from '../../design/palette'
 import { store } from '../../data/store'
 import { BackupReminder, RoutineEditSheet } from '../settings'
+import { useAccount } from '../../data/account'
 import { Button } from './components/Button'
 import { FocusBanner } from './components/FocusBanner'
 import { Hero } from './components/Hero'
@@ -54,6 +55,8 @@ export function TodayPage() {
   const nowMinutes = useNowMinutes()
   const [actionFor, setActionFor] = useState<Routine | null>(null)
   const [editing, setEditing] = useState<Routine | null>(null)
+  const [creating, setCreating] = useState(false)
+  const account = useAccount()
   const [undo, setUndo] = useState<UndoEntry | null>(null)
   const [view, setView] = useState<TodayView>(loadView)
   const undoKey = useRef(0)
@@ -160,6 +163,30 @@ export function TodayPage() {
         onStart={() => next && navigate(focusPath(next.id))}
       />
 
+      {routines && routines.length === 0 && (
+        <section aria-label="Rutinler" className="flex flex-col gap-3 rounded-card bg-surface p-4">
+          <div>
+            <p className="text-headline font-semibold">Rutinlerin henüz burada değil</p>
+            <p className="text-footnote text-muted">
+              {account.sync?.kind === 'syncing'
+                ? 'Hesabındaki rutinler eşitleniyor, birazdan gelir.'
+                : account.sync?.kind === 'error' || account.sync?.kind === 'offline'
+                  ? `${account.sync.text}. Bağlantını kontrol edip tekrar eşitle.`
+                  : 'Başka bir cihazda rutinlerin varsa aynı e-postayla girdiğinden emin ol, ya da yeni bir rutin ekle.'}
+            </p>
+            {account.email && <p className="text-footnote text-muted">Hesap: {account.email}</p>}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {account.sync && (
+              <Button variant="ghost" onClick={() => void account.syncNow()}>
+                Şimdi eşitle
+              </Button>
+            )}
+            <Button onClick={() => setCreating(true)}>Rutin ekle</Button>
+          </div>
+        </section>
+      )}
+
       <StudyCard today={today} />
 
       <BackupReminder />
@@ -226,6 +253,7 @@ export function TodayPage() {
       </Sheet>
 
       {editing && routines && <RoutineEditSheet routine={editing} all={routines} onClose={() => setEditing(null)} />}
+      {creating && routines && <RoutineEditSheet routine={null} all={routines} onClose={() => setCreating(false)} />}
 
       {celebrating && (
         <Celebration
