@@ -52,7 +52,7 @@ export function WeekBars({ today, liveDate, study, now }: WeekBarsProps) {
             </span>
             <div aria-hidden="true" className="relative flex h-24 w-full items-end overflow-hidden rounded-cell bg-raised">
               <div
-                className={`w-full ${d.ms >= targetMs ? 'bg-accent' : 'bg-accent/45'}`}
+                className={`w-full ${d.ms >= targetMs ? 'bg-accent-graphic' : 'bg-accent-graphic/60'}`}
                 style={{ height: pct(d.ms) }}
               />
               <div className="absolute inset-x-0 border-t border-dashed border-text/60" style={{ bottom: pct(targetMs) }} />
