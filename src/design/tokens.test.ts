@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { ROUTINE_COLOR_KEYS, ROUTINE_COLORS, routineInk } from './palette'
+import { ROUTINE_COLOR_KEYS, ROUTINE_COLORS, minTone, routineInk, tint } from './palette'
 
 const css = readFileSync(new URL('./tokens.css', import.meta.url), 'utf8')
 
@@ -74,17 +74,28 @@ describe('light theme blocks', () => {
   it('only overrides tokens that exist in the dark theme', () => {
     for (const k of Object.keys(light)) expect(dark).toHaveProperty(k)
   })
-  it('keeps the lime accent fill', () => {
-    expect(light['--color-accent']).toBe(dark['--color-accent'])
+  it('darkens the accent so graphics reach 3:1 on every ground', () => {
+    for (const g of GROUNDS) expect(contrast(light['--color-accent'], light[g] ?? dark[g])).toBeGreaterThanOrEqual(3)
+  })
+  it('routine fills reach 3:1 on bg, chrome and surface', () => {
+    for (const k of ROUTINE_COLOR_KEYS)
+      for (const g of ['--color-bg', '--color-chrome', '--color-surface'])
+        expect(contrast(light[`--color-routine-${k}`], light[g])).toBeGreaterThanOrEqual(3)
   })
 })
 
 describe('palette', () => {
-  it('mirrors the routine tokens', () => {
+  it('points at the routine tokens, which exist in both themes', () => {
     for (const k of ROUTINE_COLOR_KEYS) {
-      expect(ROUTINE_COLORS[k].toLowerCase()).toBe(dark[`--color-routine-${k}`])
+      expect(ROUTINE_COLORS[k]).toBe(`var(--color-routine-${k})`)
+      expect(dark[`--color-routine-${k}`]).toMatch(/^#[0-9a-f]{6}$/)
+      expect(light).toHaveProperty(`--color-routine-${k}`)
       expect(dark[`--color-routine-${k}-ink`]).toBe(dark[`--color-routine-${k}`])
     }
+  })
+  it('minTone and tint mix the variable with transparent', () => {
+    expect(minTone('amber')).toBe('color-mix(in srgb, var(--color-routine-amber) 45%, transparent)')
+    expect(tint('amber')).toContain('var(--color-routine-amber) 14%')
   })
   it('routineInk points at the ink variable', () => {
     expect(routineInk('amber')).toBe('var(--color-routine-amber-ink)')

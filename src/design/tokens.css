@@ -97,10 +97,19 @@
   --color-empty: #e5e5ea;
   --color-text: #1c1c1e;
   --color-muted: #636366;
-  --color-accent: #d4ff5c;
-  --color-on-accent: #1c1c1e;
+  /* Graphics (rings, bars, borders, dots) need 3:1 on white/grey, so light accent and routine fills are darker. */
+  --color-accent: #698f00;
+  --color-on-accent: #111111;
   --color-accent-ink: #4d6b00;
   --color-danger: #c0261a;
+  --color-routine-amber: #c87800;
+  --color-routine-sky: #1096c0;
+  --color-routine-violet: #9574f9;
+  --color-routine-coral: #ff462a;
+  --color-routine-blue: #3c88ff;
+  --color-routine-green: #1b9f49;
+  --color-routine-pink: #ed4e9a;
+  --color-routine-teal: #219b8c;
   --color-routine-amber-ink: #825e27;
   --color-routine-sky-ink: #296d82;
   --color-routine-violet-ink: #6d5aa2;
@@ -123,10 +132,19 @@
     --color-empty: #e5e5ea;
     --color-text: #1c1c1e;
     --color-muted: #636366;
-    --color-accent: #d4ff5c;
-    --color-on-accent: #1c1c1e;
+    /* Graphics (rings, bars, borders, dots) need 3:1 on white/grey, so light accent and routine fills are darker. */
+    --color-accent: #698f00;
+    --color-on-accent: #111111;
     --color-accent-ink: #4d6b00;
     --color-danger: #c0261a;
+    --color-routine-amber: #c87800;
+    --color-routine-sky: #1096c0;
+    --color-routine-violet: #9574f9;
+    --color-routine-coral: #ff462a;
+    --color-routine-blue: #3c88ff;
+    --color-routine-green: #1b9f49;
+    --color-routine-pink: #ed4e9a;
+    --color-routine-teal: #219b8c;
     --color-routine-amber-ink: #825e27;
     --color-routine-sky-ink: #296d82;
     --color-routine-violet-ink: #6d5aa2;
