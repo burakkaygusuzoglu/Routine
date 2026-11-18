@@ -1,6 +1,6 @@
 import { addDays, isScheduled } from '../../../domain/date'
 import type { DateKey, Routine } from '../../../domain/types'
-import { ProgressRing } from './ProgressRing'
+import { ProgressRing } from '../../../ui'
 import { doneKey, type DoneMap } from '../streak'
 
 const WEEKDAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
@@ -32,10 +32,11 @@ export function WeekStrip({ weekStart, today, routines, done }: Props) {
           >
             <span className={`text-caption ${isToday ? 'font-bold text-text' : 'text-muted'}`}>{name}</span>
             <ProgressRing
+              variant="line"
               value={scheduled.length ? count / scheduled.length : 0}
               size={32}
               thickness={3}
-              label={`${name}: ${count}/${scheduled.length} tamamlandı`}
+              aria-label={`${name}: ${count}/${scheduled.length} tamamlandı`}
             >
               <span className={`text-caption ${isToday ? 'font-bold' : 'font-semibold'}`}>{Number(day.slice(8))}</span>
             </ProgressRing>

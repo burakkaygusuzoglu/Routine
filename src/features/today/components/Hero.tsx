@@ -2,7 +2,7 @@ import { routineInk } from '../../../design/palette'
 import { RoutineIcon } from '../../../design/routineIcons'
 import type { Routine } from '../../../domain/types'
 import { Button } from './Button'
-import { ProgressRing } from './ProgressRing'
+import { ProgressRing } from '../../../ui'
 
 interface Props {
   done: number
@@ -17,7 +17,7 @@ export function Hero({ done, total, next, nextTime, onStart }: Props) {
   const allDone = total > 0 && next === null
   return (
     <section aria-label="Sıradaki" className="flex items-center gap-4 rounded-hero bg-surface p-4">
-      <ProgressRing value={total ? done / total : 0} size={68} thickness={7} label={`${done}/${total} tamamlandı`}>
+      <ProgressRing variant="line" value={total ? done / total : 0} size={68} thickness={7} aria-label={`${done}/${total} tamamlandı`}>
         <span className="text-headline font-bold">
           {done}/{total}
         </span>
