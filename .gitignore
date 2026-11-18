@@ -8,3 +8,5 @@ dist/
 # Dexie Cloud CLI credentials: never commit
 dexie-cloud.key
 dexie-cloud.json
+dist-e2e/
+dist-auth/
