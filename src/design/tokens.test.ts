@@ -12,7 +12,7 @@ function vars(opener: string): Record<string, string> {
   const open = css.indexOf('{', start)
   const close = css.indexOf('}', open)
   const out: Record<string, string> = {}
-  for (const m of css.slice(open + 1, close).matchAll(/(--[\w-]+):\s*([^;]+);/g)) out[m[1]] = m[2].trim()
+  for (const m of css.slice(open + 1, close).matchAll(/^\s*(-{0,2}[a-z][\w-]*):\s*([^;]+);/gm)) out[m[1]] = m[2].trim()
   return out
 }
 
@@ -42,37 +42,77 @@ describe('contrast helper', () => {
   })
 })
 
-describe.each([
+const ocean = vars(":root[data-theme='ocean']")
+const sunset = vars(":root[data-theme='sunset']")
+const lavender = vars(":root[data-theme='lavender']")
+
+const THEMES = [
   ['dark', dark],
   ['light', light],
-] as const)('%s text pairs pass 4.5:1', (name, theme) => {
+  ['ocean', ocean],
+  ['sunset', sunset],
+  ['lavender', lavender],
+] as const
+
+describe.each(THEMES)('%s contrast', (name, theme) => {
   // Light overrides dark; any token it does not override falls back to dark.
-  const t = (k: string) => (theme[k] ?? dark[k])
-  const texts = ['--color-text', '--color-muted', '--color-accent-ink', '--color-danger', ...ROUTINE_COLOR_KEYS.map((k) => `--color-routine-${k}-ink`)]
-  for (const text of texts) {
-    for (const ground of GROUNDS) {
-      it(`${text} on ${ground}`, () => {
-        expect(contrast(t(text), t(ground))).toBeGreaterThanOrEqual(4.5)
-      })
-    }
+  const t = (k: string) => theme[k] ?? dark[k]
+  const ratio = (a: string, b: string) => contrast(t(a), t(b))
+  const at = (a: string, grounds: string[], min: number) => {
+    for (const g of grounds) it(`${a} on ${g} >= ${min}`, () => expect(ratio(a, g)).toBeGreaterThanOrEqual(min))
   }
-  it('on-accent on accent', () => {
-    expect(contrast(t('--color-on-accent'), t('--color-accent'))).toBeGreaterThanOrEqual(4.5)
+
+  at('--color-text', ['--color-bg', '--color-surface', '--color-raised'], 4.5)
+  at('--color-muted', ['--color-bg', '--color-surface'], 4.5)
+  at('--color-on-accent', ['--color-accent'], 4.5)
+  at('--color-accent-ink', ['--color-bg', '--color-surface'], 4.5)
+  at('--color-accent-graphic', ['--color-bg', '--color-surface', '--color-raised'], 3)
+  at('--color-danger', ['--color-surface'], 4.5)
+  for (const k of ROUTINE_COLOR_KEYS) {
+    at(`--color-routine-${k}`, ['--color-surface'], 3)
+    at(`--color-routine-${k}-ink`, ['--color-surface'], 4.5)
+  }
+  it('text and muted also read on chrome', () => {
+    expect(ratio('--color-text', '--color-chrome')).toBeGreaterThanOrEqual(4.5)
+    expect(ratio('--color-muted', '--color-chrome')).toBeGreaterThanOrEqual(4.5)
   })
-  it(`${name}: night tokens exist in dark and are not overridden in light`, () => {
+  it('night tokens exist only in the base dark block', () => {
     const night = Object.keys(theme).filter((k) => k.startsWith('--color-night-'))
     expect(night.length).toBe(name === 'dark' ? 5 : 0)
   })
 })
 
+describe.each([
+  ['ocean', ocean, 'dark'],
+  ['sunset', sunset, 'dark'],
+  ['lavender', lavender, 'light'],
+] as const)('%s theme block', (_name, theme, scheme) => {
+  it('defines the full token set', () => {
+    const colourKeys = Object.keys(dark).filter((k) => k.startsWith('--color-') && !k.startsWith('--color-night-'))
+    for (const k of colourKeys) expect(theme, k).toHaveProperty(k)
+    expect(theme['color-scheme']).toBe(scheme)
+  })
+  it('uses hex values only', () => {
+    for (const [k, v] of Object.entries(theme)) if (k.startsWith('--color-')) expect(v).toMatch(/^#[0-9a-f]{6}$/)
+  })
+})
+
+describe('nested dark scope', () => {
+  it('repeats the base dark colours so a preview can paint dark inside another theme', () => {
+    const nested = vars("\n[data-theme='dark'] {")
+    const { ['color-scheme']: scheme, ...rest } = nested
+    expect(scheme).toBe('dark')
+    const base = Object.fromEntries(Object.entries(dark).filter(([k]) => k.startsWith('--color-') && !k.startsWith('--color-night-')))
+    expect(rest).toEqual(base)
+  })
+})
+
 describe('light theme blocks', () => {
   it('system block repeats the light block (minus nothing)', () => {
-    const { ['color-scheme']: _a, ...rest } = system
-    void _a
-    expect(rest).toEqual(light)
+    expect(system).toEqual(light)
   })
   it('only overrides tokens that exist in the dark theme', () => {
-    for (const k of Object.keys(light)) expect(dark).toHaveProperty(k)
+    for (const k of Object.keys(light).filter((x) => x !== 'color-scheme')) expect(dark).toHaveProperty(k)
   })
   it('uses a darker graphic accent so rings and bars reach 3:1 on every ground', () => {
     for (const g of GROUNDS) expect(contrast(light['--color-accent-graphic'], light[g] ?? dark[g])).toBeGreaterThanOrEqual(3)

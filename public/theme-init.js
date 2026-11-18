@@ -4,8 +4,15 @@
   try {
     theme = localStorage.getItem('routine.theme') || 'system'
   } catch (e) {}
+  var known = ['system', 'light', 'dark', 'ocean', 'sunset', 'lavender']
+  if (known.indexOf(theme) < 0) theme = 'system'
   document.documentElement.setAttribute('data-theme', theme)
-  var light = theme === 'light' || (theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)
+  var light = theme === 'light' || theme === 'lavender' || (theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches)
+  // Address bar / status colour of the concrete theme (same values as THEME_COLORS in theme.ts).
+  var colors = { light: '#F2F2F7', dark: '#0B0D12', ocean: '#06161F', sunset: '#170C1C', lavender: '#F3F0FB' }
+  var concrete = theme === 'system' ? (light ? 'light' : 'dark') : theme
+  var tc = document.querySelector('meta[name="theme-color"]')
+  if (tc) tc.setAttribute('content', colors[concrete])
   // iOS reads this when the home-screen app launches: dark text on the light theme.
   var bar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')
   if (bar && light) bar.setAttribute('content', 'default')

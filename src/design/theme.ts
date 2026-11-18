@@ -1,14 +1,32 @@
 /** Theme switch: 'system' follows the OS, the others force a theme. */
-export type Theme = 'system' | 'light' | 'dark'
+export type Theme = 'system' | 'light' | 'dark' | 'ocean' | 'sunset' | 'lavender'
+
+/** Every theme, in picker order. */
+export const THEMES: readonly Theme[] = ['system', 'light', 'dark', 'ocean', 'sunset', 'lavender']
+
+/** The scheme a theme is painted in (drives the status bar and color-scheme). */
+export type Scheme = 'light' | 'dark'
 
 export const THEME_STORAGE_KEY = 'routine.theme'
 export const DEFAULT_THEME: Theme = 'system'
 
-/** Status bar / address bar colour per resolved theme (matches --color-bg). */
-export const THEME_COLORS = { dark: '#0B0D12', light: '#F2F2F7' } as const
+/** Status bar / address bar colour per concrete theme (matches its --color-bg). */
+export const THEME_COLORS = {
+  dark: '#0B0D12',
+  light: '#F2F2F7',
+  ocean: '#06161F',
+  sunset: '#170C1C',
+  lavender: '#F3F0FB',
+} as const
 
 export function isTheme(value: unknown): value is Theme {
-  return value === 'system' || value === 'light' || value === 'dark'
+  return typeof value === 'string' && (THEMES as readonly string[]).includes(value)
+}
+
+/** The concrete theme behind a choice: 'system' becomes light or dark. */
+export function concreteTheme(theme: Theme): keyof typeof THEME_COLORS {
+  if (theme === 'system') return systemPrefersLight() ? 'light' : 'dark'
+  return theme
 }
 
 export function getTheme(): Theme {
@@ -28,17 +46,17 @@ function systemPrefersLight(): boolean {
   }
 }
 
-/** The theme that is actually painted. */
-export function resolveTheme(theme: Theme): 'light' | 'dark' {
-  if (theme === 'system') return systemPrefersLight() ? 'light' : 'dark'
-  return theme
+/** The scheme that is actually painted: light for light and lavender, dark for the rest. */
+export function resolveTheme(theme: Theme): Scheme {
+  const concrete = concreteTheme(theme)
+  return concrete === 'light' || concrete === 'lavender' ? 'light' : 'dark'
 }
 
 function apply(theme: Theme): void {
   if (typeof document === 'undefined') return
   document.documentElement.setAttribute('data-theme', theme)
   const meta = document.querySelector('meta[name="theme-color"]')
-  meta?.setAttribute('content', THEME_COLORS[resolveTheme(theme)])
+  meta?.setAttribute('content', THEME_COLORS[concreteTheme(theme)])
 }
 
 let mediaBound = false
