@@ -9,6 +9,7 @@ import { store } from '../../data/store'
 import { Button } from './components/Button'
 import { FocusBanner } from './components/FocusBanner'
 import { Hero } from './components/Hero'
+import { StudyCard } from './components/StudyCard'
 import { RoutineRow } from './components/RoutineRow'
 import { Sheet } from './components/Sheet'
 import { WakeChip } from './components/WakeChip'
@@ -156,6 +157,8 @@ export function TodayPage() {
         nextTime={next ? routineTime(next, dayLog.wokeAt, settings) : null}
         onStart={() => next && navigate(focusPath(next.id))}
       />
+
+      <StudyCard today={today} />
 
       {view === 'timeline' ? (
         <Timeline
