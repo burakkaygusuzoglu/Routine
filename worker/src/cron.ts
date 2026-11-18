@@ -7,6 +7,8 @@ const PUSH_TTL_SECONDS = LIMITS.windowMs / 1000
 const SUBREQUEST_LIMIT = 50
 /** Kept back for the account write and the index write. */
 const RESERVE = 3
+/** The index is rebuilt from KV list() when the UTC minute is a multiple of this. */
+const INDEX_REBUILD_MINUTES = 10
 
 export interface CronReport {
   sent: number
@@ -28,8 +30,10 @@ export async function runCron(env: Env, deps: Deps): Promise<CronReport> {
   ops++
   let indexDirty = false
 
-  // Hourly self-heal: rebuild the index from KV metadata (1 list op per 1000 accounts).
-  if (new Date(now).getUTCMinutes() === 0) {
+  // Self-heal every 10 minutes: rebuild the index from KV metadata (1 list op per 1000
+  // accounts). saveAccount does a read-modify-write of the single index key, so two
+  // concurrent requests can drop an entry; this puts it back (and drops stale ones).
+  if (new Date(now).getUTCMinutes() % INDEX_REBUILD_MINUTES === 0) {
     const listed = await listIndex(env)
     ops += listed.listOps
     if (JSON.stringify(sortKeys(listed.index)) !== JSON.stringify(sortKeys(index))) {

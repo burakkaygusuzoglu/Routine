@@ -126,6 +126,38 @@ describe('cron delivery', () => {
     expect(t.kv.json(`acct:${ACCOUNT}`).items.length).toBe(Math.max(0, left - 46))
   })
 
+  it('picks up an account missing from the index at the next 10-minute rebuild', async () => {
+    const t = await setup()
+    const sub = await makeSubscriber()
+    await t.api('POST', '/v1/subscribe', { ...creds, subscription: sub.subscription })
+    const base = Date.UTC(2026, 10, 17, 11, 0, 0)
+    t.deps.clock.now = base - 20 * MIN
+    await t.api('PUT', '/v1/schedule', { ...creds, items: [item('a', base + 2 * MIN)] })
+    // Simulate a lost concurrent index write.
+    const idx = t.kv.json('idx')
+    delete idx[ACCOUNT]
+    t.kv.data.set('idx', { value: JSON.stringify(idx), metadata: null })
+
+    t.deps.clock.now = base + 3 * MIN // minute 3: no rebuild, the account is invisible
+    await runCron(t.env, t.deps)
+    expect(t.calls).toHaveLength(0)
+    expect(t.kv.lists).toBe(0)
+
+    t.deps.clock.now = base + 10 * MIN // minute 10: rebuild finds it (but it is 8 min late, still in window)
+    await runCron(t.env, t.deps)
+    expect(t.kv.lists).toBe(1)
+    expect(t.calls).toHaveLength(1)
+  })
+
+  it('tolerates index entries whose account is gone', async () => {
+    const t = await setup()
+    t.kv.data.set('idx', { value: JSON.stringify({ ghost: NOW - MIN }), metadata: null })
+    t.deps.clock.now = NOW + 3 * MIN
+    const report = await runCron(t.env, t.deps)
+    expect(report).toEqual({ sent: 0, accounts: 0 })
+    expect(t.kv.json('idx')).toEqual({})
+  })
+
   it('rebuilds a lost index from KV metadata at the top of the hour', async () => {
     const t = await setup()
     const sub = await makeSubscriber()

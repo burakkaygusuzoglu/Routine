@@ -38,7 +38,7 @@ export async function writeIndex(env: Env, index: Index): Promise<void> {
 
 /**
  * Saves one account (a single KV write). The earliest item time is kept as KV
- * metadata so the hourly reconcile can rebuild the index from a list call.
+ * metadata so the periodic reconcile can rebuild the index from a list call.
  * Pass `index: false` when the caller maintains the index itself (cron).
  */
 export async function saveAccount(
