@@ -194,8 +194,12 @@ describe('sessions across midnight', () => {
     const midnight = zonedEpoch('2026-11-19', '00:00')
     const before = { ...newStudy(), accumulatedMs: MIN, runningSince: null }
     expect(joinMidnightSplit(before, { ...newStudy(), runningSince: midnight + 1 }, midnight)).toBeNull()
-    expect(joinMidnightSplit(before, { ...newStudy(), accumulatedMs: MIN, runningSince: midnight }, midnight)).toBeNull()
-    expect(joinMidnightSplit({ ...before, runningSince: 5 }, { ...newStudy(), runningSince: midnight }, midnight)).toBeNull()
+    expect(
+      joinMidnightSplit(before, { ...newStudy(), accumulatedMs: MIN, runningSince: midnight }, midnight),
+    ).toBeNull()
+    expect(
+      joinMidnightSplit({ ...before, runningSince: 5 }, { ...newStudy(), runningSince: midnight }, midnight),
+    ).toBeNull()
     expect(joinMidnightSplit(undefined, { ...newStudy(), runningSince: midnight }, midnight)).toBeNull()
   })
 })

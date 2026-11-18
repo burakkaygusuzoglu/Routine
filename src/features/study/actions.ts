@@ -116,7 +116,9 @@ export async function renameSubjectEverywhere(from: string, to: string): Promise
     const logs = await store.listDayLogs(addDays(today, -RENAME_DAYS), addDays(today, 2))
     for (const log of logs) {
       if (!log.study?.entries.some((e) => e.subject === from)) continue
-      await store.updateDayLog(log.date, (l) => (l.study ? { ...l, study: renameSubjectInEntries(l.study, from, to) } : l))
+      await store.updateDayLog(log.date, (l) =>
+        l.study ? { ...l, study: renameSubjectInEntries(l.study, from, to) } : l,
+      )
     }
   })
 }

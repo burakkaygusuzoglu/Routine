@@ -13,7 +13,13 @@ const e = (subject: string | undefined, minutes: number | null, id = Math.random
 
 describe('minutesBySubject', () => {
   it('sums per subject, groups the rest as null and sorts biggest first', () => {
-    const r = minutesBySubject([e('Network', 60), e(undefined, 30), e('Network', 30), e('Okul', 120), e(undefined, null)])
+    const r = minutesBySubject([
+      e('Network', 60),
+      e(undefined, 30),
+      e('Network', 30),
+      e('Okul', 120),
+      e(undefined, null),
+    ])
     expect(r).toEqual([
       { subject: 'Okul', minutes: 120 },
       { subject: 'Network', minutes: 90 },
