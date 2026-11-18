@@ -125,9 +125,9 @@ export function TodayPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-3 p-4">
-      <header className="flex items-end justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-footnote text-muted">{dateLabel(today)}</p>
+      <header className="flex flex-wrap items-end justify-between gap-x-2 gap-y-3">
+        <div>
+          <p className="whitespace-nowrap text-footnote text-muted">{dateLabel(today)}</p>
           <h1 className="text-large-title font-bold">Bugün</h1>
         </div>
         <div className="flex shrink-0 items-center gap-2">
