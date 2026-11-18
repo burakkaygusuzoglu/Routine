@@ -52,7 +52,7 @@ function parse(ics: string) {
 
 describe('escaping and folding', () => {
   it('escapes backslash, semicolon, comma and newlines', () => {
-    expect(escapeText('a\\b;c,d\ne')).toBe('a\\\\b\;c\\,d\\ne')
+    expect(escapeText('a\\b;c,d\ne')).toBe('a\\\\b\\;c\\,d\\ne')
   })
 
   it('folds long lines at 75 octets with a leading space', () => {
@@ -116,6 +116,21 @@ describe('buildIcs', () => {
   it('sanitises # and | in the UID', () => {
     const [e] = parse(buildIcs([r('#seed-1|x')], settings, NOW))
     expect(e.UID).toBe('routine--seed-1-x@routine')
+  })
+
+  it('strips everything outside [A-Za-z0-9_-] from the UID', () => {
+    const [e] = parse(buildIcs([r('a b\r\nX-EVIL:1;@é')], settings, NOW))
+    expect(e.UID).toBe('routine-abX-EVIL1@routine')
+  })
+
+  it('ignores days outside 0-6 in BYDAY and skips routines with no valid day', () => {
+    const [e] = parse(buildIcs([r('a', { days: [9, 2, -1, 1.5, 0] })], settings, NOW))
+    expect(e.RRULE).toBe('FREQ=WEEKLY;BYDAY=MO,WE')
+    expect(buildIcs([r('b', { days: [7, 8] })], settings, NOW)).not.toContain('BEGIN:VEVENT')
+  })
+
+  it('escapes semicolons with a backslash', () => {
+    expect(escapeText('a;b')).toBe('a\\;b')
   })
 
   it('maps days to BYDAY, 0 = MO ... 6 = SU', () => {

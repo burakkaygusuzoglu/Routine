@@ -16,7 +16,7 @@ import { TodayPage } from '../features/today/TodayPage'
 import { useAppBadge } from '../features/today/useAppBadge'
 import { WeeklyPage } from '../features/weekly/WeeklyPage'
 import { InstallHint } from '../pwa'
-import { CalendarIcon, CheckCircleIcon, GridIcon, Sidebar, SlidersIcon, TabBar, TimerIcon, type NavItem } from '../ui'
+import { CalendarIcon, CheckCircleIcon, ErrorBoundary, GridIcon, Sidebar, SlidersIcon, TabBar, TimerIcon, type NavItem } from '../ui'
 
 const NAV: NavItem[] = [
   { to: '/', label: 'Bugün', icon: <CheckCircleIcon /> },
@@ -168,17 +168,19 @@ export function App() {
   if (!onboarded) return <Onboarding onDone={markOnboarded} />
 
   return (
-    <HashRouter>
-      <TimeZoneScope>
-        <BadgeSync />
-        <PushSync />
-        <Routes>
-          {/* Full-screen modes: no tab bar, no sidebar. */}
-          <Route path="/focus/:routineId" element={<FocusPage />} />
-          <Route path="/night" element={<NightPage />} />
-          <Route path="*" element={<TabbedLayout />} />
-        </Routes>
-      </TimeZoneScope>
-    </HashRouter>
+    <ErrorBoundary>
+      <HashRouter>
+        <TimeZoneScope>
+          <BadgeSync />
+          <PushSync />
+          <Routes>
+            {/* Full-screen modes: no tab bar, no sidebar. */}
+            <Route path="/focus/:routineId" element={<FocusPage />} />
+            <Route path="/night" element={<NightPage />} />
+            <Route path="*" element={<TabbedLayout />} />
+          </Routes>
+        </TimeZoneScope>
+      </HashRouter>
+    </ErrorBoundary>
   )
 }

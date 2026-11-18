@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { deleteAllData, deriveSyncStatus } from './account'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { clearAppLocalStorage, deleteAllData, deriveSyncStatus } from './account'
 import { RoutineDB } from './db'
 import { createStore } from './store'
 
@@ -51,6 +51,86 @@ describe('deleteAllData', () => {
     expect(await db.notes.count()).toBe(0)
     expect(await db.focusSessions.count()).toBe(0)
     expect((await store.getSettings()).targetWake).toBe('08:00')
+  })
+})
+
+function memoryStorage(): Storage {
+  const m = new Map<string, string>()
+  return {
+    get length() {
+      return m.size
+    },
+    key: (i) => [...m.keys()][i] ?? null,
+    getItem: (k) => m.get(k) ?? null,
+    setItem: (k, v) => void m.set(k, String(v)),
+    removeItem: (k) => void m.delete(k),
+    clear: () => m.clear(),
+  }
+}
+
+describe('deleteAllData: push and local keys', () => {
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', memoryStorage())
+  })
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  it('tells the push server to forget the account, then clears app keys but keeps the theme', async () => {
+    vi.stubEnv('VITE_PUSH_URL', 'https://push.example.workers.dev/')
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const db = new RoutineDB('account-test-push-1')
+    const store = createStore(db)
+    await store.init()
+    await store.updateSettings((st) => ({ ...st, push: { accountId: 'acc1', secret: 'sec1', followUp: true } }))
+    localStorage.setItem('routine.theme', 'dark')
+    localStorage.setItem('routine.focus.session', '{}')
+    localStorage.setItem('routine.onboardingDone', '1')
+    localStorage.setItem('other.app', 'x')
+
+    await deleteAllData(db)
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('https://push.example.workers.dev/v1/account')
+    expect(init.method).toBe('DELETE')
+    expect(JSON.parse(init.body)).toEqual({ accountId: 'acc1', secret: 'sec1' })
+    expect(localStorage.getItem('routine.theme')).toBe('dark')
+    expect(localStorage.getItem('routine.focus.session')).toBeNull()
+    expect(localStorage.getItem('routine.onboardingDone')).toBeNull()
+    expect(localStorage.getItem('other.app')).toBe('x')
+    expect((await store.getSettings()).push).toBeUndefined()
+  })
+
+  it('ignores network errors and does nothing when no push URL or no push settings', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError('offline'))
+    vi.stubGlobal('fetch', fetchMock)
+    vi.stubEnv('VITE_PUSH_URL', 'https://push.example.workers.dev')
+    const db = new RoutineDB('account-test-push-2')
+    const store = createStore(db)
+    await store.init()
+    await deleteAllData(db) // no push settings: no call
+    expect(fetchMock).not.toHaveBeenCalled()
+    await store.updateSettings((st) => ({ ...st, push: { accountId: 'a', secret: 's', followUp: false } }))
+    await expect(deleteAllData(db)).resolves.toBeUndefined() // fetch rejects: still finishes
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    vi.stubEnv('VITE_PUSH_URL', '')
+    await store.updateSettings((st) => ({ ...st, push: { accountId: 'a', secret: 's', followUp: false } }))
+    await deleteAllData(db)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('clearAppLocalStorage leaves non-app keys and the theme', () => {
+    localStorage.setItem('routine.timeZone', 'UTC')
+    localStorage.setItem('routine.theme', 'light')
+    localStorage.setItem('keep', '1')
+    clearAppLocalStorage()
+    expect(localStorage.getItem('routine.timeZone')).toBeNull()
+    expect(localStorage.getItem('routine.theme')).toBe('light')
+    expect(localStorage.getItem('keep')).toBe('1')
   })
 })
 

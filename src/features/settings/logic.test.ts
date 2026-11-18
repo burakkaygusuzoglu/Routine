@@ -150,7 +150,7 @@ describe('backup helpers', () => {
     expect(daysSinceBackup(new Date(2026, 10, 14, 1).toISOString(), now)).toBe(0)
   })
   it('parses a valid backup and rejects junk', () => {
-    const ok = { app: 'routine', version: 1, exportedAt: '', routines: [routine], completions: [], dayLogs: [], settings: [] }
+    const ok = { app: 'routine', version: 1, exportedAt: '', routines: [routine], completions: [], dayLogs: [], settings: [{ id: '#me', targetWake: '07:00', targetBed: '23:30', lastBackupAt: null }] }
     expect(parseBackup(JSON.stringify(ok)).routines).toHaveLength(1)
     expect(() => parseBackup('not json')).toThrow('Routine yedeği')
     expect(() => parseBackup('null')).toThrow()

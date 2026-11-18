@@ -9,16 +9,18 @@ const EVENT_MINUTES = 15
 const MAX_LINE_OCTETS = 75
 const encoder = new TextEncoder()
 
+const validDay = (d: number) => Number.isInteger(d) && d >= 0 && d <= 6
+
 /** Active routines that opted in to the calendar export and have a usable time. */
 export function exportableRoutines(routines: Routine[], settings: IcsSettings): Routine[] {
   return routines.filter(
-    (r) => r.archivedAt === null && r.calendarAlarm && r.days.length > 0 && routineTime(r, null, settings) !== null,
+    (r) => r.archivedAt === null && r.calendarAlarm && r.days.some(validDay) && routineTime(r, null, settings) !== null,
   )
 }
 
 /** Escape TEXT values per RFC 5545 (backslash, semicolon, comma, newline). */
 export function escapeText(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n')
+  return value.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n')
 }
 
 /** Fold a content line to at most 75 octets per physical line, never splitting a character. */
@@ -44,7 +46,7 @@ export function foldLine(line: string): string {
 }
 
 function uidFor(id: string): string {
-  return `routine-${id.replace(/[#|]/g, '-')}@routine`
+  return `routine-${id.replace(/[#|]/g, '-').replace(/[^A-Za-z0-9_-]/g, '')}@routine`
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -73,7 +75,10 @@ function firstDay(routine: Routine, time: ClockTime, now: Date): string {
 function eventLines(routine: Routine, settings: IcsSettings, now: Date): string[] {
   const time = routineTime(routine, null, settings) as ClockTime
   const start = floatingStamp(firstDay(routine, time, now), time)
-  const days = [...new Set(routine.days)].sort((a, b) => a - b).map((d) => BYDAY[d])
+  const days = [...new Set(routine.days)]
+    .filter(validDay)
+    .sort((a, b) => a - b)
+    .map((d) => BYDAY[d])
   const lines = [
     'BEGIN:VEVENT',
     `UID:${uidFor(routine.id)}`,
