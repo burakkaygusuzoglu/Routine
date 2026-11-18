@@ -1,4 +1,4 @@
-import { Card } from './Card'
+import { Card } from '../../../ui'
 import type { IdentityVotes as Row } from '../identity'
 
 interface Props {

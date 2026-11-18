@@ -13,7 +13,7 @@ import {
   shiftMonth,
   type Level,
 } from '../month'
-import { Card } from './Card'
+import { Card } from '../../../ui'
 import { Sheet } from './Sheet'
 
 const HEADERS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']

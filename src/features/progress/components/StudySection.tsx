@@ -1,7 +1,7 @@
 import { shortDate } from '../../weekly/logic'
 import { formatShort } from '../../study/logic'
 import type { StudyReport } from '../studyStats'
-import { Card } from './Card'
+import { Card } from '../../../ui'
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (

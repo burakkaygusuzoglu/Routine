@@ -1,4 +1,4 @@
-import { Card } from './Card'
+import { Card } from '../../../ui'
 import type { DaySummary } from '../../../domain/streak'
 
 const WEEKDAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
