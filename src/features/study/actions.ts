@@ -17,20 +17,25 @@ export async function defaultTargetMin(): Promise<number> {
  * - stops timers forgotten for longer than MAX_STRETCH_MS.
  * A session that runs past midnight is left alone: it belongs to the day it started.
  */
-export async function ensureRollover(today: DateKey = todayKey(), now: number = Date.now()): Promise<void> {
+/** Serialized entry point (shares the write queue with updateStudyToday). */
+export function ensureRollover(today: DateKey = todayKey(), now: number = Date.now()): Promise<void> {
+  return serialized(() => settle(today, now))
+}
+
+async function settle(today: DateKey, now: number): Promise<void> {
   await pullBackFutureTimer(today)
   for (const day of [addDays(today, -1), today]) {
     const prevKey = addDays(day, -1)
     const [prev, cur] = await Promise.all([store.getDayLog(prevKey), store.getDayLog(day)])
     const joined = joinMidnightSplit(prev.study, cur.study, zonedEpoch(day, '00:00'))
     if (!joined) continue
-    await store.saveDayLog({ ...prev, study: joined.previous })
-    await store.saveDayLog({ ...cur, study: joined.current })
+    await store.updateDayLog(prev.date, (l) => ({ ...l, study: joined.previous }))
+    await store.updateDayLog(cur.date, (l) => ({ ...l, study: joined.current }))
   }
   const logs = await store.listDayLogs(addDays(today, -LOOKBACK_DAYS), today)
   for (const log of logs) {
     const capped = log.study ? capForgotten(log.study, now) : null
-    if (capped) await store.saveDayLog({ ...log, study: capped })
+    if (capped) await store.updateDayLog(log.date, (l) => ({ ...l, study: capped }))
   }
 }
 
@@ -50,12 +55,13 @@ async function pullBackFutureTimer(today: DateKey): Promise<void> {
   for (const f of future) {
     const running = f.study?.runningSince
     if (running == null || !f.study) continue
-    const log = await store.getDayLog(today)
-    const current = log.study ?? newStudy(await defaultTargetMin())
-    await store.saveDayLog({ ...f, study: { ...f.study, runningSince: null } })
-    if (current.runningSince == null) {
-      await store.saveDayLog({ ...log, study: { ...current, runningSince: Math.max(running, zonedEpoch(today, '00:00')) } })
-    }
+    const fallback = await defaultTargetMin()
+    await store.updateDayLog(f.date, (l) => (l.study ? { ...l, study: { ...l.study, runningSince: null } } : l))
+    const since = Math.max(running, zonedEpoch(today, '00:00'))
+    await store.updateDayLog(today, (l) => {
+      const current = l.study ?? newStudy(fallback)
+      return current.runningSince == null ? { ...l, study: { ...current, runningSince: since } } : l
+    })
   }
 }
 
@@ -71,14 +77,14 @@ function serialized<T>(task: () => Promise<T>): Promise<T> {
 export function updateStudyToday(change: (study: StudyDay) => StudyDay): Promise<void> {
   return serialized(async () => {
     const today = todayKey()
-    await ensureRollover(today)
-    const log = await store.getDayLog(await activeStudyKey(today))
-    const current = log.study ?? newStudy(await defaultTargetMin())
-    await store.saveDayLog({ ...log, study: change(current) })
+    await settle(today, Date.now())
+    const key = await activeStudyKey(today)
+    const fallback = await defaultTargetMin()
+    // Atomic read-change-write of the study field only.
+    await store.updateDayLog(key, (log) => ({ ...log, study: change(log.study ?? newStudy(fallback)) }))
   })
 }
 
 export async function saveDefaultTarget(minutes: number): Promise<void> {
-  const settings = await store.getSettings()
-  await store.saveSettings({ ...settings, studyTargetMin: Math.max(1, Math.round(minutes)) })
+  await store.updateSettings((s) => ({ ...s, studyTargetMin: Math.max(1, Math.round(minutes)) }))
 }

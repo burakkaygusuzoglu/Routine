@@ -43,7 +43,8 @@ export function NightPage() {
   const [note, setNote] = useState('')
   const [noteSaved, setNoteSaved] = useState(false)
   const loaded = useRef(false)
-  const dirty = useRef(false)
+  // Only the fields edited here are written, so the other one stays as another device left it.
+  const dirty = useRef(new Set<'firstTask' | 'reflection'>())
   const latest = useRef({ firstTask, reflection })
   latest.current = { firstTask, reflection }
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -59,15 +60,20 @@ export function NightPage() {
   const flush = useCallback(async () => {
     if (timer.current) clearTimeout(timer.current)
     timer.current = null
-    if (!dirty.current) return
-    dirty.current = false
-    const fresh = await store.getDayLog(today)
-    await store.saveDayLog(applyFields(fresh, latest.current))
+    if (dirty.current.size === 0) return
+    const edited = new Set(dirty.current)
+    dirty.current.clear()
+    await store.updateDayLog(today, (fresh) =>
+      applyFields(fresh, {
+        firstTask: edited.has('firstTask') ? latest.current.firstTask : (fresh.firstTask ?? ''),
+        reflection: edited.has('reflection') ? latest.current.reflection : (fresh.reflection ?? ''),
+      }),
+    )
   }, [today])
 
-  const edit = (setter: (v: string) => void) => (value: string) => {
+  const edit = (field: 'firstTask' | 'reflection', setter: (v: string) => void) => (value: string) => {
     setter(value)
-    dirty.current = true
+    dirty.current.add(field)
     if (timer.current) clearTimeout(timer.current)
     timer.current = setTimeout(() => void flush(), SAVE_DELAY_MS)
   }
@@ -77,8 +83,7 @@ export function NightPage() {
 
   async function goToBed() {
     await flush()
-    const fresh = await store.getDayLog(today)
-    await store.saveDayLog({ ...fresh, bedAt: toClockTime(new Date()) })
+    await store.updateDayLog(today, (log) => ({ ...log, bedAt: toClockTime(new Date()) }))
     navigate('/')
   }
 
@@ -156,7 +161,7 @@ export function NightPage() {
             id={ids.first}
             className={FIELD}
             value={firstTask}
-            onChange={(e) => edit(setFirstTask)(e.target.value)}
+            onChange={(e) => edit('firstTask', setFirstTask)(e.target.value)}
             placeholder="Örn. ACP lab sorularına başla"
             autoComplete="off"
           />
@@ -168,7 +173,7 @@ export function NightPage() {
             className={`${FIELD} min-h-20 resize-none`}
             rows={2}
             value={reflection}
-            onChange={(e) => edit(setReflection)(e.target.value)}
+            onChange={(e) => edit('reflection', setReflection)(e.target.value)}
           />
           <form onSubmit={parkNote} className="mt-2 flex flex-col gap-2">
             <label htmlFor={ids.note} className={LABEL}>

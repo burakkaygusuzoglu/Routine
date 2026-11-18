@@ -115,14 +115,14 @@ export function SettingsPage() {
 
   const saveTime = (key: 'targetWake' | 'targetBed', value: string) => {
     if (!settings || !value) return
-    void attempt(() => store.saveSettings({ ...settings, [key]: value }))
+    void attempt(() => store.updateSettings((s) => ({ ...s, [key]: value })).then(() => undefined))
   }
 
   const download = () =>
     attempt(async () => {
       const now = new Date()
       // Record the backup time first so the file itself carries it.
-      await store.saveSettings({ ...(await store.getSettings()), lastBackupAt: now.toISOString() })
+      await store.updateSettings((s) => ({ ...s, lastBackupAt: now.toISOString() }))
       downloadJson(backupFileName(now), await store.exportBackup())
       return 'Yedek indirildi.'
     })
@@ -154,10 +154,10 @@ export function SettingsPage() {
       const current = await store.getSettings()
       const routines = await store.listRoutines()
       downloadBlob(CALENDAR_FILE_NAME, new Blob([buildIcs(routines, current, now)], { type: 'text/calendar' }))
-      await store.saveSettings({
-        ...current,
+      await store.updateSettings((s) => ({
+        ...s,
         calendarExport: { at: now.toISOString(), signature: scheduleSignature(routines, current) },
-      })
+      }))
       return 'Takvim dosyası indirildi.'
     })
 
@@ -280,7 +280,7 @@ export function SettingsPage() {
                   type="button"
                   role="radio"
                   aria-checked={on}
-                  onClick={() => void store.saveSettings({ ...settings, timeZone: c.value })}
+                  onClick={() => void store.updateSettings((s) => ({ ...s, timeZone: c.value }))}
                   className={`flex min-h-[var(--tap)] items-center justify-between gap-3 rounded-control px-3 text-left text-body ${on ? 'bg-raised font-semibold' : ''}`}
                 >
                   <span>{c.value ? c.label : `${c.label} (${Intl.DateTimeFormat().resolvedOptions().timeZone})`}</span>

@@ -23,7 +23,13 @@ export interface RoutineStore {
   setCompletion(routineId: string, date: DateKey, status: CompletionStatus | null): Promise<void>
 
   getDayLog(date: DateKey): Promise<DayLog>
+  /** Replaces the whole log. Prefer updateDayLog: it never overwrites fields written elsewhere. */
   saveDayLog(log: DayLog): Promise<void>
+  /**
+   * Reads the day's log, applies `change` and writes only the fields that changed, in one
+   * transaction. Two screens or two devices changing different fields never lose each other's work.
+   */
+  updateDayLog(date: DateKey, change: (log: DayLog) => DayLog): Promise<DayLog>
 
   /** Day logs with from <= date <= to, oldest first. */
   listDayLogs(from: DateKey, to: DateKey): Promise<DayLog[]>
@@ -38,11 +44,26 @@ export interface RoutineStore {
   deleteNote(id: string): Promise<void>
 
   getSettings(): Promise<Settings>
+  /** Replaces all settings. Prefer updateSettings. */
   saveSettings(settings: Settings): Promise<void>
+  /** Applies `change` to the current settings and writes only the changed fields, atomically. */
+  updateSettings(change: (settings: Settings) => Settings): Promise<Settings>
 
   exportBackup(): Promise<Backup>
   /** Replaces all local data with the backup. */
   importBackup(backup: Backup): Promise<void>
+}
+
+/** Keys whose values differ between `before` and `after` (deep, by JSON value). */
+function changedFields<T extends object>(before: T, after: T): Partial<T> {
+  const out: Record<string, unknown> = {}
+  const keys = new Set([...Object.keys(before), ...Object.keys(after)])
+  for (const k of keys) {
+    const a = (before as Record<string, unknown>)[k]
+    const b = (after as Record<string, unknown>)[k]
+    if (JSON.stringify(a) !== JSON.stringify(b)) out[k] = b
+  }
+  return out as Partial<T>
 }
 
 export const completionId = (routineId: string, date: DateKey) => `${routineId}|${date}`
@@ -54,15 +75,25 @@ export function createStore(db: RoutineDB = defaultDb): RoutineStore {
   return {
     async init() {
       if (db.isCloud) {
-        // Pull the account's data first, so a new device does not seed
-        // defaults over it. Offline is fine: we fall back to what is local.
-        try {
-          await Promise.race([
-            db.cloud.sync({ purpose: 'pull', wait: true }),
-            new Promise((resolve) => setTimeout(resolve, 8000)),
-          ])
-        } catch {
-          // Offline or server unreachable.
+        // Pull the account's data first, so a new device never seeds defaults over
+        // it. If the pull does not finish (slow or offline), do not seed now: the app
+        // shows defaults without saving them, and seeding retries after a real pull.
+        const pulled = await Promise.race([
+          db.cloud.sync({ purpose: 'pull', wait: true }).then(
+            () => true,
+            () => false,
+          ),
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000)),
+        ])
+        if (!pulled) {
+          const retry = () => {
+            void db.cloud
+              .sync({ purpose: 'pull', wait: true })
+              .then(() => this.init())
+              .catch(() => setTimeout(retry, 30_000))
+          }
+          setTimeout(retry, 5000)
+          return
         }
       }
       await db.transaction('rw', db.routines, db.settings, async () => {
@@ -115,6 +146,21 @@ export function createStore(db: RoutineDB = defaultDb): RoutineStore {
     async saveDayLog(log) {
       await db.dayLogs.put({ ...log, id: dayLogId(log.date) })
     },
+    async updateDayLog(date, change) {
+      return db.transaction('rw', db.dayLogs, async () => {
+        const id = dayLogId(date)
+        const row = await db.dayLogs.get(id)
+        const before: DayLog = row ? (({ id: _id, ...log }) => log)(row) : { date, wokeAt: null, bedAt: null, badDay: false }
+        const after = { ...change(before), date }
+        if (!row) {
+          await db.dayLogs.put({ ...after, id })
+        } else {
+          const patch = changedFields(before, after)
+          if (Object.keys(patch).length) await db.dayLogs.update(id, patch)
+        }
+        return after
+      })
+    },
 
     async listDayLogs(from, to) {
       const rows = await db.dayLogs.where('date').between(from, to, true, true).sortBy('date')
@@ -143,6 +189,20 @@ export function createStore(db: RoutineDB = defaultDb): RoutineStore {
     },
     async saveSettings(settings) {
       await db.settings.put(settings)
+    },
+    async updateSettings(change) {
+      return db.transaction('rw', db.settings, async () => {
+        const row = await db.settings.get(DEFAULT_SETTINGS.id)
+        const before = row ?? DEFAULT_SETTINGS
+        const after = { ...change(before), id: DEFAULT_SETTINGS.id }
+        if (!row) {
+          await db.settings.put(after)
+        } else {
+          const patch = changedFields(before, after)
+          if (Object.keys(patch).length) await db.settings.update(DEFAULT_SETTINGS.id, patch)
+        }
+        return after
+      })
     },
 
     async exportBackup() {

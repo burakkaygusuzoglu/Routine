@@ -131,8 +131,8 @@ export function TodayPage() {
         <div className="flex items-center gap-2">
           <WakeChip
             wokeAt={dayLog.wokeAt}
-            onWake={() => void store.saveDayLog({ ...dayLog, wokeAt: toClockTime(new Date()) })}
-            onChange={(t) => void store.saveDayLog({ ...dayLog, wokeAt: t })}
+            onWake={() => void store.updateDayLog(dayLog.date, (l) => ({ ...l, wokeAt: toClockTime(new Date()) }))}
+            onChange={(t) => void store.updateDayLog(dayLog.date, (l) => ({ ...l, wokeAt: t }))}
           />
           <ViewToggle
             value={view}

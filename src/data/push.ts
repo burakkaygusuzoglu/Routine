@@ -211,11 +211,10 @@ async function request(path: string, init: { method: 'POST' | 'PUT'; body: unkno
 
 /** Makes sure `settings.push` exists (random ids, follow-up on) and returns it. */
 async function ensurePushSettings(): Promise<NonNullable<Settings['push']>> {
-  const settings = await store.getSettings()
-  if (settings.push) return settings.push
-  const push = { accountId: crypto.randomUUID(), secret: crypto.randomUUID(), followUp: true }
-  await store.saveSettings({ ...settings, push })
-  return push
+  const fresh = { accountId: crypto.randomUUID(), secret: crypto.randomUUID(), followUp: true }
+  // Atomic: if another tab created ids meanwhile, keep theirs.
+  const settings = await store.updateSettings((s) => (s.push ? s : { ...s, push: fresh }))
+  return settings.push ?? fresh
 }
 
 function applicationServerKey(base64Url: string): Uint8Array<ArrayBuffer> {
@@ -301,9 +300,8 @@ export async function sendTest(): Promise<number> {
 
 /** Switches the "20 dk sonra tekrar hatırlat" follow-up for the whole account. */
 export async function setFollowUp(followUp: boolean): Promise<void> {
-  const settings = await store.getSettings()
-  const push = settings.push ?? { accountId: crypto.randomUUID(), secret: crypto.randomUUID(), followUp }
-  await store.saveSettings({ ...settings, push: { ...push, followUp } })
+  const ids = { accountId: crypto.randomUUID(), secret: crypto.randomUUID(), followUp }
+  await store.updateSettings((s) => ({ ...s, push: { ...(s.push ?? ids), followUp } }))
 }
 
 // ---------------------------------------------------------------------------

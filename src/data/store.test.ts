@@ -90,4 +90,28 @@ describe('RoutineStore', () => {
     await store.deleteNote('n1')
     expect(await store.listNotes()).toHaveLength(1)
   })
+
+  it('keeps every field when different parts of a day log are written at once', async () => {
+    await store.updateDayLog('2026-11-18', (l) => ({ ...l, reflection: 'iyi', firstTask: 'kitap' }))
+    await Promise.all([
+      store.updateDayLog('2026-11-18', (l) => ({ ...l, wokeAt: '07:10' })),
+      store.updateDayLog('2026-11-18', (l) => ({ ...l, study: { targetMin: 480, accumulatedMs: 0, runningSince: 1, entries: [] } })),
+      store.updateDayLog('2026-11-18', (l) => ({ ...l, bedAt: '23:30' })),
+    ])
+    const log = await store.getDayLog('2026-11-18')
+    expect(log).toMatchObject({ wokeAt: '07:10', bedAt: '23:30', reflection: 'iyi', firstTask: 'kitap' })
+    expect(log.study?.runningSince).toBe(1)
+  })
+
+  it('keeps push ids when another setting changes at the same time', async () => {
+    await Promise.all([
+      store.updateSettings((s) => ({ ...s, push: { accountId: 'a', secret: 'b', followUp: true } })),
+      store.updateSettings((s) => ({ ...s, targetWake: '06:45' })),
+      store.updateSettings((s) => ({ ...s, timeZone: 'Europe/Skopje' })),
+    ])
+    const st = await store.getSettings()
+    expect(st.push?.accountId).toBe('a')
+    expect(st.targetWake).toBe('06:45')
+    expect(st.timeZone).toBe('Europe/Skopje')
+  })
 })

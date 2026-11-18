@@ -73,8 +73,7 @@ async function applyPendingName() {
     return
   }
   if (!name) return
-  const settings = await store.getSettings()
-  await store.saveSettings({ ...settings, displayName: name })
+  await store.updateSettings((s) => ({ ...s, displayName: name }))
 }
 
 /** Width from which Today and Progress sit side by side. */
