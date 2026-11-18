@@ -15,8 +15,9 @@ import { ChevronDown, ChevronUp, Plus } from './components/icons'
 import { Sheet } from './components/Sheet'
 import { Switch } from './components/Switch'
 import { RoutineEditSheet } from './RoutineEditSheet'
+import { BackupReminder } from './BackupReminder'
+import { downloadBackup, downloadBlob } from './downloadBackup'
 import {
-  backupFileName,
   backupHint,
   CALENDAR_EMPTY_REASON,
   CALENDAR_FILE_NAME,
@@ -54,21 +55,6 @@ const SYNC_DOT: Record<SyncKind, string> = {
 const ICON_BTN =
   'flex min-h-[var(--tap)] min-w-[var(--tap)] items-center justify-center rounded-control text-muted disabled:opacity-30'
 
-function downloadJson(name: string, data: unknown) {
-  downloadBlob(name, new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
-}
-
-function downloadBlob(name: string, blob: Blob) {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = name
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
-}
-
 export function SettingsPage() {
   // Re-render every 30 s so the time-zone clocks stay current.
   const [, setTick] = useState(0)
@@ -84,6 +70,8 @@ export function SettingsPage() {
   const [deleting, setDeleting] = useState<'warn' | 'confirm' | null>(null)
   const [typed, setTyped] = useState('')
   const [busy, setBusy] = useState(false)
+  const [undo, setUndo] = useState<Routine | null>(null)
+  const [removing, setRemoving] = useState<Routine | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const { state: pushState, refresh: refreshPush } = usePushState()
   const [pushBusy, setPushBusy] = useState(false)
@@ -113,6 +101,28 @@ export function SettingsPage() {
       await store.saveRoutine({ ...r, archivedAt: null, sort })
     })
 
+  // The undo toast disappears by itself after a few seconds.
+  useEffect(() => {
+    if (!undo) return
+    const t = window.setTimeout(() => setUndo(null), 8000)
+    return () => window.clearTimeout(t)
+  }, [undo])
+
+  const undoArchive = () => {
+    const r = undo
+    setUndo(null)
+    if (r) void attempt(() => store.saveRoutine({ ...r, archivedAt: null }))
+  }
+
+  const removeForever = () => {
+    const r = removing
+    setRemoving(null)
+    if (r) void attempt(async () => {
+      await store.deleteRoutine(r.id)
+      return `"${r.name}" silindi.`
+    })
+  }
+
   const saveTime = (key: 'targetWake' | 'targetBed', value: string) => {
     if (!settings || !value) return
     void attempt(() => store.updateSettings((s) => ({ ...s, [key]: value })).then(() => undefined))
@@ -120,10 +130,7 @@ export function SettingsPage() {
 
   const download = () =>
     attempt(async () => {
-      const now = new Date()
-      // Record the backup time first so the file itself carries it.
-      await store.updateSettings((s) => ({ ...s, lastBackupAt: now.toISOString() }))
-      downloadJson(backupFileName(now), await store.exportBackup())
+      await downloadBackup()
       return 'Yedek indirildi.'
     })
 
@@ -206,7 +213,9 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto flex max-w-[40rem] flex-col gap-6 p-4 pb-8">
-      <h1 className="text-large-title font-bold">Ayarlar</h1>
+      <h1 className="pt-2 text-large-title font-bold">Ayarlar</h1>
+
+      <BackupReminder />
 
       <Group title="Rutinler">
         {active.map((r, i) => (
@@ -251,7 +260,7 @@ export function SettingsPage() {
           className="flex min-h-[var(--tap)] items-center gap-2 rounded-row px-2 text-body font-semibold text-accent-ink"
         >
           <Plus />
-          Rutin ekle
+          Yeni rutin ekle
         </button>
       </Group>
 
@@ -442,6 +451,14 @@ export function SettingsPage() {
               >
                 Geri al
               </button>
+              <button
+                type="button"
+                onClick={() => setRemoving(r)}
+                aria-label={`${r.name} kalıcı olarak sil`}
+                className="min-h-[var(--tap)] min-w-[var(--tap)] px-2 text-body font-semibold text-danger"
+              >
+                Sil
+              </button>
             </div>
           ))}
         </Group>
@@ -480,6 +497,7 @@ export function SettingsPage() {
           routine={editing.routine}
           all={all ?? []}
           onClose={() => setEditing(null)}
+          onArchived={setUndo}
         />
       )}
 
@@ -525,6 +543,38 @@ export function SettingsPage() {
           </div>
         </Sheet>
       )}
+
+      {removing && (
+        <Sheet open onClose={() => setRemoving(null)} title="Rutini sil">
+          <div className="flex flex-col gap-3">
+            <p className="text-body">
+              "{removing.name}" kalıcı olarak silinecek. Geri alınamaz. Geçmişte işaretlediğin günler kayıtlarda kalır.
+            </p>
+            <Button variant="danger" onClick={removeForever}>
+              Kalıcı olarak sil
+            </Button>
+          </div>
+        </Sheet>
+      )}
+
+      <div
+        role="status"
+        aria-live="polite"
+        className="pointer-events-none fixed inset-x-4 bottom-[calc(var(--safe-bottom)+var(--spacing)*18)] z-20 flex justify-center min-[900px]:bottom-6"
+      >
+        {undo && (
+          <div className="pointer-events-auto flex w-full max-w-[420px] items-center justify-between gap-3 rounded-card border border-line bg-raised py-1 pl-4 pr-1 text-text">
+            <span className="min-w-0 truncate text-footnote">"{undo.name}" arşivlendi.</span>
+            <button
+              type="button"
+              onClick={undoArchive}
+              className="min-h-[var(--tap)] min-w-[var(--tap)] shrink-0 rounded-control px-3 text-body font-semibold text-accent-ink"
+            >
+              Geri al
+            </button>
+          </div>
+        )}
+      </div>
 
       {pending && (
         <Sheet open onClose={() => setPending(null)} title="Yedekten yükle">
