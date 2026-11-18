@@ -35,11 +35,35 @@ function json(status: number, body: unknown, extra: Record<string, string> = {})
   })
 }
 
+/** Reads the body as text, aborting as soon as it grows past the limit (Content-Length may be absent or wrong). */
+async function readLimitedText(request: Request): Promise<string> {
+  if (!request.body) return ''
+  const reader = request.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > LIMITS.bodyBytes) {
+      await reader.cancel().catch(() => undefined)
+      throw new HttpError(413, 'body_too_large')
+    }
+    chunks.push(value)
+  }
+  const all = new Uint8Array(total)
+  let offset = 0
+  for (const c of chunks) {
+    all.set(c, offset)
+    offset += c.byteLength
+  }
+  return new TextDecoder().decode(all)
+}
+
 async function readJson(request: Request): Promise<unknown> {
   const declared = Number(request.headers.get('Content-Length') ?? 0)
   if (declared > LIMITS.bodyBytes) throw new HttpError(413, 'body_too_large')
-  const raw = await request.text()
-  if (new TextEncoder().encode(raw).length > LIMITS.bodyBytes) throw new HttpError(413, 'body_too_large')
+  const raw = await readLimitedText(request)
   try {
     return JSON.parse(raw)
   } catch {

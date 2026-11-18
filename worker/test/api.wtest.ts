@@ -79,6 +79,41 @@ describe('validation and limits', () => {
     expect(res.status).toBe(413)
   })
 
+  it('enforces the body limit while streaming when Content-Length is absent or lies', async () => {
+    const { env, deps } = await setup()
+    const { handleRequest } = await import('../src/api.ts')
+    let pulled = 0
+    const chunk = new TextEncoder().encode('x'.repeat(16 * 1024))
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulled++
+        if (pulled > 1000) controller.close()
+        else controller.enqueue(chunk)
+      },
+    })
+    const res = await handleRequest(
+      new Request('https://routine-push.test.workers.dev/v1/schedule', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': '100' },
+        body: stream,
+        duplex: 'half',
+      } as RequestInit),
+      env,
+      deps,
+    )
+    expect(res.status).toBe(413)
+    expect(pulled).toBeLessThan(20) // aborted early, did not drain the 16 MB stream
+  })
+
+  it('accepts a body just under the limit and counts bytes, not characters', async () => {
+    const { api } = await setup()
+    const ok = await api('PUT', '/v1/schedule', { ...creds, items: [], pad: 'x'.repeat(60_000) })
+    expect(ok.status).toBe(204)
+    // 40k two-byte characters are 80 KB: over the limit although under 64k characters.
+    const multi = await api('PUT', '/v1/schedule', { ...creds, items: [], pad: 'ç'.repeat(40_000) })
+    expect(multi.status).toBe(413)
+  })
+
   it('limits subscriptions to 10 but lets the same endpoint replace itself', async () => {
     const { api, kv } = await setup()
     for (let i = 0; i < 10; i++) {
