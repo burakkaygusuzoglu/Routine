@@ -1,27 +1,32 @@
-/** Routine colours. Hex values mirror --color-routine-* in tokens.css. */
+/**
+ * Routine colours as CSS variable references. Dark theme: the bright hues in
+ * tokens.css; light theme: darker shades of the same hues so fills, rings and
+ * borders keep 3:1 on white. Valid anywhere CSS takes a colour (inline style,
+ * SVG fill); not for canvas.
+ */
 export const ROUTINE_COLORS = {
-  amber: '#FFB84D',
-  sky: '#4CC9F0',
-  violet: '#A78BFA',
-  coral: '#FF7A66',
-  blue: '#5B9BFF',
-  green: '#5BE38A',
-  pink: '#F27DB5',
-  teal: '#3DD6C3',
+  amber: 'var(--color-routine-amber)',
+  sky: 'var(--color-routine-sky)',
+  violet: 'var(--color-routine-violet)',
+  coral: 'var(--color-routine-coral)',
+  blue: 'var(--color-routine-blue)',
+  green: 'var(--color-routine-green)',
+  pink: 'var(--color-routine-pink)',
+  teal: 'var(--color-routine-teal)',
 } as const
 
 export type RoutineColor = keyof typeof ROUTINE_COLORS
 
 export const ROUTINE_COLOR_KEYS = Object.keys(ROUTINE_COLORS) as RoutineColor[]
 
-/** "Minimum" state: the routine colour at 45% opacity (hex alpha 73). */
+/** "Minimum" state: the routine colour at 45% opacity. */
 export function minTone(color: RoutineColor): string {
-  return `${ROUTINE_COLORS[color]}73`
+  return `color-mix(in srgb, ${ROUTINE_COLORS[color]} 45%, transparent)`
 }
 
-/** Tinted background for the "next up" row (hex alpha 24). */
+/** Tinted background for the "next up" row (14% opacity). */
 export function tint(color: RoutineColor): string {
-  return `${ROUTINE_COLORS[color]}24`
+  return `color-mix(in srgb, ${ROUTINE_COLORS[color]} 14%, transparent)`
 }
 
 /**
