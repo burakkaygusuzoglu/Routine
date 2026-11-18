@@ -61,11 +61,11 @@ test('light theme: routine and accent graphics are not the bright dark-theme hue
   const read = () =>
     page.evaluate(() => {
       const s = getComputedStyle(document.documentElement)
-      return { accent: s.getPropertyValue('--color-accent').trim(), amber: s.getPropertyValue('--color-routine-amber').trim() }
+      return { graphic: s.getPropertyValue('--color-accent-graphic').trim(), amber: s.getPropertyValue('--color-routine-amber').trim() }
     })
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'))
-  expect(await read()).toEqual({ accent: '#d4ff5c', amber: '#ffb84d' })
+  expect(await read()).toEqual({ graphic: '#d4ff5c', amber: '#ffb84d' })
   await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'))
-  expect(await read()).toEqual({ accent: '#698f00', amber: '#c87800' })
+  expect(await read()).toEqual({ graphic: '#698f00', amber: '#c87800' })
   await page.screenshot({ path: 'test-results/light-today.png' })
 })

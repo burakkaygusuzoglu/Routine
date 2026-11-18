@@ -5,7 +5,7 @@ import { join } from 'node:path'
 import { openApp } from './helpers'
 
 async function downloadBackup(page: Page): Promise<string> {
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Yedeği indir' }).click()])
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Yedeği indir' }).last().click()])
   const file = join(mkdtempSync(join(tmpdir(), 'routine-e2e-')), 'backup.json')
   await download.saveAs(file)
   return file
