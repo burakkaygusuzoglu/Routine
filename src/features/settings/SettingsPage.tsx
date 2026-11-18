@@ -8,11 +8,10 @@ import { deleteAllData, useAccount, type SyncKind } from '../../data/account'
 import { disablePush, enablePush, pushConfigured, sendTest, setFollowUp, usePushState } from '../../data/push'
 import { useAuthState } from '../../data/auth'
 import { store } from '../../data/store'
-import { PageHeader, Switch } from '../../ui'
+import { Button, PageHeader, Switch } from '../../ui'
 import { applyUpdate, checkForUpdate } from '../../pwa'
 import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
 import type { Backup, Routine } from '../../domain/types'
-import { Button } from './components/Button'
 import { ChevronDown, ChevronRight, ChevronUp, Plus } from './components/icons'
 import { Sheet } from './components/Sheet'
 import { RoutineEditSheet } from './RoutineEditSheet'
@@ -339,16 +338,16 @@ export function SettingsPage() {
         {configured && canToggle && (
           <>
             {pushState === 'on' ? (
-              <Button disabled={pushBusy} onClick={() => void runPush(disablePush)}>
+              <Button look="plain" variant="ghost" disabled={pushBusy} onClick={() => void runPush(disablePush)}>
                 Bu cihazda kapat
               </Button>
             ) : (
-              <Button variant="primary" disabled={pushBusy} onClick={() => void runPush(enablePush)}>
+              <Button look="plain" variant="primary" disabled={pushBusy} onClick={() => void runPush(enablePush)}>
                 Bildirimleri aç
               </Button>
             )}
             {pushState === 'on' && (
-              <Button disabled={pushBusy} onClick={() => void runPush(async () => testText(await sendTest()))}>
+              <Button look="plain" variant="ghost" disabled={pushBusy} onClick={() => void runPush(async () => testText(await sendTest()))}>
                 Deneme bildirimi gönder
               </Button>
             )}
@@ -408,8 +407,8 @@ export function SettingsPage() {
           </>
         }
       >
-        <Button onClick={download}>Yedeği indir</Button>
-        <Button onClick={() => fileRef.current?.click()}>Yedekten yükle</Button>
+        <Button look="plain" variant="ghost" onClick={download}>Yedeği indir</Button>
+        <Button look="plain" variant="ghost" onClick={() => fileRef.current?.click()}>Yedekten yükle</Button>
         <input
           ref={fileRef}
           type="file"
@@ -445,7 +444,7 @@ export function SettingsPage() {
                 </>
               )}
             </div>
-            <Button variant="danger" onClick={() => void account.logout()}>
+            <Button look="plain" variant="danger" onClick={() => void account.logout()}>
               Çıkış yap
             </Button>
           </div>
@@ -458,7 +457,7 @@ export function SettingsPage() {
                 </span>
                 {account.sync.detail && <span className="text-footnote text-muted">{account.sync.detail}</span>}
               </div>
-              <Button onClick={() => void account.syncNow()} disabled={account.sync.kind === 'syncing'}>
+              <Button look="plain" variant="ghost" onClick={() => void account.syncNow()} disabled={account.sync.kind === 'syncing'}>
                 Şimdi eşitle
               </Button>
             </div>
@@ -486,6 +485,7 @@ export function SettingsPage() {
       </Group>
 
       <Button
+        look="plain"
         variant="danger"
         onClick={() => {
           // An old "Yedek yüklendi." must not show up inside the delete sheet.
@@ -514,13 +514,13 @@ export function SettingsPage() {
               {account.cloud ? ' giriş yaptığın tüm cihazlarda' : ''} silinecek. Bu geri alınamaz.
             </p>
             <p className="text-body text-muted">Önce bir yedek indirmeni öneririz.</p>
-            <Button onClick={() => void download()}>Önce yedek indir</Button>
+            <Button look="plain" variant="ghost" onClick={() => void download()}>Önce yedek indir</Button>
             {message && (
               <p role="status" className="text-footnote text-muted">
                 {message}
               </p>
             )}
-            <Button variant="danger" onClick={() => setDeleting('confirm')}>
+            <Button look="plain" variant="danger" onClick={() => setDeleting('confirm')}>
               Devam et
             </Button>
           </div>
@@ -542,7 +542,7 @@ export function SettingsPage() {
               autoCapitalize="characters"
               className="min-h-[var(--tap)] rounded-control border border-field-line bg-bg px-3 text-body"
             />
-            <Button variant="danger" disabled={!isDeleteConfirmed(typed) || busy} onClick={() => void confirmDelete()}>
+            <Button look="plain" variant="danger" disabled={!isDeleteConfirmed(typed) || busy} onClick={() => void confirmDelete()}>
               {busy ? 'Siliniyor…' : 'Her şeyi sil'}
             </Button>
           </div>
@@ -555,7 +555,7 @@ export function SettingsPage() {
             <p className="text-body">
               "{removing.name}" kalıcı olarak silinecek. Geri alınamaz. Geçmişte işaretlediğin günler kayıtlarda kalır.
             </p>
-            <Button variant="danger" onClick={removeForever}>
+            <Button look="plain" variant="danger" onClick={removeForever}>
               Kalıcı olarak sil
             </Button>
           </div>
@@ -585,7 +585,7 @@ export function SettingsPage() {
         <Sheet open onClose={() => setPending(null)} title="Yedekten yükle">
           <div className="flex flex-col gap-3">
             <p className="text-body">Mevcut veriler silinecek. Yedekteki veriler onların yerine geçecek.</p>
-            <Button variant="primary" onClick={confirmImport}>
+            <Button look="plain" variant="primary" onClick={confirmImport}>
               Evet, yükle
             </Button>
           </div>

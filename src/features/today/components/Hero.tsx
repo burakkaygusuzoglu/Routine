@@ -1,8 +1,7 @@
 import { routineInk } from '../../../design/palette'
 import { RoutineIcon } from '../../../design/routineIcons'
 import type { Routine } from '../../../domain/types'
-import { Button } from './Button'
-import { ProgressRing } from '../../../ui'
+import { Button, ProgressRing } from '../../../ui'
 
 interface Props {
   done: number
@@ -33,7 +32,7 @@ export function Hero({ done, total, next, nextTime, onStart }: Props) {
               <span className="line-clamp-2 min-w-0 [overflow-wrap:normal] [word-break:normal]">{next.name}</span>
             </p>
             {next.minText.trim() && <p className="text-footnote text-muted">Minimum: {next.minText}</p>}
-            <Button className="mt-2 w-full min-[420px]:hidden" onClick={onStart}>
+            <Button look="strong" className="mt-2 w-full min-[420px]:hidden" onClick={onStart}>
               Başla
             </Button>
           </>
@@ -50,7 +49,7 @@ export function Hero({ done, total, next, nextTime, onStart }: Props) {
         )}
       </div>
       {next && (
-        <Button className="hidden shrink-0 min-[420px]:block" onClick={onStart}>
+        <Button look="strong" className="hidden shrink-0 min-[420px]:block" onClick={onStart}>
           Başla
         </Button>
       )}

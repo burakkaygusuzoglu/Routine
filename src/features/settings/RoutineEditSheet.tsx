@@ -3,8 +3,7 @@ import { ROUTINE_COLORS, ROUTINE_COLOR_KEYS, type RoutineColor } from '../../des
 import { ROUTINE_ICON_LABELS, ROUTINE_ICON_NAMES, RoutineIcon } from '../../design/routineIcons'
 import { store } from '../../data/store'
 import type { AnchorType, Routine } from '../../domain/types'
-import { Button } from './components/Button'
-import { SegmentedControl, Switch } from '../../ui'
+import { Button, SegmentedControl, Switch } from '../../ui'
 import { sheetErrorText } from './messages'
 import { Sheet } from './components/Sheet'
 import {
@@ -287,7 +286,7 @@ export function RoutineEditSheet({ routine, all, onClose, onArchived }: Props) {
         )}
 
         {routine && (
-          <Button variant="danger" disabled={busy} onClick={() => run(async () => {
+          <Button look="plain" variant="danger" disabled={busy} onClick={() => run(async () => {
                 await store.archiveRoutine(routine.id)
                 onArchived?.(routine)
               })}>

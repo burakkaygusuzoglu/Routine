@@ -8,7 +8,7 @@ import { ROUTINE_COLORS } from '../../design/palette'
 import { store } from '../../data/store'
 import { BackupReminder, RoutineEditSheet } from '../settings'
 import { useAccount } from '../../data/account'
-import { Button } from './components/Button'
+import { Button } from '../../ui'
 import { FocusBanner } from './components/FocusBanner'
 import { Hero } from './components/Hero'
 import { StudyCard } from './components/StudyCard'
@@ -178,11 +178,11 @@ export function TodayPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {account.sync && (
-              <Button variant="ghost" onClick={() => void account.syncNow()}>
+              <Button look="strong" variant="ghost" onClick={() => void account.syncNow()}>
                 Şimdi eşitle
               </Button>
             )}
-            <Button onClick={() => setCreating(true)}>Rutin ekle</Button>
+            <Button look="strong" onClick={() => setCreating(true)}>Rutin ekle</Button>
           </div>
         </section>
       )}
@@ -227,17 +227,18 @@ export function TodayPage() {
       {showNightEntry(nowMinutes, settings.targetBed) && <NightCard />}
 
       <Sheet open={actionFor !== null} onClose={() => setActionFor(null)} title={actionFor?.name ?? ''}>
-        <Button onClick={() => choose('full')}>Tam yaptım</Button>
-        <Button variant="ghost" onClick={() => choose('min')}>
+        <Button look="strong" onClick={() => choose('full')}>Tam yaptım</Button>
+        <Button look="strong" variant="ghost" onClick={() => choose('min')}>
           Minimumu yaptım
         </Button>
-        <Button variant="ghost" onClick={() => choose('skipped')}>
+        <Button look="strong" variant="ghost" onClick={() => choose('skipped')}>
           Bugün atla
         </Button>
-        <Button variant="ghost" onClick={() => choose(null)}>
+        <Button look="strong" variant="ghost" onClick={() => choose(null)}>
           Temizle
         </Button>
         <Button
+          look="strong"
           variant="ghost"
           onClick={() => {
             const r = actionFor
@@ -247,7 +248,7 @@ export function TodayPage() {
         >
           Rutini düzenle
         </Button>
-        <Button variant="ghost" onClick={() => setActionFor(null)}>
+        <Button look="strong" variant="ghost" onClick={() => setActionFor(null)}>
           Vazgeç
         </Button>
       </Sheet>

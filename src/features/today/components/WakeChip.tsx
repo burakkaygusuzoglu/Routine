@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ClockTime } from '../../../domain/types'
-import { Button } from './Button'
+import { Button } from '../../../ui'
 import { Sheet } from './Sheet'
 
 interface Props {
@@ -44,6 +44,7 @@ export function WakeChip({ wokeAt, onWake, onChange }: Props) {
           />
         </label>
         <Button
+          look="strong"
           disabled={!value}
           onClick={() => {
             onChange(value)
@@ -53,6 +54,7 @@ export function WakeChip({ wokeAt, onWake, onChange }: Props) {
           Kaydet
         </Button>
         <Button
+          look="strong"
           variant="ghost"
           onClick={() => {
             onChange(null)
@@ -61,7 +63,7 @@ export function WakeChip({ wokeAt, onWake, onChange }: Props) {
         >
           Saati temizle
         </Button>
-        <Button variant="ghost" onClick={() => setOpen(false)}>
+        <Button look="strong" variant="ghost" onClick={() => setOpen(false)}>
           Vazgeç
         </Button>
       </Sheet>
