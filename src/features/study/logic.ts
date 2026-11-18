@@ -99,25 +99,38 @@ export function formatMinutes(min: number): string {
 }
 
 /**
- * Splits a stretch that runs across midnight. `yesterday` gets the time up to
- * `midnightMs` and is paused; `today` keeps running from midnight, with
- * `defaultTargetMin` when it has no log yet. Returns null when yesterday is not running.
+ * A study session belongs to the day it was started on, even when it runs past
+ * midnight: 8 hours started at 22:30 stay one session until it is paused.
+ * A timer left running longer than this is treated as forgotten and stopped there.
  */
-export function rollOver(
-  yesterday: StudyDay | undefined,
-  today: StudyDay | undefined,
+export const MAX_STRETCH_MS = 16 * 60 * 60_000
+
+/** True when `study` is running and the stretch is still within the forgotten-timer cap. */
+export function isLiveSession(study: StudyDay | undefined, now: number): boolean {
+  return !!study && study.runningSince !== null && now - study.runningSince < MAX_STRETCH_MS
+}
+
+/** Stops a forgotten timer, counting at most MAX_STRETCH_MS for the stretch. */
+export function capForgotten(study: StudyDay, now: number): StudyDay | null {
+  if (study.runningSince === null || now - study.runningSince < MAX_STRETCH_MS) return null
+  return { ...study, accumulatedMs: study.accumulatedMs + MAX_STRETCH_MS, runningSince: null }
+}
+
+/**
+ * Version 2.1.0 split a running timer at midnight: the old day was paused at midnight
+ * and the new day started running at exactly midnight with nothing counted yet. This
+ * joins such a split back into one session on the old day.
+ */
+export function joinMidnightSplit(
+  previous: StudyDay | undefined,
+  current: StudyDay | undefined,
   midnightMs: number,
-  defaultTargetMin: number = DEFAULT_TARGET_MIN,
-): { yesterday: StudyDay; today: StudyDay } | null {
-  if (!yesterday || yesterday.runningSince === null) return null
-  const since = yesterday.runningSince
-  const before = {
-    ...yesterday,
-    accumulatedMs: yesterday.accumulatedMs + Math.max(0, midnightMs - since),
-    runningSince: null,
+): { previous: StudyDay; current: StudyDay } | null {
+  if (!previous || !current) return null
+  if (previous.runningSince !== null) return null
+  if (current.runningSince !== midnightMs || current.accumulatedMs !== 0) return null
+  return {
+    previous: { ...previous, runningSince: midnightMs, entries: [...current.entries, ...previous.entries] },
+    current: { ...current, runningSince: null, entries: [] },
   }
-  const base = today ?? newStudy(defaultTargetMin)
-  // Today may already be running (another device rolled over first): keep that.
-  const after = base.runningSince === null ? { ...base, runningSince: Math.max(since, midnightMs) } : base
-  return { yesterday: before, today: after }
 }

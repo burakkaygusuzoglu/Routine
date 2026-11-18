@@ -1,7 +1,7 @@
 import { store } from '../../data/store'
 import { addDays, todayKey, zonedEpoch } from '../../domain/date'
 import type { DateKey, StudyDay } from '../../domain/types'
-import { DEFAULT_TARGET_MIN, newStudy, rollOver } from './logic'
+import { DEFAULT_TARGET_MIN, capForgotten, isLiveSession, joinMidnightSplit, newStudy } from './logic'
 
 /** How far back a forgotten running timer is looked for. */
 const LOOKBACK_DAYS = 7
@@ -11,23 +11,33 @@ export async function defaultTargetMin(): Promise<number> {
 }
 
 /**
- * Moves a timer that kept running past midnight into the new day, one midnight at a
- * time. Safe to call often and from several places: once yesterday is paused it does nothing.
+ * Keeps the stored study state consistent. Safe to call often, from any device:
+ * - brings back a timer stranded on a "future" day after a time-zone switch,
+ * - joins a session that version 2.1.0 split at midnight,
+ * - stops timers forgotten for longer than MAX_STRETCH_MS.
+ * A session that runs past midnight is left alone: it belongs to the day it started.
  */
-export async function ensureRollover(today: DateKey = todayKey()): Promise<void> {
+export async function ensureRollover(today: DateKey = todayKey(), now: number = Date.now()): Promise<void> {
   await pullBackFutureTimer(today)
-  const logs = await store.listDayLogs(addDays(today, -LOOKBACK_DAYS), addDays(today, -1))
-  const first = logs.find((l) => l.study?.runningSince != null)
-  if (!first) return
-  const fallback = await defaultTargetMin()
-  for (let day = first.date; day < today; day = addDays(day, 1)) {
-    const next = addDays(day, 1)
-    const [from, to] = await Promise.all([store.getDayLog(day), store.getDayLog(next)])
-    const res = rollOver(from.study, to.study, zonedEpoch(next, '00:00'), fallback)
-    if (!res) continue
-    await store.saveDayLog({ ...from, study: res.yesterday })
-    await store.saveDayLog({ ...to, study: res.today })
+  for (const day of [addDays(today, -1), today]) {
+    const prevKey = addDays(day, -1)
+    const [prev, cur] = await Promise.all([store.getDayLog(prevKey), store.getDayLog(day)])
+    const joined = joinMidnightSplit(prev.study, cur.study, zonedEpoch(day, '00:00'))
+    if (!joined) continue
+    await store.saveDayLog({ ...prev, study: joined.previous })
+    await store.saveDayLog({ ...cur, study: joined.current })
   }
+  const logs = await store.listDayLogs(addDays(today, -LOOKBACK_DAYS), today)
+  for (const log of logs) {
+    const capped = log.study ? capForgotten(log.study, now) : null
+    if (capped) await store.saveDayLog({ ...log, study: capped })
+  }
+}
+
+/** The day whose session is shown and changed: yesterday while its session is still running, else today. */
+export async function activeStudyKey(today: DateKey = todayKey(), now: number = Date.now()): Promise<DateKey> {
+  const yesterday = await store.getDayLog(addDays(today, -1))
+  return isLiveSession(yesterday.study, now) ? yesterday.date : today
 }
 
 /**
@@ -62,7 +72,7 @@ export function updateStudyToday(change: (study: StudyDay) => StudyDay): Promise
   return serialized(async () => {
     const today = todayKey()
     await ensureRollover(today)
-    const log = await store.getDayLog(today)
+    const log = await store.getDayLog(await activeStudyKey(today))
     const current = log.study ?? newStudy(await defaultTargetMin())
     await store.saveDayLog({ ...log, study: change(current) })
   })

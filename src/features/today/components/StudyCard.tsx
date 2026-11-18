@@ -2,13 +2,13 @@ import { Link } from 'react-router-dom'
 import type { DateKey } from '../../../domain/types'
 import { Button, TimerIcon } from '../../../ui'
 import { updateStudyToday } from '../../study/actions'
-import { useNow, useStudyDay, useStudyRollover } from '../../study/hooks'
+import { useActiveStudyKey, useNow, useStudyDay, useStudyRollover } from '../../study/hooks'
 import { elapsedMs, formatHms, formatShort, isRunning, pause, remainingMs, start } from '../../study/logic'
 
 /** Compact study timer under the hero: remaining time, start/pause and a link to the page. */
 export function StudyCard({ today }: { today: DateKey }) {
   useStudyRollover(today)
-  const day = useStudyDay(today)
+  const day = useStudyDay(useActiveStudyKey(today))
   const running = day ? isRunning(day.study) : false
   const now = useNow(running)
   if (!day) return null

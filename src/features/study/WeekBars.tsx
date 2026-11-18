@@ -15,18 +15,20 @@ function compact(ms: number): string {
 
 export interface WeekBarsProps {
   today: DateKey
-  /** Today's live state, so the bar moves while the timer runs. */
+  /** Day of the live session (yesterday while a session runs past midnight). */
+  liveDate: DateKey
+  /** Live state of that day, so the bar moves while the timer runs. */
   study: StudyDay
   now: number
 }
 
 /** Studied time of the last 7 days with the target as a line. */
-export function WeekBars({ today, study, now }: WeekBarsProps) {
+export function WeekBars({ today, liveDate, study, now }: WeekBarsProps) {
   const from = addDays(today, -6)
-  const logs = useLiveQuery(() => store.listDayLogs(from, addDays(today, -1)), [today])
+  const logs = useLiveQuery(() => store.listDayLogs(from, today), [today])
   const byDay = new Map((logs ?? []).map((l) => [l.date, l.study]))
   const days = dateRange(from, today).map((date) => {
-    const s = date === today ? study : byDay.get(date)
+    const s = date === liveDate ? study : byDay.get(date)
     return { date, ms: s ? elapsedMs(s, now) : 0 }
   })
 

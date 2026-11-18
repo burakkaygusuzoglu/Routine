@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { fromDateKey } from '../../domain/date'
 import { Button, Card, ProgressRing, Sheet } from '../../ui'
 import { saveDefaultTarget, updateStudyToday } from './actions'
-import { useNow, useStudyDay, useStudyRollover, useStudyToday, useWakeLock } from './hooks'
+import { useActiveStudyKey, useNow, useStudyDay, useStudyRollover, useStudyToday, useWakeLock } from './hooks'
 import {
   addEntry,
   elapsedMs,
@@ -27,7 +27,9 @@ const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz'
 export function StudyPage() {
   const today = useStudyToday()
   useStudyRollover(today)
-  const day = useStudyDay(today)
+  const sessionKey = useActiveStudyKey(today)
+  const continuing = sessionKey !== today
+  const day = useStudyDay(sessionKey)
   const running = day ? isRunning(day.study) : false
   const now = useNow(running)
   useWakeLock(running)
@@ -54,7 +56,7 @@ export function StudyPage() {
   const remaining = remainingMs(study, now)
   const over = remaining < 0
   const share = study.targetMin > 0 ? Math.min(1, elapsed / (study.targetMin * 60_000)) : 0
-  const d = fromDateKey(today)
+  const d = fromDateKey(sessionKey)
 
   return (
     <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-3 pb-4">
@@ -63,6 +65,9 @@ export function StudyPage() {
           {DAY_NAMES[d.getDay()]}, {d.getDate()} {MONTHS[d.getMonth()]}
         </p>
         <h1 className="m-0 text-large-title font-bold">Çalışma</h1>
+        {continuing && (
+          <p className="m-0 mt-1 text-footnote text-muted">Gece yarısını geçtin; oturumun dünün hedefine sayılmaya devam ediyor.</p>
+        )}
       </header>
 
       <div className="grid grid-cols-[minmax(0,1fr)] gap-3 px-4 min-[900px]:grid-cols-[repeat(2,minmax(0,1fr))] min-[900px]:items-start">
@@ -113,7 +118,7 @@ export function StudyPage() {
             </p>
           </Card>
 
-          <WeekBars today={today} study={study} now={now} />
+          <WeekBars today={today} liveDate={sessionKey} study={study} now={now} />
         </div>
 
         <Notes

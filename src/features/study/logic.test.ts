@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { addDays, setAppTimeZone, toDateKey, zonedEpoch } from '../../domain/date'
+import { setAppTimeZone, zonedEpoch } from '../../domain/date'
 import {
   addEntry,
   elapsedMs,
@@ -12,7 +12,10 @@ import {
   remainingMs,
   removeEntry,
   reset,
-  rollOver,
+  capForgotten,
+  isLiveSession,
+  joinMidnightSplit,
+  MAX_STRETCH_MS,
   setTarget,
   start,
 } from './logic'
@@ -153,77 +156,44 @@ describe('formatting', () => {
   })
 })
 
-describe('midnight rollover', () => {
-  const zones = ['Europe/Istanbul', 'Europe/Skopje']
+describe('sessions across midnight', () => {
+  afterEach(() => setAppTimeZone(null))
 
-  it.each(zones)('splits a stretch across midnight in %s', (tz) => {
-    setAppTimeZone(tz)
-    const day = '2026-11-18'
-    const midnight = zonedEpoch(addDays(day, 1), '00:00')
-    // Studying since 23:00, 7 h target; yesterday already had 2 h banked.
-    const since = zonedEpoch(day, '23:00')
-    const yesterday = { ...newStudy(420), accumulatedMs: 2 * HOUR, runningSince: since }
-    const res = rollOver(yesterday, undefined, midnight, 480)!
-    expect(res.yesterday.runningSince).toBeNull()
-    expect(res.yesterday.accumulatedMs).toBe(3 * HOUR)
-    expect(res.yesterday.targetMin).toBe(420)
-    expect(res.today.runningSince).toBe(midnight)
-    expect(res.today.accumulatedMs).toBe(0)
-    expect(res.today.targetMin).toBe(480)
-    // 30 minutes into the new day:
-    expect(elapsedMs(res.today, midnight + 30 * MIN)).toBe(30 * MIN)
-    expect(toDateKey(new Date(midnight))).toBe(addDays(day, 1))
-    expect(toDateKey(new Date(midnight - 1))).toBe(day)
-  })
-
-  it('the zones put midnight at different instants', () => {
-    setAppTimeZone('Europe/Istanbul')
-    const a = zonedEpoch('2026-11-19', '00:00')
+  it('keeps a session started before midnight live into the next day', () => {
     setAppTimeZone('Europe/Skopje')
-    const b = zonedEpoch('2026-11-19', '00:00')
-    expect(a).not.toBe(b)
-    expect(a).toBe(Date.UTC(2026, 10, 18, 21, 0)) // GMT+3
-    expect(b).toBe(Date.UTC(2026, 10, 18, 23, 0)) // CET, GMT+1
+    const started = zonedEpoch('2026-11-18', '22:30')
+    const s = { ...newStudy(480), runningSince: started }
+    const at0630 = zonedEpoch('2026-11-19', '06:30')
+    expect(isLiveSession(s, at0630)).toBe(true)
+    expect(remainingMs(s, at0630)).toBe(0) // 8 h done, not split at midnight
   })
 
-  it('keeps an existing, paused today and only starts it', () => {
+  it('stops only a forgotten timer, counting at most the cap', () => {
+    const s = { ...newStudy(), runningSince: T0 }
+    expect(capForgotten(s, T0 + MAX_STRETCH_MS - 1)).toBeNull()
+    const capped = capForgotten(s, T0 + MAX_STRETCH_MS + 5 * MIN)!
+    expect(capped.runningSince).toBeNull()
+    expect(capped.accumulatedMs).toBe(MAX_STRETCH_MS)
+    expect(isLiveSession(s, T0 + MAX_STRETCH_MS)).toBe(false)
+  })
+
+  it('joins a session that the previous version split at midnight', () => {
     setAppTimeZone('Europe/Istanbul')
     const midnight = zonedEpoch('2026-11-19', '00:00')
-    const yesterday = { ...newStudy(), runningSince: midnight - 10 * MIN }
-    const today = addEntry({ ...newStudy(240), accumulatedMs: 5 * MIN }, 'x', 10, T0, 'a')
-    const res = rollOver(yesterday, today, midnight, 480)!
-    expect(res.yesterday.accumulatedMs).toBe(10 * MIN)
-    expect(res.today.targetMin).toBe(240)
-    expect(res.today.accumulatedMs).toBe(5 * MIN)
-    expect(res.today.entries).toHaveLength(1)
-    expect(res.today.runningSince).toBe(midnight)
+    const before = { ...newStudy(480), accumulatedMs: 90 * MIN, runningSince: null }
+    const after = { ...newStudy(480), runningSince: midnight }
+    const joined = joinMidnightSplit(before, after, midnight)!
+    expect(joined.previous.runningSince).toBe(midnight)
+    expect(joined.current.runningSince).toBeNull()
+    expect(elapsedMs(joined.previous, midnight + 30 * MIN)).toBe(120 * MIN)
   })
 
-  it('leaves a today that is already running alone', () => {
-    const midnight = zonedEpoch('2026-11-19', '00:00', 'Europe/Skopje')
-    const yesterday = { ...newStudy(), runningSince: midnight - 5 * MIN }
-    const today = { ...newStudy(), runningSince: midnight + MIN }
-    const res = rollOver(yesterday, today, midnight)!
-    expect(res.today.runningSince).toBe(midnight + MIN)
-  })
-
-  it('does nothing when yesterday is paused or missing', () => {
-    expect(rollOver(undefined, undefined, T0)).toBeNull()
-    expect(rollOver(newStudy(), undefined, T0)).toBeNull()
-  })
-
-  it('a stretch that began after midnight adds nothing to yesterday', () => {
-    const res = rollOver({ ...newStudy(), runningSince: T0 + MIN }, undefined, T0)!
-    expect(res.yesterday.accumulatedMs).toBe(0)
-    expect(res.today.runningSince).toBe(T0 + MIN)
-  })
-
-  it('handles the DST change in Skopje (25 h day)', () => {
-    setAppTimeZone('Europe/Skopje')
-    // CEST ends on 2026-10-25: that day lasts 25 hours, and midnight of the 26th is CET.
-    const midnight = zonedEpoch('2026-10-26', '00:00')
-    expect(midnight).toBe(Date.UTC(2026, 9, 25, 23, 0))
-    const res = rollOver({ ...newStudy(), runningSince: zonedEpoch('2026-10-25', '00:00') }, undefined, midnight)!
-    expect(res.yesterday.accumulatedMs).toBe(25 * HOUR)
+  it('leaves a real start alone', () => {
+    const midnight = zonedEpoch('2026-11-19', '00:00')
+    const before = { ...newStudy(), accumulatedMs: MIN, runningSince: null }
+    expect(joinMidnightSplit(before, { ...newStudy(), runningSince: midnight + 1 }, midnight)).toBeNull()
+    expect(joinMidnightSplit(before, { ...newStudy(), accumulatedMs: MIN, runningSince: midnight }, midnight)).toBeNull()
+    expect(joinMidnightSplit({ ...before, runningSince: 5 }, { ...newStudy(), runningSince: midnight }, midnight)).toBeNull()
+    expect(joinMidnightSplit(undefined, { ...newStudy(), runningSince: midnight }, midnight)).toBeNull()
   })
 })

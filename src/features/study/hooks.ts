@@ -1,10 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
 import { store } from '../../data/store'
-import { msUntilNextMidnight, todayKey } from '../../domain/date'
+import { addDays, msUntilNextMidnight, todayKey } from '../../domain/date'
 import type { DateKey, StudyDay } from '../../domain/types'
 import { ensureRollover } from './actions'
-import { DEFAULT_TARGET_MIN, newStudy } from './logic'
+import { DEFAULT_TARGET_MIN, isLiveSession, newStudy } from './logic'
 
 /** Today's date key; changes at the next midnight of the app zone and when the app returns to the screen. */
 export function useStudyToday(): DateKey {
@@ -28,6 +28,18 @@ export function useStudyRollover(today: DateKey): void {
     const id = setTimeout(() => void ensureRollover(), msUntilNextMidnight())
     return () => clearTimeout(id)
   }, [today])
+}
+
+/**
+ * The day whose session is shown: yesterday while a session started yesterday is still
+ * running (it does not stop at midnight), otherwise today. Live, so it follows other devices.
+ */
+export function useActiveStudyKey(today: DateKey): DateKey {
+  const key = useLiveQuery(
+    () => store.getDayLog(addDays(today, -1)).then((y) => (isLiveSession(y.study, Date.now()) ? y.date : today)),
+    [today],
+  )
+  return key ?? today
 }
 
 /**
