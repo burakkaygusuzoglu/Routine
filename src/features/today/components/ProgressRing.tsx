@@ -12,7 +12,7 @@ interface Props {
 }
 
 /** SVG ring. Local copy of the package 1 component (adds `label` for aria-label). */
-export function ProgressRing({ value, size, thickness, color = 'var(--color-accent)', label, children }: Props) {
+export function ProgressRing({ value, size, thickness, color = 'var(--color-accent-graphic)', label, children }: Props) {
   const r = (size - thickness) / 2
   const circ = 2 * Math.PI * r
   const v = Math.min(1, Math.max(0, value))

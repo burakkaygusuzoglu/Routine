@@ -67,7 +67,7 @@ function Hero() {
         />
         <svg className="absolute inset-0" viewBox="0 0 144 144">
           <circle cx="72" cy="72" r="46" className="fill-surface" />
-          <path d="M52 74l15 15 27-31" fill="none" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" className="stroke-accent" />
+          <path d="M52 74l15 15 27-31" fill="none" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" className="stroke-accent-graphic" />
         </svg>
       </div>
       <div className="text-large-title font-bold">Routine</div>

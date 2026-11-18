@@ -34,7 +34,7 @@ export function ProgressRing({ value, size, thickness, color, children, ...rest 
           strokeLinecap="round"
           strokeDasharray={g.circumference}
           strokeDashoffset={g.dashOffset}
-          className={`${color ? '' : 'stroke-accent'} transition-[stroke-dashoffset] duration-300`}
+          className={`${color ? '' : 'stroke-accent-graphic'} transition-[stroke-dashoffset] duration-300`}
           style={color ? { stroke: color } : undefined}
         />
       </svg>

@@ -43,7 +43,7 @@ export function StudySection({ report, today }: { report: StudyReport; today: st
               {report.days.map((d) => (
                 <div
                   key={d.date}
-                  className={`min-w-0 flex-1 rounded-t-cell ${d.hit ? 'bg-accent' : 'bg-accent/45'}`}
+                  className={`min-w-0 flex-1 rounded-t-cell ${d.hit ? 'bg-accent-graphic' : 'bg-accent-graphic/60'}`}
                   style={{ height: pct(d.ms) }}
                 />
               ))}
@@ -85,7 +85,7 @@ export function StudySection({ report, today }: { report: StudyReport; today: st
                       </span>
                     </div>
                     <div className="h-2 overflow-hidden rounded-cell bg-raised" aria-hidden="true">
-                      <div className="h-full rounded-cell bg-accent" style={{ width: `${(s.minutes / maxSubject) * 100}%` }} />
+                      <div className="h-full rounded-cell bg-accent-graphic" style={{ width: `${(s.minutes / maxSubject) * 100}%` }} />
                     </div>
                   </li>
                 ))}

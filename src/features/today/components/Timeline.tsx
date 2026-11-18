@@ -115,8 +115,8 @@ export function Timeline({ entries, nextId, onCheck, onOpen }: Props) {
 
         {now !== null && (
           <div className="pointer-events-none absolute inset-x-0 z-10 flex items-center" style={{ top: now }} role="presentation">
-            <span className="ml-10 size-2 rounded-full bg-accent" />
-            <span className="h-0.5 flex-1 bg-accent" />
+            <span className="ml-10 size-2 rounded-full bg-accent-graphic" />
+            <span className="h-0.5 flex-1 bg-accent-graphic" />
           </div>
         )}
       </div>

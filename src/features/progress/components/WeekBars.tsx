@@ -33,8 +33,8 @@ export function WeekBars({ days, today, average }: WeekBarsProps) {
               <div className="flex h-22 w-full flex-col justify-end overflow-hidden rounded-control bg-raised" aria-hidden="true">
                 {hasBar && (
                   <>
-                    <div className="bg-accent/45" style={{ height: `${(d.min / d.total) * 100}%` }} />
-                    <div className="bg-accent" style={{ height: `${(d.full / d.total) * 100}%` }} />
+                    <div className="bg-accent-graphic/60" style={{ height: `${(d.min / d.total) * 100}%` }} />
+                    <div className="bg-accent-graphic" style={{ height: `${(d.full / d.total) * 100}%` }} />
                   </>
                 )}
               </div>
@@ -50,11 +50,11 @@ export function WeekBars({ days, today, average }: WeekBarsProps) {
       </ul>
       <div className="mt-3 flex gap-4 text-footnote text-muted">
         <span className="flex items-center gap-2">
-          <span className="size-3 rounded-cell bg-accent" aria-hidden="true" />
+          <span className="size-3 rounded-cell bg-accent-graphic" aria-hidden="true" />
           tam
         </span>
         <span className="flex items-center gap-2">
-          <span className="size-3 rounded-cell bg-accent/45" aria-hidden="true" />
+          <span className="size-3 rounded-cell bg-accent-graphic/60" aria-hidden="true" />
           minimum
         </span>
       </div>

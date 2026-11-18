@@ -18,7 +18,7 @@ export function Switch({ checked, onChange, label }: Props) {
       <span
         aria-hidden="true"
         className={`flex h-8 w-14 items-center rounded-full p-1 transition-colors motion-reduce:transition-none ${
-          checked ? 'justify-end bg-accent' : 'justify-start bg-raised'
+          checked ? 'justify-end bg-accent-graphic' : 'justify-start bg-raised'
         }`}
       >
         <span className="size-6 rounded-full bg-bg" />

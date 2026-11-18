@@ -27,7 +27,7 @@ export function IdentityVotes({ rows, hasIdentity }: Props) {
                     <span className="shrink-0 text-footnote text-muted">{row.votes} oy</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-cell bg-raised" aria-hidden="true">
-                    <div className="h-full bg-accent" style={{ width: `${(row.votes / max) * 100}%` }} />
+                    <div className="h-full bg-accent-graphic" style={{ width: `${(row.votes / max) * 100}%` }} />
                   </div>
                 </li>
               ))}

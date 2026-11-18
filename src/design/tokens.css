@@ -26,6 +26,8 @@
   --color-danger: #ff8f7d;
   /* Accent as text/icon on the ground. Equals accent in dark; darker in light. */
   --color-accent-ink: #d4ff5c;
+  /* Accent for graphics (rings, bars, dots, switches): 3:1 on the ground. Equals accent in dark. */
+  --color-accent-graphic: #d4ff5c;
 
   /* Night mode (Faz 3) is deliberately dimmer. */
   --color-night-bg: #07080b;
@@ -97,10 +99,11 @@
   --color-empty: #e5e5ea;
   --color-text: #1c1c1e;
   --color-muted: #636366;
-  /* Graphics (rings, bars, borders, dots) need 3:1 on white/grey, so light accent and routine fills are darker. */
-  --color-accent: #698f00;
+  /* Button fills stay lime (their text carries the meaning). Graphics (rings, bars, borders, dots) need 3:1 on white/grey, so they use the darker accent-graphic and routine fills. */
+  --color-accent: #c8f542;
   --color-on-accent: #111111;
   --color-accent-ink: #4d6b00;
+  --color-accent-graphic: #698f00;
   --color-danger: #c0261a;
   --color-routine-amber: #c87800;
   --color-routine-sky: #1096c0;
@@ -132,10 +135,11 @@
     --color-empty: #e5e5ea;
     --color-text: #1c1c1e;
     --color-muted: #636366;
-    /* Graphics (rings, bars, borders, dots) need 3:1 on white/grey, so light accent and routine fills are darker. */
-    --color-accent: #698f00;
+    /* Button fills stay lime (their text carries the meaning). Graphics (rings, bars, borders, dots) need 3:1 on white/grey, so they use the darker accent-graphic and routine fills. */
+    --color-accent: #c8f542;
     --color-on-accent: #111111;
     --color-accent-ink: #4d6b00;
+    --color-accent-graphic: #698f00;
     --color-danger: #c0261a;
     --color-routine-amber: #c87800;
     --color-routine-sky: #1096c0;

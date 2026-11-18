@@ -74,8 +74,11 @@ describe('light theme blocks', () => {
   it('only overrides tokens that exist in the dark theme', () => {
     for (const k of Object.keys(light)) expect(dark).toHaveProperty(k)
   })
-  it('darkens the accent so graphics reach 3:1 on every ground', () => {
-    for (const g of GROUNDS) expect(contrast(light['--color-accent'], light[g] ?? dark[g])).toBeGreaterThanOrEqual(3)
+  it('uses a darker graphic accent so rings and bars reach 3:1 on every ground', () => {
+    for (const g of GROUNDS) expect(contrast(light['--color-accent-graphic'], light[g] ?? dark[g])).toBeGreaterThanOrEqual(3)
+  })
+  it('keeps button text readable on the lime fill', () => {
+    expect(contrast(light['--color-on-accent'], light['--color-accent'])).toBeGreaterThanOrEqual(4.5)
   })
   it('routine fills reach 3:1 on bg, chrome and surface', () => {
     for (const k of ROUTINE_COLOR_KEYS)

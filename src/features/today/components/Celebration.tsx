@@ -32,7 +32,7 @@ export function Celebration({ colors, done, total, onClose }: Props) {
     return () => clearTimeout(id)
   }, [onClose])
 
-  const rings = colors.length > 0 ? colors : ['var(--color-accent)']
+  const rings = colors.length > 0 ? colors : ['var(--color-accent-graphic)']
   return (
     <div role="status" aria-live="polite" className="fixed inset-0 z-40 flex items-center justify-center bg-bg/90">
       {!still && (
