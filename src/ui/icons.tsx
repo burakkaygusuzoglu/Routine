@@ -65,3 +65,10 @@ export const CloseIcon = (p: IconProps) => (
     <path d="M6 6l12 12M18 6L6 18" />
   </Icon>
 )
+
+export const TimerIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="13.5" r="7.5" />
+    <path d="M12 9.5v4l2.5 1.5M9.5 3h5" />
+  </Icon>
+)

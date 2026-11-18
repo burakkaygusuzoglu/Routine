@@ -10,15 +10,17 @@ import { FocusPage } from '../features/focus/FocusPage'
 import { NightPage } from '../features/night/NightPage'
 import { Onboarding, useOnboardingDone } from '../features/onboarding'
 import { ProgressPage } from '../features/progress/ProgressPage'
+import { StudyPage } from '../features/study'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { TodayPage } from '../features/today/TodayPage'
 import { useAppBadge } from '../features/today/useAppBadge'
 import { WeeklyPage } from '../features/weekly/WeeklyPage'
 import { InstallHint } from '../pwa'
-import { CalendarIcon, CheckCircleIcon, GridIcon, Sidebar, SlidersIcon, TabBar, type NavItem } from '../ui'
+import { CalendarIcon, CheckCircleIcon, GridIcon, Sidebar, SlidersIcon, TabBar, TimerIcon, type NavItem } from '../ui'
 
 const NAV: NavItem[] = [
   { to: '/', label: 'Bugün', icon: <CheckCircleIcon /> },
+  { to: '/study', label: 'Çalışma', icon: <TimerIcon /> },
   { to: '/progress', label: 'İlerleme', icon: <GridIcon /> },
   { to: '/weekly', label: 'Haftalık', icon: <CalendarIcon /> },
   { to: '/settings', label: 'Ayarlar', icon: <SlidersIcon /> },
@@ -117,6 +119,7 @@ function TabbedLayout() {
             <InstallHint />
             <Routes>
               <Route path="/" element={<TodayPage />} />
+              <Route path="/study" element={<StudyPage />} />
               <Route path="/progress" element={<ProgressPage />} />
               <Route path="/weekly" element={<WeeklyPage />} />
               <Route path="/settings" element={<SettingsPage />} />
