@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { setAppTimeZone, zonedEpoch } from '../../domain/date'
 import {
   addEntry,
+  restoreEntry,
+  updateEntry,
   elapsedMs,
   entriesTotalMin,
   formatHms,
@@ -195,5 +197,33 @@ describe('sessions across midnight', () => {
     expect(joinMidnightSplit(before, { ...newStudy(), accumulatedMs: MIN, runningSince: midnight }, midnight)).toBeNull()
     expect(joinMidnightSplit({ ...before, runningSince: 5 }, { ...newStudy(), runningSince: midnight }, midnight)).toBeNull()
     expect(joinMidnightSplit(undefined, { ...newStudy(), runningSince: midnight }, midnight)).toBeNull()
+  })
+})
+
+describe('subjects on notes', () => {
+  const base = newStudy(60)
+  it('allows a subject without text (text mirrors the subject)', () => {
+    const s = addEntry(base, '', 120, 1000, 'a', 'Network')
+    expect(s.entries[0]).toMatchObject({ text: 'Network', subject: 'Network', minutes: 120 })
+    expect(addEntry(base, '  ', 30, 1000, 'b')).toBe(base)
+  })
+  it('keeps old calls working (no subject key)', () => {
+    expect('subject' in addEntry(base, 'x', null, 1000, 'a').entries[0]).toBe(false)
+  })
+  it('updateEntry edits text, subject and duration in place', () => {
+    const s = addEntry(base, 'x', 30, 1000, 'a', 'Okul')
+    const u = updateEntry(s, 'a', { text: 'y', minutes: 90, subject: null })
+    expect(u.entries[0]).toEqual({ id: 'a', text: 'y', minutes: 90, at: s.entries[0].at })
+    expect(updateEntry(s, 'a', { text: '', minutes: 1, subject: null })).toBe(s)
+    expect(updateEntry(s, 'zz', { text: 'q', minutes: 1, subject: null })).toBe(s)
+  })
+  it('restoreEntry puts a deleted note back in time order, once', () => {
+    let s = addEntry(base, 'one', null, 1000, 'a')
+    s = addEntry(s, 'two', null, 2000, 'b')
+    const first = s.entries[0]
+    const without = removeEntry(s, 'a')
+    const back = restoreEntry(without, first)
+    expect(back.entries.map((e) => e.id)).toEqual(['a', 'b'])
+    expect(restoreEntry(back, first)).toBe(back)
   })
 })

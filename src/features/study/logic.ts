@@ -47,23 +47,59 @@ export function setTarget(study: StudyDay, minutes: number): StudyDay {
   return targetMin === study.targetMin ? study : { ...study, targetMin }
 }
 
-/** Adds a note. Blank text is ignored. `id` is only for tests. */
+/**
+ * Adds a note. Blank text is ignored unless a subject is given: then the subject
+ * name is stored as the text (so older app versions still show something).
+ * `id` is only for tests.
+ */
 export function addEntry(
   study: StudyDay,
   text: string,
   minutes: number | null,
   now: number,
   id: string = crypto.randomUUID(),
+  subject?: string | null,
 ): StudyDay {
-  const clean = text.trim()
+  const subj = subject?.trim() || undefined
+  const clean = text.trim() || subj || ''
   if (!clean) return study
   const entry: StudyEntry = {
     id,
     text: clean,
     minutes: minutes !== null && minutes > 0 ? Math.round(minutes) : null,
     at: new Date(now).toISOString(),
+    ...(subj ? { subject: subj } : {}),
   }
   return { ...study, entries: [...study.entries, entry] }
+}
+
+export interface EntryChange {
+  text: string
+  minutes: number | null
+  subject: string | null
+}
+
+/** Edits one note in place (same id and time). Blank text falls back to the subject; both blank: no-op. */
+export function updateEntry(study: StudyDay, id: string, change: EntryChange): StudyDay {
+  const subj = change.subject?.trim() || undefined
+  const text = change.text.trim() || subj || ''
+  if (!text || !study.entries.some((e) => e.id === id)) return study
+  const minutes = change.minutes !== null && change.minutes > 0 ? Math.round(change.minutes) : null
+  return {
+    ...study,
+    entries: study.entries.map((e) => {
+      if (e.id !== id) return e
+      const { subject: _old, ...rest } = e
+      return { ...rest, text, minutes, ...(subj ? { subject: subj } : {}) }
+    }),
+  }
+}
+
+/** Puts a deleted note back (undo), keeping the list ordered by time. Ignored if it is already there. */
+export function restoreEntry(study: StudyDay, entry: StudyEntry): StudyDay {
+  if (study.entries.some((e) => e.id === entry.id)) return study
+  const entries = [...study.entries, entry].sort((a, b) => a.at.localeCompare(b.at))
+  return { ...study, entries }
 }
 
 export function removeEntry(study: StudyDay, id: string): StudyDay {
