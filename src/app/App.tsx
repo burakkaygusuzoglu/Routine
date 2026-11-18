@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { useEffect, useState, type ReactNode } from 'react'
 import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { openDatabase, useAuthState } from '../data/auth'
 import { usePushSync } from '../data/push'
 import { store } from '../data/store'
+import { setAppTimeZone } from '../domain/date'
 import { AuthScreen, PENDING_NAME_KEY } from '../features/auth/AuthScreen'
 import { FocusPage } from '../features/focus/FocusPage'
 import { NightPage } from '../features/night/NightPage'
@@ -23,6 +25,31 @@ const NAV: NavItem[] = [
 ]
 
 /** Keeps the home-screen icon badge in sync; mounted only once signed in. */
+const TZ_CACHE_KEY = 'routine.timeZone'
+
+// Apply the last chosen zone before the first render, so "today" is right at once.
+try {
+  setAppTimeZone(localStorage.getItem(TZ_CACHE_KEY))
+} catch {
+  // Private mode: settings will apply it a moment later.
+}
+
+/**
+ * Follows the time zone chosen in Settings (synced across devices). When it changes,
+ * every screen remounts so "today", timers and reminders use the new zone.
+ */
+function TimeZoneScope({ children }: { children: ReactNode }) {
+  const tz = useLiveQuery(() => store.getSettings().then((s) => s.timeZone ?? ''), [])
+  if (tz === undefined) return null
+  setAppTimeZone(tz)
+  try {
+    localStorage.setItem(TZ_CACHE_KEY, tz)
+  } catch {
+    // Not critical.
+  }
+  return <div key={tz || 'device'} className="contents">{children}</div>
+}
+
 function BadgeSync() {
   useAppBadge()
   return null
@@ -140,14 +167,16 @@ export function App() {
 
   return (
     <HashRouter>
-      <BadgeSync />
-      <PushSync />
-      <Routes>
-        {/* Full-screen modes: no tab bar, no sidebar. */}
-        <Route path="/focus/:routineId" element={<FocusPage />} />
-        <Route path="/night" element={<NightPage />} />
-        <Route path="*" element={<TabbedLayout />} />
-      </Routes>
+      <TimeZoneScope>
+        <BadgeSync />
+        <PushSync />
+        <Routes>
+          {/* Full-screen modes: no tab bar, no sidebar. */}
+          <Route path="/focus/:routineId" element={<FocusPage />} />
+          <Route path="/night" element={<NightPage />} />
+          <Route path="*" element={<TabbedLayout />} />
+        </Routes>
+      </TimeZoneScope>
     </HashRouter>
   )
 }

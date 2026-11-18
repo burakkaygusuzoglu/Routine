@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useCallback, useEffect, useState } from 'react'
 import { isIosSafari, isStandalone } from '../pwa/installHint'
-import { addDays, clockToMinutes, fromDateKey, isScheduled, todayKey } from '../domain/date'
+import { addDays, clockToMinutes, isScheduled, toClockTime, todayKey, zonedEpoch } from '../domain/date'
 import { routineTime } from '../domain/schedule'
 import { store } from './store'
 import type { ClockTime, Completion, DateKey, DayLog, Routine, Settings } from '../domain/types'
@@ -26,12 +26,9 @@ export const MAX_ITEMS = 300
 
 type ScheduleSettings = Pick<Settings, 'targetWake' | 'targetBed' | 'push'>
 
-/** Epoch ms of `time` on local day `date`. */
+/** Epoch ms of `time` on day `date` in the app's time zone. */
 function atLocal(date: DateKey, time: ClockTime): number {
-  const d = fromDateKey(date)
-  const m = clockToMinutes(time)
-  d.setHours(Math.floor(m / 60), m % 60, 0, 0)
-  return d.getTime()
+  return zonedEpoch(date, time)
 }
 
 /** True when the clock time falls between target bedtime and target wake time. */
@@ -108,8 +105,7 @@ export function buildSchedule(
       })
       if (i === 0 && followUp) {
         const later = at + FOLLOW_UP_MIN * 60_000
-        const laterTime = new Date(later)
-        const laterClock = `${String(laterTime.getHours()).padStart(2, '0')}:${String(laterTime.getMinutes()).padStart(2, '0')}`
+        const laterClock = toClockTime(new Date(later))
         if (r.anchor === 'bedtime' || !inQuietWindow(laterClock, settings)) {
           add({
             ...base,

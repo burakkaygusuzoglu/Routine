@@ -1,6 +1,6 @@
 import type { RoutineColor } from '../../design/palette'
 import { DEFAULT_ROUTINE_ICON, type RoutineIconName } from '../../design/routineIcons'
-import { fromDateKey, toDateKey, todayKey } from '../../domain/date'
+import { zonedParts, fromDateKey, toDateKey, todayKey } from '../../domain/date'
 import type { PushState } from '../../data/push'
 import type { AnchorType, Backup, ClockTime, Routine } from '../../domain/types'
 
@@ -176,7 +176,8 @@ const MONTHS = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl',
 export function lastBackupText(iso: string | null): string {
   if (!iso) return 'Henüz yedek alınmadı'
   const d = new Date(iso)
-  return `Son yedek: ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+  const z = zonedParts(d)
+  return `Son yedek: ${z.day} ${MONTHS[z.month - 1]} ${z.year}`
 }
 
 export const BACKUP_STALE_DAYS = 7
@@ -221,7 +222,8 @@ export function parseBackup(text: string): Backup {
 export function lastCalendarExportText(iso: string): string {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `Son aktarım: ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const z = zonedParts(d)
+  return `Son aktarım: ${z.day} ${MONTHS[z.month - 1]} ${z.year}, ${pad(z.hour)}:${pad(z.minute)}`
 }
 
 /** True when an export exists and the schedule has changed since. */

@@ -3,6 +3,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import { routineInk } from '../../design/palette'
 import { RoutineIcon } from '../../design/routineIcons'
 import { ThemePicker } from '../../design/ThemePicker'
+import { TIME_ZONE_CHOICES, toClockTime } from '../../domain/date'
 import { deleteAllData, useAccount, type SyncKind } from '../../data/account'
 import { disablePush, enablePush, pushConfigured, sendTest, setFollowUp, usePushState } from '../../data/push'
 import { store } from '../../data/store'
@@ -257,6 +258,34 @@ export function SettingsPage() {
           <ThemePicker />
         </div>
       </Group>
+
+      {settings && (
+        <Group
+          title="Saat dilimi"
+          footer={`Bugün, saatler ve bildirimler bu saate göre çalışır. Seçim tüm cihazlarına uygulanır. Şu an: ${toClockTime(new Date())}`}
+        >
+          <div role="radiogroup" aria-label="Saat dilimi" className="flex flex-col gap-1 px-2">
+            {TIME_ZONE_CHOICES.map((c) => {
+              const on = (settings.timeZone ?? '') === c.value
+              return (
+                <button
+                  key={c.value || 'device'}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() => void store.saveSettings({ ...settings, timeZone: c.value })}
+                  className={`flex min-h-[var(--tap)] items-center justify-between gap-3 rounded-control px-3 text-left text-body ${on ? 'bg-raised font-semibold' : ''}`}
+                >
+                  <span>{c.value ? c.label : `${c.label} (${Intl.DateTimeFormat().resolvedOptions().timeZone})`}</span>
+                  <span className="text-footnote text-muted">
+                    {new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit', ...(c.value ? { timeZone: c.value } : {}) }).format(new Date())}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </Group>
+      )}
 
       <Group title="Bildirimler">
         <p role="status" className="px-2 py-1 text-body">

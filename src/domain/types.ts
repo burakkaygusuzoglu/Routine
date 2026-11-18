@@ -54,6 +54,28 @@ export interface DayLog {
   reflection?: string
   /** Night mode: the first task for the next morning. */
   firstTask?: string
+  /** Study timer for this day (synced, so it continues on every device). */
+  study?: StudyDay
+}
+
+export interface StudyEntry {
+  id: string
+  /** What was studied, e.g. "Network". */
+  text: string
+  /** Optional duration the person attached to the note. */
+  minutes: number | null
+  /** ISO timestamp. */
+  at: string
+}
+
+export interface StudyDay {
+  /** Daily study target in minutes. */
+  targetMin: number
+  /** Time already counted, excluding the running stretch. */
+  accumulatedMs: number
+  /** Epoch ms when the current stretch started; null when paused. */
+  runningSince: number | null
+  entries: StudyEntry[]
 }
 
 export interface Settings {
@@ -71,6 +93,10 @@ export interface Settings {
    * accountId and secret are random and identify the account to the push server.
    */
   push?: { accountId: string; secret: string; followUp: boolean }
+  /** IANA zone the whole app runs in ('' or undefined: the device's zone). Syncs to every device. */
+  timeZone?: string
+  /** Default daily study target in minutes (8 h if unset). */
+  studyTargetMin?: number
 }
 
 /** Faz 3. */

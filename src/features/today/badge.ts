@@ -1,3 +1,4 @@
+import { msUntilNextMidnight } from '../../domain/date'
 /** Number shown on the app icon: today's scheduled routines that are not done. */
 export function badgeCount(progress: { done: number; total: number }): number {
   return Math.max(0, progress.total - progress.done)
@@ -19,8 +20,7 @@ export function applyBadge(count: number, nav: BadgeNavigator | undefined = type
   }
 }
 
-/** Milliseconds until the next local midnight (plus a small margin). */
+/** Milliseconds until the next midnight in the app's time zone (plus a small margin). */
 export function msUntilMidnight(now: Date = new Date()): number {
-  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1)
-  return next.getTime() - now.getTime()
+  return msUntilNextMidnight(now)
 }

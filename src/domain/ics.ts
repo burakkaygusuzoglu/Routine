@@ -1,4 +1,4 @@
-import { addDays, clockToMinutes, isScheduled, todayKey } from './date'
+import { addDays, clockToMinutes, isScheduled, nowMinutes, todayKey } from './date'
 import { routineTime } from './schedule'
 import type { ClockTime, Routine, Settings } from './types'
 
@@ -60,7 +60,7 @@ function floatingStamp(dateKey: string, time: ClockTime): string {
 /** First scheduled day whose time has not passed yet (today counts), within the next week. */
 function firstDay(routine: Routine, time: ClockTime, now: Date): string {
   const today = todayKey(now)
-  const nowMin = now.getHours() * 60 + now.getMinutes()
+  const nowMin = nowMinutes(now)
   for (let i = 0; i < 8; i++) {
     const key = addDays(today, i)
     if (!isScheduled(routine, key)) continue
