@@ -9,7 +9,7 @@ interface RoutineCardProps {
   color: RoutineColor
   icon?: RoutineIconName
   streak: number
-  /** "66 güne 12 gün", or null when every milestone is reached. */
+  /** "66 günlük hedefe 12 gün kaldı", or null when every milestone is reached. */
   nextText?: string | null
   cells: CellState[]
   onOpen: () => void

@@ -28,7 +28,7 @@ describe('nextMilestone', () => {
     expect(nextMilestone(250)).toBeNull()
   })
   it('formats the card text', () => {
-    expect(nextMilestoneText(54)).toBe('66 güne 12 gün')
+    expect(nextMilestoneText(54)).toBe('66 günlük hedefe 12 gün kaldı')
     expect(nextMilestoneText(120)).toBeNull()
   })
 })

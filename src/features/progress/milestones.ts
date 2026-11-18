@@ -17,10 +17,10 @@ export function nextMilestone(streak: number): NextMilestone | null {
   return target === undefined ? null : { target, remaining: target - streak }
 }
 
-/** "66 güne 12 gün", or null when every milestone is reached. */
+/** "66 günlük hedefe 12 gün kaldı", or null when every milestone is reached. */
 export function nextMilestoneText(streak: number): string | null {
   const next = nextMilestone(streak)
-  return next ? `${next.target} güne ${next.remaining} gün` : null
+  return next ? `${next.target} günlük hedefe ${next.remaining} gün kaldı` : null
 }
 
 export interface ReachedMilestone {

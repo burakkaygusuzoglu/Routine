@@ -99,7 +99,7 @@ export function StudyPage() {
           {DAY_NAMES[d.getDay()]}, {d.getDate()} {MONTHS[d.getMonth()]}
         </p>
         <h1 className="m-0 text-large-title font-bold">Çalışma</h1>
-        <p className="m-0 mt-1 text-footnote font-semibold text-muted" aria-label={`Seri: ${streak} gün`}>
+        <p className="m-0 mt-1 text-footnote text-muted" aria-label={`Seri: ${streak} gün`}>
           {streak > 0 ? (
             <span className="text-accent-ink">Seri: {streak} gün</span>
           ) : (
@@ -189,7 +189,6 @@ export function StudyPage() {
               >
                 hedef {formatMinutes(study.targetMin)}
                 <PencilGlyph width={16} height={16} />
-                <span className="text-footnote underline underline-offset-4">Değiştir</span>
               </button>
             </p>
 

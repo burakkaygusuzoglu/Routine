@@ -15,7 +15,7 @@ export function WakeChip({ wokeAt, onWake, onChange }: Props) {
 
   if (wokeAt === null) {
     return (
-      <button type="button" onClick={onWake} className="min-h-11 rounded-control bg-accent px-4 text-footnote font-bold text-on-accent">
+      <button type="button" onClick={onWake} className="min-h-11 shrink-0 whitespace-nowrap rounded-control bg-accent px-3 text-footnote font-bold text-on-accent">
         Uyandım
       </button>
     )
@@ -29,7 +29,7 @@ export function WakeChip({ wokeAt, onWake, onChange }: Props) {
           setOpen(true)
         }}
         aria-label={`Uyanma saati ${wokeAt}, düzeltmek için dokun`}
-        className="min-h-11 rounded-control bg-surface px-4 text-footnote text-muted"
+        className="min-h-11 shrink-0 whitespace-nowrap rounded-control bg-surface px-3 text-footnote text-muted"
       >
         Uyandın <b className="ml-1 text-text">{wokeAt}</b>
       </button>

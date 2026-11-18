@@ -16,23 +16,26 @@ interface Props {
 export function Hero({ done, total, next, nextTime, onStart }: Props) {
   const allDone = total > 0 && next === null
   return (
-    <section aria-label="Sıradaki" className="flex flex-wrap items-center gap-4 rounded-hero bg-surface p-4">
+    <section aria-label="Sıradaki" className="flex items-center gap-4 rounded-hero bg-surface p-4">
       <ProgressRing value={total ? done / total : 0} size={68} thickness={7} label={`${done}/${total} tamamlandı`}>
         <span className="text-headline font-bold">
           {done}/{total}
         </span>
       </ProgressRing>
-      <div className="min-w-0 flex-1 basis-32">
+      <div className="min-w-0 flex-1">
         {next ? (
           <>
             <p className="text-footnote text-muted">Sıradaki{nextTime ? ` · ${nextTime}` : ''}</p>
             <p className="flex items-start gap-2 text-title font-bold">
-              <span className="mt-1 shrink-0" style={{ color: routineInk(next.color) }}>
+              <span className="mt-1 hidden shrink-0 min-[420px]:block" style={{ color: routineInk(next.color) }}>
                 <RoutineIcon name={next.icon} size={24} />
               </span>
-              <span className="line-clamp-2 min-w-0 break-words">{next.name}</span>
+              <span className="line-clamp-2 min-w-0 [overflow-wrap:normal] [word-break:normal]">{next.name}</span>
             </p>
             {next.minText.trim() && <p className="text-footnote text-muted">Minimum: {next.minText}</p>}
+            <Button className="mt-2 w-full min-[420px]:hidden" onClick={onStart}>
+              Başla
+            </Button>
           </>
         ) : allDone ? (
           <>
@@ -46,7 +49,11 @@ export function Hero({ done, total, next, nextTime, onStart }: Props) {
           </>
         )}
       </div>
-      {next && <Button onClick={onStart}>Başla</Button>}
+      {next && (
+        <Button className="hidden shrink-0 min-[420px]:block" onClick={onStart}>
+          Başla
+        </Button>
+      )}
     </section>
   )
 }

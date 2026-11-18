@@ -66,7 +66,7 @@ export function StudyCard({ today }: { today: DateKey }) {
             <TimerIcon width={28} height={28} />
           </span>
           <span className="min-w-0">
-            <span className="block text-headline font-semibold tabular-nums">
+            <span className="block text-headline font-bold tabular-nums">
               {over ? `+${formatHms(remaining)} fazladan` : `${formatHms(remaining)} kaldı`}
             </span>
             <span className="block text-footnote text-muted">
