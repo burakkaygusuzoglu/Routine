@@ -2,6 +2,7 @@ import { useObservable } from 'dexie-react-hooks'
 import { BehaviorSubject } from 'rxjs'
 import type { UserLogin } from 'dexie-cloud-addon'
 import { db, type RoutineDB } from './db'
+import { THEME_STORAGE_KEY } from '../design/theme'
 import { createStore } from './store'
 
 const signedOut = new BehaviorSubject<UserLogin | null>(null)
@@ -91,6 +92,7 @@ export function useAccount(): Account {
       if (!db.isCloud) return
       try {
         await db.cloud.logout()
+        clearAppLocalStorage()
       } catch {
         // The person chose to keep unsynced changes and stay signed in.
       }
@@ -98,15 +100,78 @@ export function useAccount(): Account {
   }
 }
 
+const NETWORK_TIMEOUT_MS = 5000
+
+/**
+ * Removes every localStorage key the app uses (all start with "routine.") except the
+ * theme, which is a device preference rather than account data.
+ */
+export function clearAppLocalStorage(): void {
+  try {
+    const keys: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k && k.startsWith('routine.') && k !== THEME_STORAGE_KEY) keys.push(k)
+    }
+    for (const k of keys) localStorage.removeItem(k)
+  } catch {
+    // Storage blocked: nothing to clear.
+  }
+}
+
+/**
+ * Best effort: tells the push server to forget this account and unsubscribes this browser.
+ * Never throws; network errors and missing APIs are ignored.
+ */
+export async function revokePush(database: RoutineDB = db): Promise<void> {
+  let push: { accountId: string; secret: string } | undefined
+  try {
+    push = (await createStore(database).getSettings()).push
+  } catch {
+    return
+  }
+  if (!push) return
+  const base = (import.meta.env.VITE_PUSH_URL ?? '').replace(/\/+$/, '')
+  if (base) {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS)
+    try {
+      await fetch(`${base}/v1/account`, {
+        method: 'DELETE',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ accountId: push.accountId, secret: push.secret }),
+        signal: controller.signal,
+      })
+    } catch {
+      // Offline or server down: the data is deleted locally anyway.
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+  try {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), NETWORK_TIMEOUT_MS))
+    const reg = await Promise.race([navigator.serviceWorker.ready, timeout])
+    const sub = await reg?.pushManager?.getSubscription()
+    await sub?.unsubscribe()
+  } catch {
+    // Not subscribed or not supported.
+  }
+}
+
 /**
  * Deletes every routine, tick, day log, note and setting in one transaction,
  * then recreates the starter routines. In cloud mode the deletes are pushed to
  * the server (so every device loses the data) and the person is logged out.
+ * The push server is told to forget the account first, and the app's
+ * localStorage keys (all but the theme) are cleared.
  */
 export async function deleteAllData(database: RoutineDB = db): Promise<void> {
+  await revokePush(database)
   await database.transaction('rw', database.dataTables, async () => {
     await Promise.all(database.dataTables.map((t) => t.clear()))
   })
+  clearAppLocalStorage()
   if (database.isCloud) await database.cloud.sync({ purpose: 'push', wait: true })
   await createStore(database).init()
   if (database.isCloud) {
