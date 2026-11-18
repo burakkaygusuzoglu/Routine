@@ -82,18 +82,59 @@ describe('validation and limits', () => {
   it('limits subscriptions to 10 but lets the same endpoint replace itself', async () => {
     const { api, kv } = await setup()
     for (let i = 0; i < 10; i++) {
-      const s = await makeSubscriber(`https://push.example.test/send/${i}`)
+      const s = await makeSubscriber(`https://fcm.googleapis.com/fcm/send/${i}`)
       expect((await api('POST', '/v1/subscribe', { ...creds, subscription: s.subscription })).status).toBe(204)
     }
-    const extra = await makeSubscriber('https://push.example.test/send/extra')
+    const extra = await makeSubscriber('https://fcm.googleapis.com/fcm/send/extra')
     const res = await api('POST', '/v1/subscribe', { ...creds, subscription: extra.subscription })
     expect(res.status).toBe(400)
     expect(await res.json()).toEqual({ error: 'too_many_subscriptions' })
-    const again = await makeSubscriber('https://push.example.test/send/3')
+    const again = await makeSubscriber('https://fcm.googleapis.com/fcm/send/3')
     expect((await api('POST', '/v1/subscribe', { ...creds, subscription: again.subscription })).status).toBe(204)
     const acc = kv.json(`acct:${ACCOUNT}`)
     expect(acc.subs).toHaveLength(10)
     expect(acc.subs.find((s: { endpoint: string }) => s.endpoint.endsWith('/3')).keys.p256dh).toBe(again.subscription.keys.p256dh)
+  })
+
+  it('only accepts endpoints on known push service hosts', async () => {
+    const { api, kv } = await setup()
+    const post = async (endpoint: string) => {
+      const s = await makeSubscriber(endpoint)
+      return api('POST', '/v1/subscribe', { ...creds, subscription: s.subscription })
+    }
+    for (const ok of [
+      'https://fcm.googleapis.com/fcm/send/abc',
+      'https://updates.push.services.mozilla.com/wpush/v2/abc',
+      'https://foo.push.services.mozilla.com/x',
+      'https://web.push.apple.com/abc',
+      'https://api.push.apple.com/3/device/abc',
+      'https://db5p.notify.windows.com/?token=abc',
+      'https://FCM.GoogleAPIs.com/fcm/send/up',
+    ]) {
+      expect((await post(ok)).status, ok).toBe(204)
+    }
+    for (const bad of [
+      'https://evil.example/x',
+      'https://evilfcm.googleapis.com/x',
+      'https://fcm.googleapis.com.attacker.com/x',
+      'https://attacker.com/fcm.googleapis.com',
+      'https://fcm.googleapis.com@attacker.com/x',
+      'https://attacker.com@fcm.googleapis.com.evil.io/x',
+      'https://x.evil-notify.windows.com.io/x',
+      'https://notify.windows.com.evil.io/x',
+      'https://notify.windows.com/x',
+      'https://sub.fcm.googleapis.com/x',
+      'https://fcm.googleapis.com:8443/x',
+      'https://user:pw@fcm.googleapis.com/x',
+      'http://fcm.googleapis.com/x',
+      'https://localhost/x',
+      'https://127.0.0.1/x',
+    ]) {
+      const res = await post(bad)
+      expect(res.status, bad).toBe(400)
+      expect(await res.json()).toEqual({ error: 'invalid_subscription' })
+    }
+    expect(kv.json(`acct:${ACCOUNT}`).subs).toHaveLength(7)
   })
 
   it('rejects invalid subscriptions', async () => {
@@ -149,8 +190,8 @@ describe('subscribe, unsubscribe, schedule', () => {
 
   it('unsubscribes by endpoint', async () => {
     const { api, kv } = await setup()
-    const a = await makeSubscriber('https://push.example.test/send/a')
-    const b = await makeSubscriber('https://push.example.test/send/b')
+    const a = await makeSubscriber('https://fcm.googleapis.com/fcm/send/a')
+    const b = await makeSubscriber('https://fcm.googleapis.com/fcm/send/b')
     await api('POST', '/v1/subscribe', { ...creds, subscription: a.subscription })
     await api('POST', '/v1/subscribe', { ...creds, subscription: b.subscription })
     expect((await api('POST', '/v1/unsubscribe', { ...creds, endpoint: a.subscription.endpoint })).status).toBe(204)
@@ -161,8 +202,8 @@ describe('subscribe, unsubscribe, schedule', () => {
 describe('POST /v1/test', () => {
   it('sends the contract payload to every subscription and reports the count', async () => {
     const { api, calls } = await setup()
-    const a = await makeSubscriber('https://push.example.test/send/a')
-    const b = await makeSubscriber('https://push.example.test/send/b')
+    const a = await makeSubscriber('https://fcm.googleapis.com/fcm/send/a')
+    const b = await makeSubscriber('https://fcm.googleapis.com/fcm/send/b')
     await api('POST', '/v1/subscribe', { ...creds, subscription: a.subscription })
     await api('POST', '/v1/subscribe', { ...creds, subscription: b.subscription })
     const res = await api('POST', '/v1/test', creds)
@@ -181,8 +222,8 @@ describe('POST /v1/test', () => {
 
   it('removes a subscription answering 410 and does not count it', async () => {
     const { api, kv } = await setup(async (url) => new Response(null, { status: String(url).endsWith('/dead') ? 410 : 201 }))
-    const live = await makeSubscriber('https://push.example.test/send/live')
-    const dead = await makeSubscriber('https://push.example.test/send/dead')
+    const live = await makeSubscriber('https://fcm.googleapis.com/fcm/send/live')
+    const dead = await makeSubscriber('https://fcm.googleapis.com/fcm/send/dead')
     await api('POST', '/v1/subscribe', { ...creds, subscription: live.subscription })
     await api('POST', '/v1/subscribe', { ...creds, subscription: dead.subscription })
     const res = await api('POST', '/v1/test', creds)

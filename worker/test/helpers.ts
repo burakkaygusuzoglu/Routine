@@ -74,7 +74,7 @@ export async function decryptPayload(
 }
 
 /** A fake browser subscription with real keys, so tests can decrypt what was sent. */
-export async function makeSubscriber(endpoint = 'https://push.example.test/send/abc') {
+export async function makeSubscriber(endpoint = 'https://fcm.googleapis.com/fcm/send/abc') {
   const pair = (await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, [
     'deriveBits',
   ])) as CryptoKeyPair

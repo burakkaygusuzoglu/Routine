@@ -40,6 +40,16 @@ function validBase64Url(value: unknown, length: number, firstByte?: number): val
   }
 }
 
+/** Exact hosts and domains (proper subdomains only) of the browser push services. */
+const PUSH_HOSTS = ['fcm.googleapis.com', 'updates.push.services.mozilla.com', 'web.push.apple.com']
+const PUSH_DOMAINS = ['push.services.mozilla.com', 'push.apple.com', 'notify.windows.com']
+
+export function isPushHost(hostname: string): boolean {
+  const host = hostname.toLowerCase()
+  if (PUSH_HOSTS.includes(host)) return true
+  return PUSH_DOMAINS.some((d) => host.endsWith(`.${d}`))
+}
+
 export function parseSubscription(v: unknown): Sub {
   if (!isRecord(v) || !isRecord(v.keys)) throw bad('invalid_subscription')
   const endpoint = text(v.endpoint, 'invalid_subscription', 12, 1000)
@@ -49,7 +59,8 @@ export function parseSubscription(v: unknown): Sub {
   } catch {
     throw bad('invalid_subscription')
   }
-  if (url.protocol !== 'https:') throw bad('invalid_subscription')
+  if (url.protocol !== 'https:' || url.username || url.password || url.port) throw bad('invalid_subscription')
+  if (!isPushHost(url.hostname)) throw bad('invalid_subscription')
   const { p256dh, auth } = v.keys
   if (!validBase64Url(p256dh, 65, 4) || !validBase64Url(auth, 16)) throw bad('invalid_subscription')
   return { endpoint, keys: { p256dh, auth } }
