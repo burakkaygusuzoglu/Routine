@@ -193,8 +193,12 @@ export function daysSinceBackup(iso: string, now: Date): number {
 }
 
 /** A gentle nudge, or null when the last backup is recent. */
-export function backupHint(iso: string | null, now: Date): string | null {
-  if (iso === null) return 'Verilerin yalnızca bu cihazda. Bir yedek almak iyi olur.'
+export function backupHint(iso: string | null, now: Date, cloud = false): string | null {
+  if (iso === null) {
+    return cloud
+      ? 'Verilerin bulutta da duruyor. Ayrıca bir yedek almak iyi olur.'
+      : 'Verilerin yalnızca bu cihazda. Bir yedek almak iyi olur.'
+  }
   if (daysSinceBackup(iso, now) > BACKUP_STALE_DAYS) return 'Yedeğin biraz eski. İstersen yenisini al.'
   return null
 }
@@ -216,8 +220,10 @@ export function backupDue(
 }
 
 /** Reminder text, e.g. "Son yedeğin 9 gün önce. ..." */
-export function backupReminderText(lastBackupAt: string | null | undefined, now: Date): string {
-  const tail = 'Verilerin bulutta da duruyor; ayrıca bir yedek indirmek iyi olur.'
+export function backupReminderText(lastBackupAt: string | null | undefined, now: Date, cloud = false): string {
+  const tail = cloud
+    ? 'Verilerin bulutta da duruyor; ayrıca bir yedek indirmek iyi olur.'
+    : 'Verilerin yalnızca bu cihazda duruyor; bir yedek indirmek iyi olur.'
   const last = lastBackupAt ? Date.parse(lastBackupAt) : NaN
   if (Number.isNaN(last)) return `Henüz yedek indirmedin. ${tail}`
   const days = Math.max(BACKUP_STALE_DAYS, Math.floor((now.getTime() - last) / DAY_MS))

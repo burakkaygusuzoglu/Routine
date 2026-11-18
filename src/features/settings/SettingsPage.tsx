@@ -6,16 +6,17 @@ import { ThemePicker } from '../../design/ThemePicker'
 import { TIME_ZONE_CHOICES, toClockTime } from '../../domain/date'
 import { deleteAllData, useAccount, type SyncKind } from '../../data/account'
 import { disablePush, enablePush, pushConfigured, sendTest, setFollowUp, usePushState } from '../../data/push'
+import { useAuthState } from '../../data/auth'
 import { store } from '../../data/store'
+import { PageHeader } from '../../ui'
 import { applyUpdate, checkForUpdate } from '../../pwa'
 import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
 import type { Backup, Routine } from '../../domain/types'
 import { Button } from './components/Button'
-import { ChevronDown, ChevronUp, Plus } from './components/icons'
+import { ChevronDown, ChevronRight, ChevronUp, Plus } from './components/icons'
 import { Sheet } from './components/Sheet'
 import { Switch } from './components/Switch'
 import { RoutineEditSheet } from './RoutineEditSheet'
-import { BackupReminder } from './BackupReminder'
 import { downloadBackup, downloadBlob } from './downloadBackup'
 import {
   backupHint,
@@ -208,14 +209,14 @@ export function SettingsPage() {
     }
   }
 
-  const hint = settings ? backupHint(settings.lastBackupAt, new Date()) : null
+  const { cloud } = useAuthState()
+  const hint = settings ? backupHint(settings.lastBackupAt, new Date(), cloud) : null
   const account = useAccount()
 
   return (
-    <div className="mx-auto flex max-w-[40rem] flex-col gap-6 p-4 pb-8">
-      <h1 className="pt-2 text-large-title font-bold">Ayarlar</h1>
-
-      <BackupReminder />
+    <div className="mx-auto flex w-full max-w-[1040px] flex-col pb-8">
+      <PageHeader eyebrow="Rutinler, yedek ve hesap" title="Ayarlar" />
+      <div className="flex max-w-[40rem] flex-col gap-6 px-4">
 
       <Group title="Rutinler">
         {active.map((r, i) => (
@@ -263,6 +264,35 @@ export function SettingsPage() {
           Yeni rutin ekle
         </button>
       </Group>
+
+      {archived.length > 0 && (
+        <Group title="Arşiv">
+          {archived.map((r) => (
+            <div key={r.id} className="flex items-center gap-3 px-2">
+              <span aria-hidden="true" className="shrink-0" style={{ color: routineInk(r.color) }}>
+                <RoutineIcon name={r.icon} size={20} />
+              </span>
+              <span className="min-w-0 flex-1 truncate text-body text-muted">{r.name}</span>
+              <button
+                type="button"
+                onClick={() => restore(r)}
+                aria-label={`${r.name} geri al`}
+                className="min-h-[var(--tap)] min-w-[var(--tap)] px-2 text-body font-semibold text-accent-ink"
+              >
+                Geri al
+              </button>
+              <button
+                type="button"
+                onClick={() => setRemoving(r)}
+                aria-label={`${r.name} kalıcı olarak sil`}
+                className="min-h-[var(--tap)] min-w-[var(--tap)] px-2 text-body font-semibold text-danger"
+              >
+                Sil
+              </button>
+            </div>
+          ))}
+        </Group>
+      )}
 
       <Group title="Günüm">
         <TimeRow label="Uyanma hedefi" value={settings?.targetWake ?? ''} onChange={(v) => saveTime('targetWake', v)} />
@@ -351,9 +381,10 @@ export function SettingsPage() {
             type="button"
             onClick={() => void exportCalendar()}
             disabled={!settings || exportable.length === 0}
-            className="flex min-h-[var(--tap)] items-center rounded-row px-2 text-left text-footnote font-semibold text-accent-ink disabled:opacity-40"
+            className="flex min-h-[var(--tap)] w-full items-center justify-between gap-3 rounded-row px-2 text-left text-body font-semibold text-accent-ink disabled:opacity-40"
           >
-            Takvim'e de aktar (isteğe bağlı)
+            <span>Takvim'e de aktar (isteğe bağlı)</span>
+            <ChevronRight />
           </button>
           {settings && exportable.length === 0 && (
             <p className="px-2 text-footnote text-muted">{CALENDAR_EMPTY_REASON}</p>
@@ -435,48 +466,22 @@ export function SettingsPage() {
         </Group>
       )}
 
-      {archived.length > 0 && (
-        <Group title="Arşiv">
-          {archived.map((r) => (
-            <div key={r.id} className="flex items-center gap-3 px-2">
-              <span aria-hidden="true" className="shrink-0" style={{ color: routineInk(r.color) }}>
-                <RoutineIcon name={r.icon} size={20} />
-              </span>
-              <span className="min-w-0 flex-1 truncate text-body text-muted">{r.name}</span>
-              <button
-                type="button"
-                onClick={() => restore(r)}
-                aria-label={`${r.name} geri al`}
-                className="min-h-[var(--tap)] min-w-[var(--tap)] px-2 text-body font-semibold text-accent-ink"
-              >
-                Geri al
-              </button>
-              <button
-                type="button"
-                onClick={() => setRemoving(r)}
-                aria-label={`${r.name} kalıcı olarak sil`}
-                className="min-h-[var(--tap)] min-w-[var(--tap)] px-2 text-body font-semibold text-danger"
-              >
-                Sil
-              </button>
-            </div>
-          ))}
-        </Group>
-      )}
-
       <Group title="Hakkında">
         <div className="flex min-h-[var(--tap)] items-center justify-between gap-3 px-2">
           <span className="text-body">Sürüm</span>
-          <span className="text-body text-muted">{import.meta.env.VITE_APP_VERSION ?? 'dev'}</span>
+          <span className="text-body text-muted tabular-nums">{import.meta.env.VITE_APP_VERSION ?? 'dev'}</span>
         </div>
         <UpdateCheck />
         <a
           href="https://github.com/burakkaygusuzoglu/Routine"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-h-[var(--tap)] items-center rounded-row px-2 text-body font-semibold text-accent-ink"
+          className="flex min-h-[var(--tap)] items-center justify-between gap-3 rounded-row px-2 text-body"
         >
-          Kaynak kod
+          <span>Kaynak kod</span>
+          <span className="text-muted">
+            <ChevronRight />
+          </span>
         </a>
       </Group>
 
@@ -586,6 +591,7 @@ export function SettingsPage() {
           </div>
         </Sheet>
       )}
+      </div>
     </div>
   )
 }
@@ -602,7 +608,7 @@ function TimeRow({ label, value, onChange }: { label: string; value: string; onC
         type="time"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="min-h-[var(--tap)] rounded-control border border-field-line bg-bg px-3 text-right text-headline font-semibold"
+        className="min-h-[var(--tap)] w-28 rounded-control border border-field-line bg-bg px-3 text-right text-headline font-semibold"
       />
     </div>
   )
@@ -611,28 +617,35 @@ function TimeRow({ label, value, onChange }: { label: string; value: string; onC
 /** "Güncellemeleri denetle": looks for a new version and offers to load it. */
 function UpdateCheck() {
   const [state, setState] = useState<'idle' | 'checking' | 'ready' | 'latest'>('idle')
+  const status =
+    state === 'checking'
+      ? 'Denetleniyor…'
+      : state === 'ready'
+        ? 'Yeni sürüm hazır'
+        : state === 'latest'
+          ? 'En güncel sürüm'
+          : ''
   return (
-    <div className="flex min-h-[var(--tap)] items-center justify-between gap-3 px-2">
-      <span className="text-footnote text-muted" role="status">
-        {state === 'checking' ? 'Denetleniyor…' : state === 'ready' ? 'Yeni sürüm hazır. Sayacın korunur.' : state === 'latest' ? 'En güncel sürümü kullanıyorsun.' : ''}
-      </span>
-      {state === 'ready' ? (
-        <button type="button" onClick={applyUpdate} className="min-h-[var(--tap)] shrink-0 rounded-control bg-accent px-4 text-body font-semibold text-on-accent">
-          Yenile
-        </button>
-      ) : (
-        <button
-          type="button"
-          disabled={state === 'checking'}
-          onClick={() => {
-            setState('checking')
-            void checkForUpdate().then((ready) => setState(ready ? 'ready' : 'latest'))
-          }}
-          className="min-h-[var(--tap)] shrink-0 px-2 text-body font-semibold text-accent-ink"
-        >
-          Güncellemeleri denetle
-        </button>
-      )}
+    <div className="flex flex-col">
+      <button
+        type="button"
+        disabled={state === 'checking'}
+        onClick={() => {
+          if (state === 'ready') {
+            applyUpdate()
+            return
+          }
+          setState('checking')
+          void checkForUpdate().then((ready) => setState(ready ? 'ready' : 'latest'))
+        }}
+        className="flex min-h-[var(--tap)] w-full items-center justify-between gap-3 rounded-row px-2 text-left text-body"
+      >
+        <span>{state === 'ready' ? 'Yenile' : 'Güncellemeleri denetle'}</span>
+        <span role="status" className={`text-footnote ${state === 'ready' ? 'font-semibold text-accent-ink' : 'text-muted'}`}>
+          {status}
+        </span>
+      </button>
+      {state === 'ready' && <p className="px-2 pb-2 text-footnote text-muted">Sayacın korunur.</p>}
     </div>
   )
 }

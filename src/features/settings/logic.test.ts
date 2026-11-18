@@ -147,7 +147,8 @@ describe('backup helpers', () => {
   })
   it('hints only when old or missing', () => {
     const now = new Date(2026, 10, 14, 12)
-    expect(backupHint(null, now)).not.toBeNull()
+    expect(backupHint(null, now)).toContain('yalnızca bu cihazda')
+    expect(backupHint(null, now, true)).toContain('bulutta')
     expect(backupHint(new Date(2026, 10, 7, 9).toISOString(), now)).toBeNull()
     expect(backupHint(new Date(2026, 10, 6, 9).toISOString(), now)).not.toBeNull()
     expect(daysSinceBackup(new Date(2026, 10, 14, 1).toISOString(), now)).toBe(0)
@@ -264,8 +265,11 @@ describe('backupDue', () => {
     expect(backupDue({ lastBackupAt: ago(30), backupReminderSnoozedUntil: null }, now)).toBe(true)
   })
   it('writes the days into the text', () => {
-    expect(backupReminderText(ago(9), now)).toBe(
+    expect(backupReminderText(ago(9), now, true)).toBe(
       'Son yedeğin 9 gün önce. Verilerin bulutta da duruyor; ayrıca bir yedek indirmek iyi olur.',
+    )
+    expect(backupReminderText(ago(9), now)).toBe(
+      'Son yedeğin 9 gün önce. Verilerin yalnızca bu cihazda duruyor; bir yedek indirmek iyi olur.',
     )
     expect(backupReminderText(null, now)).toContain('Henüz yedek indirmedin.')
   })

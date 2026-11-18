@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
+import { useAuthState } from '../../data/auth'
 import { store } from '../../data/store'
 import { downloadBackup } from './downloadBackup'
 import { backupDue, backupReminderText, snoozeUntil } from './logic'
@@ -11,6 +12,7 @@ const BTN =
 /** Slim, dismissible weekly backup nudge. Renders nothing when no backup is due. */
 export function BackupReminder({ className = '' }: { className?: string }) {
   const settings = useLiveQuery(() => store.getSettings(), [])
+  const { cloud } = useAuthState()
   const [now, setNow] = useState(() => new Date())
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -42,7 +44,7 @@ export function BackupReminder({ className = '' }: { className?: string }) {
 
   return (
     <section aria-label="Yedek hatırlatması" className={`rounded-card bg-surface p-4 ${className}`.trim()}>
-      <p className="text-footnote text-text">{backupReminderText(settings.lastBackupAt, now)}</p>
+      <p className="text-footnote text-text">{backupReminderText(settings.lastBackupAt, now, cloud)}</p>
       {error && (
         <p role="alert" className="mt-2 text-footnote text-danger">
           {error}

@@ -26,3 +26,8 @@ export const Plus = () => (
     <path d="M12 5v14M5 12h14" />
   </svg>
 )
+export const ChevronRight = () => (
+  <svg {...base}>
+    <path d="m9 6 6 6-6 6" />
+  </svg>
+)
