@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Sheet } from '../../ui'
+import { Button, Sheet, Switch } from '../../ui'
 import { formatMinutes } from './logic'
 
 const CHIPS_H = [2, 4, 6, 8, 10]
@@ -16,7 +16,13 @@ export interface TargetSheetProps {
   onApply: (minutes: number) => void
   /** Apply to today and keep as the default for new days. */
   onMakeDefault: (minutes: number) => void
+  /** Break reminder interval in minutes (0 = off). */
+  breakMin: number
+  /** Saved at once, independent of the target buttons. */
+  onBreakChange: (minutes: number) => void
 }
+
+const BREAK_CHOICES = [25, 50, 90]
 
 /** Mounted fresh on every open so the draft starts from today's target. */
 export function TargetSheet({ open, ...rest }: TargetSheetProps) {
@@ -27,7 +33,14 @@ export function TargetSheet({ open, ...rest }: TargetSheetProps) {
   )
 }
 
-function TargetForm({ targetMin, defaultMin, onApply, onMakeDefault }: Omit<TargetSheetProps, 'open' | 'onClose'>) {
+function TargetForm({
+  targetMin,
+  defaultMin,
+  onApply,
+  onMakeDefault,
+  breakMin,
+  onBreakChange,
+}: Omit<TargetSheetProps, 'open' | 'onClose'>) {
   const [hours, setHours] = useState(String(Math.floor(targetMin / 60)))
   const [minutes, setMinutes] = useState(String(targetMin % 60))
 
@@ -91,7 +104,9 @@ function TargetForm({ targetMin, defaultMin, onApply, onMakeDefault }: Omit<Targ
       </div>
 
       <p className="m-0 text-footnote text-muted" aria-live="polite">
-        {valid ? `Hedef: ${formatMinutes(total)} · yeni günlerde varsayılan: ${formatMinutes(defaultMin)}` : 'Tam sayı gir: dakika 0–59, toplam 1 dakika ile 24 saat arası.'}
+        {valid
+          ? `Hedef: ${formatMinutes(total)} · yeni günlerde varsayılan: ${formatMinutes(defaultMin)}`
+          : 'Tam sayı gir: dakika 0–59, toplam 1 dakika ile 24 saat arası.'}
       </p>
 
       <Button disabled={!valid} onClick={() => onApply(total)}>
@@ -100,6 +115,31 @@ function TargetForm({ targetMin, defaultMin, onApply, onMakeDefault }: Omit<Targ
       <Button variant="ghost" disabled={!valid} onClick={() => onMakeDefault(total)}>
         Varsayılan yap
       </Button>
+
+      <div className="flex flex-col gap-2 border-t border-line pt-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="m-0 text-body font-semibold">Mola hatırlatıcısı</p>
+            <p className="m-0 text-footnote text-muted">Sayaç çalışırken, uygulama açıkken sorar. Hemen kaydedilir.</p>
+          </div>
+          <Switch label="Mola hatırlatıcısı" checked={breakMin > 0} onChange={(on) => onBreakChange(on ? 50 : 0)} />
+        </div>
+        {breakMin > 0 && (
+          <div role="group" aria-label="Mola aralığı" className="flex flex-wrap gap-2">
+            {BREAK_CHOICES.map((n) => (
+              <button
+                key={n}
+                type="button"
+                aria-pressed={breakMin === n}
+                onClick={() => onBreakChange(n)}
+                className="min-h-[var(--tap)] min-w-[var(--tap)] cursor-pointer rounded-control border-0 bg-raised px-4 text-body font-semibold text-text aria-pressed:bg-accent aria-pressed:text-on-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                {n} dk
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

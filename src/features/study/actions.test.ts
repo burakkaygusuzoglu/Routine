@@ -15,7 +15,8 @@ vi.mock('../../data/store', async (orig) => {
   }
 })
 
-const { activeStudyKey, ensureRollover, updateStudyToday } = await import('./actions')
+const { activeStudyKey, ensureRollover, renameSubjectEverywhere, saveSubjects, updateStudyToday } =
+  await import('./actions')
 
 const MIN = 60_000
 let n = 0
@@ -61,7 +62,12 @@ describe('study actions', () => {
     vi.setSystemTime(zonedEpoch('2026-11-18', '20:00'))
     const writes: Promise<void>[] = []
     for (let i = 0; i < 6; i++) {
-      writes.push(updateStudyToday((st) => ({ ...st, entries: [...st.entries, { id: `n${i}`, text: `n${i}`, minutes: null, at: '' }] })))
+      writes.push(
+        updateStudyToday((st) => ({
+          ...st,
+          entries: [...st.entries, { id: `n${i}`, text: `n${i}`, minutes: null, at: '' }],
+        })),
+      )
       writes.push(updateStudyToday((st) => ({ ...st, runningSince: st.runningSince === null ? Date.now() : null })))
     }
     await Promise.all(writes)
@@ -79,5 +85,33 @@ describe('study actions', () => {
     const log = await s.getDayLog('2026-11-18')
     expect(log.wokeAt).toBe('07:10')
     expect(log.reflection).toBe('iyi')
+  })
+
+  it('renames a subject in settings and old notes without touching the timer', async () => {
+    const s = holder.store
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(zonedEpoch('2026-11-18', '20:00'))
+    await saveSubjects(['Network', 'Okul'])
+    const note = (id: string, subject?: string) => ({
+      id,
+      text: 't',
+      minutes: 30,
+      at: '2026-11-10T10:00:00.000Z',
+      ...(subject ? { subject } : {}),
+    })
+    await s.saveDayLog({
+      ...(await s.getDayLog('2026-11-10')),
+      study: { ...newStudy(), entries: [note('a', 'Network'), note('b')] },
+    })
+    await s.saveDayLog({
+      ...(await s.getDayLog('2026-11-18')),
+      study: { ...newStudy(), runningSince: Date.now(), entries: [note('c', 'Network')] },
+    })
+    await renameSubjectEverywhere('Network', 'Ağ')
+    expect((await s.getSettings()).studySubjects).toEqual(['Ağ', 'Okul'])
+    expect((await study('2026-11-10'))?.entries.map((e) => e.subject)).toEqual(['Ağ', undefined])
+    const today = await study('2026-11-18')
+    expect(today?.entries[0].subject).toBe('Ağ')
+    expect(today?.runningSince).not.toBeNull()
   })
 })

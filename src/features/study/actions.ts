@@ -1,7 +1,8 @@
 import { store } from '../../data/store'
 import { addDays, todayKey, zonedEpoch } from '../../domain/date'
-import type { DateKey, StudyDay } from '../../domain/types'
+import { DEFAULT_STUDY_SUBJECTS, type DateKey, type StudyDay } from '../../domain/types'
 import { DEFAULT_TARGET_MIN, capForgotten, isLiveSession, joinMidnightSplit, newStudy } from './logic'
+import { renameSubject, renameSubjectInEntries } from './subjects'
 
 /** How far back a forgotten running timer is looked for. */
 const LOOKBACK_DAYS = 7
@@ -87,4 +88,37 @@ export function updateStudyToday(change: (study: StudyDay) => StudyDay): Promise
 
 export async function saveDefaultTarget(minutes: number): Promise<void> {
   await store.updateSettings((s) => ({ ...s, studyTargetMin: Math.max(1, Math.round(minutes)) }))
+}
+
+/** How far back a renamed subject is patched on old notes. */
+const RENAME_DAYS = 400
+
+export async function saveSubjects(list: string[]): Promise<void> {
+  await store.updateSettings((s) => ({ ...s, studySubjects: list }))
+}
+
+/** 0 turns the break reminder off. */
+export async function saveBreakMin(minutes: number): Promise<void> {
+  await store.updateSettings((s) => ({ ...s, studyBreakMin: Math.max(0, Math.round(minutes)) }))
+}
+
+/**
+ * Renames a subject in the settings list and on the notes of the last RENAME_DAYS days.
+ * Only the notes' subject label is touched; each log is patched atomically.
+ */
+export async function renameSubjectEverywhere(from: string, to: string): Promise<void> {
+  await serialized(async () => {
+    await store.updateSettings((s) => {
+      const list = s.studySubjects ?? DEFAULT_STUDY_SUBJECTS
+      return { ...s, studySubjects: renameSubject(list, from, to) }
+    })
+    const today = todayKey()
+    const logs = await store.listDayLogs(addDays(today, -RENAME_DAYS), addDays(today, 2))
+    for (const log of logs) {
+      if (!log.study?.entries.some((e) => e.subject === from)) continue
+      await store.updateDayLog(log.date, (l) =>
+        l.study ? { ...l, study: renameSubjectInEntries(l.study, from, to) } : l,
+      )
+    }
+  })
 }
