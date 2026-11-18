@@ -69,3 +69,13 @@ test('light theme: routine and accent graphics are not the bright dark-theme hue
   expect(await read()).toEqual({ graphic: '#698f00', amber: '#c87800' })
   await page.screenshot({ path: 'test-results/light-today.png' })
 })
+
+test('picking Okyanus in Ayarlar applies the theme and keeps it after reload', async ({ page }) => {
+  await openApp(page, '/settings')
+  await page.getByRole('radio', { name: 'Okyanus teması' }).click()
+  await expect(page.getByRole('radio', { name: 'Okyanus teması' })).toHaveAttribute('aria-checked', 'true')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'ocean')
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'ocean')
+  await expect(page.getByRole('radio', { name: 'Okyanus teması' })).toHaveAttribute('aria-checked', 'true')
+})

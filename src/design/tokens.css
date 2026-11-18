@@ -89,7 +89,8 @@
  * through var(), so they follow. Night tokens are not touched: they stay dark.
  * The two blocks below must hold identical values (a test checks it).
  */
-:root[data-theme='light'] {
+:root[data-theme='light'],
+[data-theme='light'] {
   --color-bg: #f2f2f7;
   --color-chrome: #f9f9fb;
   --color-surface: #ffffff;
@@ -173,4 +174,147 @@
   :root[data-theme='system'] {
     color-scheme: light;
   }
+}
+
+/* Dark values again, scoped so a [data-theme='dark'] element nested in another theme (the picker preview) paints dark. */
+[data-theme='dark'] {
+  --color-bg: #0b0d12;
+  --color-chrome: #10131a;
+  --color-surface: #151821;
+  --color-raised: #1c2030;
+  --color-line: #232735;
+  --color-field-line: #2e3345;
+  --color-empty: #232735;
+  --color-text: #f3f4f6;
+  --color-muted: #a3a9b5;
+  --color-accent: #d4ff5c;
+  --color-on-accent: #0b0d12;
+  --color-danger: #ff8f7d;
+  --color-accent-ink: #d4ff5c;
+  --color-accent-graphic: #d4ff5c;
+  --color-routine-amber: #ffb84d;
+  --color-routine-sky: #4cc9f0;
+  --color-routine-violet: #a78bfa;
+  --color-routine-coral: #ff7a66;
+  --color-routine-blue: #5b9bff;
+  --color-routine-green: #5be38a;
+  --color-routine-pink: #f27db5;
+  --color-routine-teal: #3dd6c3;
+  --color-routine-amber-ink: #ffb84d;
+  --color-routine-sky-ink: #4cc9f0;
+  --color-routine-violet-ink: #a78bfa;
+  --color-routine-coral-ink: #ff7a66;
+  --color-routine-blue-ink: #5b9bff;
+  --color-routine-green-ink: #5be38a;
+  --color-routine-pink-ink: #f27db5;
+  --color-routine-teal-ink: #3dd6c3;
+  color-scheme: dark;
+}
+
+/* Okyanus: deep navy-teal ground, aqua accent. */
+:root[data-theme='ocean'],
+[data-theme='ocean'] {
+  --color-bg: #06161f;
+  --color-chrome: #0a1d28;
+  --color-surface: #0c2330;
+  --color-raised: #123142;
+  --color-line: #163748;
+  --color-field-line: #2a5870;
+  --color-empty: #163748;
+  --color-text: #e8f6fa;
+  --color-muted: #93b4c2;
+  --color-accent: #5ce1e6;
+  --color-on-accent: #04202a;
+  --color-accent-ink: #5ce1e6;
+  --color-accent-graphic: #5ce1e6;
+  --color-danger: #ff9a8a;
+  --color-routine-amber: #ffbf5a;
+  --color-routine-sky: #5cc8ff;
+  --color-routine-violet: #a99bff;
+  --color-routine-coral: #ff8a70;
+  --color-routine-blue: #6aa5ff;
+  --color-routine-green: #62e39a;
+  --color-routine-pink: #f58bc0;
+  --color-routine-teal: #44d6c0;
+  --color-routine-amber-ink: #ffbf5a;
+  --color-routine-sky-ink: #5cc8ff;
+  --color-routine-violet-ink: #a99bff;
+  --color-routine-coral-ink: #ff8a70;
+  --color-routine-blue-ink: #6aa5ff;
+  --color-routine-green-ink: #62e39a;
+  --color-routine-pink-ink: #f58bc0;
+  --color-routine-teal-ink: #44d6c0;
+  color-scheme: dark;
+}
+
+/* Gün Batımı: aubergine ground, coral-peach accent. */
+:root[data-theme='sunset'],
+[data-theme='sunset'] {
+  --color-bg: #170c1c;
+  --color-chrome: #1d1023;
+  --color-surface: #24132b;
+  --color-raised: #311a3a;
+  --color-line: #3a2243;
+  --color-field-line: #5c3c68;
+  --color-empty: #3a2243;
+  --color-text: #fff1ea;
+  --color-muted: #c9aeb9;
+  --color-accent: #ff8a5c;
+  --color-on-accent: #2a0f0a;
+  --color-accent-ink: #ff8a5c;
+  --color-accent-graphic: #ff8a5c;
+  --color-danger: #ff8aa0;
+  --color-routine-amber: #ffc060;
+  --color-routine-sky: #62cff5;
+  --color-routine-violet: #b79cff;
+  --color-routine-coral: #ff7a6e;
+  --color-routine-blue: #7aa8ff;
+  --color-routine-green: #6fe39a;
+  --color-routine-pink: #ff86bf;
+  --color-routine-teal: #48d8c4;
+  --color-routine-amber-ink: #ffc060;
+  --color-routine-sky-ink: #62cff5;
+  --color-routine-violet-ink: #b79cff;
+  --color-routine-coral-ink: #ff7a6e;
+  --color-routine-blue-ink: #7aa8ff;
+  --color-routine-green-ink: #6fe39a;
+  --color-routine-pink-ink: #ff86bf;
+  --color-routine-teal-ink: #48d8c4;
+  color-scheme: dark;
+}
+
+/* Lavanta: lavender-tinted light ground, violet accent with white button text. */
+:root[data-theme='lavender'],
+[data-theme='lavender'] {
+  --color-bg: #f3f0fb;
+  --color-chrome: #faf8ff;
+  --color-surface: #ffffff;
+  --color-raised: #e9e4f7;
+  --color-line: #e1daf3;
+  --color-field-line: #bdb3da;
+  --color-empty: #e1daf3;
+  --color-text: #2a2340;
+  --color-muted: #5f5878;
+  --color-accent: #7552f7;
+  --color-on-accent: #ffffff;
+  --color-accent-ink: #5b3fd6;
+  --color-accent-graphic: #7552f7;
+  --color-danger: #c0261a;
+  --color-routine-amber: #c27300;
+  --color-routine-sky: #0f8fbd;
+  --color-routine-violet: #8a63f5;
+  --color-routine-coral: #ec4a30;
+  --color-routine-blue: #3a7bf0;
+  --color-routine-green: #1b9a47;
+  --color-routine-pink: #d9418f;
+  --color-routine-teal: #1a978a;
+  --color-routine-amber-ink: #80560f;
+  --color-routine-sky-ink: #24687f;
+  --color-routine-violet-ink: #6444b8;
+  --color-routine-coral-ink: #a8412f;
+  --color-routine-blue-ink: #3b60a8;
+  --color-routine-green-ink: #2a6e42;
+  --color-routine-pink-ink: #9a3d6c;
+  --color-routine-teal-ink: #1d6c62;
+  color-scheme: light;
 }

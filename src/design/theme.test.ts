@@ -56,6 +56,28 @@ describe('theme', () => {
     expect(t.resolveTheme('system')).toBe('dark')
   })
 
+  it('accepts the new themes and rejects junk', async () => {
+    const t = await import('./theme')
+    for (const v of ['ocean', 'sunset', 'lavender']) expect(t.isTheme(v)).toBe(true)
+    expect(t.isTheme('purple')).toBe(false)
+    expect(t.isTheme(undefined)).toBe(false)
+  })
+
+  it('new themes set data-theme, their own meta colour and the painted scheme', async () => {
+    const t = await import('./theme')
+    t.setTheme('ocean')
+    expect(attrs.get('data-theme')).toBe('ocean')
+    expect(meta.content).toBe('#06161F')
+    expect(t.resolveTheme('ocean')).toBe('dark')
+    t.setTheme('sunset')
+    expect(meta.content).toBe('#170C1C')
+    expect(t.resolveTheme('sunset')).toBe('dark')
+    t.setTheme('lavender')
+    expect(attrs.get('data-theme')).toBe('lavender')
+    expect(meta.content).toBe('#F3F0FB')
+    expect(t.resolveTheme('lavender')).toBe('light')
+  })
+
   it('applyStoredTheme restores the stored choice', async () => {
     localStorage.setItem('routine.theme', 'light')
     const t = await import('./theme')
