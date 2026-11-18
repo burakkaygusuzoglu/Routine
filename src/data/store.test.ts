@@ -11,6 +11,16 @@ beforeEach(async () => {
 })
 
 describe('RoutineStore', () => {
+  it('deleteRoutine removes only the routine row', async () => {
+    const [first, second] = await store.listRoutines()
+    await store.setCompletion(first.id, '2026-01-01', 'full')
+    await store.deleteRoutine(first.id)
+    const ids = (await store.listRoutines({ includeArchived: true })).map((r) => r.id)
+    expect(ids).not.toContain(first.id)
+    expect(ids).toContain(second.id)
+    expect(await store.listCompletions('2026-01-01', '2026-01-01')).toHaveLength(1)
+  })
+
   it('seeds eight routines once, with private singleton ids', async () => {
     await store.init()
     const routines = await store.listRoutines()

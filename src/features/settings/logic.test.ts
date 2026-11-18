@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 import type { Routine } from '../../domain/types'
 import {
   applyDraft,
+  backupDue,
   backupFileName,
+  backupReminderText,
+  snoozeUntil,
   backupHint,
   createRoutine,
   daysSinceBackup,
@@ -225,5 +228,48 @@ describe('pushStateText', () => {
     expect(pushStateText('needs-install', true)).toBe("iPhone'da önce Ana Ekrana Ekle, sonra buradan aç")
     expect(pushStateText('unsupported', true)).toBe('Bu tarayıcı bildirimleri desteklemiyor.')
     expect(pushStateText(null, true)).toBe('')
+  })
+})
+
+describe('validateDraft limits', () => {
+  it('rejects names over 60 characters and accepts exactly 60', () => {
+    expect(validateDraft({ ...newDraft(), name: 'a'.repeat(61) }).name).toBeDefined()
+    expect(validateDraft({ ...newDraft(), name: 'a'.repeat(60) }).name).toBeUndefined()
+  })
+  it('requires a name, a day and a valid HH:MM', () => {
+    const ok = { ...newDraft(), name: 'Okul' }
+    expect(isValid(ok)).toBe(true)
+    expect(validateDraft({ ...ok, name: '   ' }).name).toBeDefined()
+    expect(validateDraft({ ...ok, days: [] }).days).toBeDefined()
+    expect(validateDraft({ ...ok, fixedTime: '24:00' }).time).toBeDefined()
+    expect(validateDraft({ ...ok, fixedTime: '9:5' }).time).toBeDefined()
+  })
+})
+
+describe('backupDue', () => {
+  const now = new Date('2026-11-18T12:00:00.000Z')
+  const ago = (days: number) => new Date(now.getTime() - days * 86_400_000).toISOString()
+  it('is due when there is no backup', () => {
+    expect(backupDue({ lastBackupAt: null }, now)).toBe(true)
+  })
+  it('is due only after more than 7 days', () => {
+    expect(backupDue({ lastBackupAt: ago(7) }, now)).toBe(false)
+    expect(backupDue({ lastBackupAt: ago(8) }, now)).toBe(true)
+    expect(backupDue({ lastBackupAt: ago(1) }, now)).toBe(false)
+  })
+  it('stays hidden while snoozed and returns when the snooze ends', () => {
+    const future = new Date(now.getTime() + 1000).toISOString()
+    expect(backupDue({ lastBackupAt: null, backupReminderSnoozedUntil: future }, now)).toBe(false)
+    expect(backupDue({ lastBackupAt: null, backupReminderSnoozedUntil: ago(0) }, now)).toBe(true)
+    expect(backupDue({ lastBackupAt: ago(30), backupReminderSnoozedUntil: null }, now)).toBe(true)
+  })
+  it('writes the days into the text', () => {
+    expect(backupReminderText(ago(9), now)).toBe(
+      'Son yedeğin 9 gün önce. Verilerin bulutta da duruyor; ayrıca bir yedek indirmek iyi olur.',
+    )
+    expect(backupReminderText(null, now)).toContain('Henüz yedek indirmedin.')
+  })
+  it('snoozes for 3 days', () => {
+    expect(Date.parse(snoozeUntil(now)) - now.getTime()).toBe(3 * 86_400_000)
   })
 })

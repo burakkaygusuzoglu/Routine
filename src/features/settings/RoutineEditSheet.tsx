@@ -49,10 +49,12 @@ interface Props {
   /** All routines including archived, used to place a new routine last. */
   all: Routine[]
   onClose: () => void
+  /** Called after the routine was archived, so the caller can offer an undo. */
+  onArchived?: (routine: Routine) => void
 }
 
 /** Mount this only while the sheet is wanted; it starts from a fresh draft each time. */
-export function RoutineEditSheet({ routine, all, onClose }: Props) {
+export function RoutineEditSheet({ routine, all, onClose, onArchived }: Props) {
   const [draft, setDraft] = useState<RoutineDraft>(() => (routine ? draftFromRoutine(routine) : newDraft()))
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -111,9 +113,15 @@ export function RoutineEditSheet({ routine, all, onClose }: Props) {
             value={draft.name}
             onChange={(e) => set('name', e.target.value)}
             aria-invalid={errors.name !== undefined && draft.name !== ''}
+            aria-describedby={errors.name && draft.name !== '' ? `${nameId}-err` : undefined}
             className={`${FIELD} mt-2`}
             autoComplete="off"
           />
+          {errors.name && draft.name !== '' && (
+            <p id={`${nameId}-err`} className="mt-2 text-footnote text-danger">
+              {errors.name}
+            </p>
+          )}
           <p className="mt-4 text-footnote font-semibold text-muted" id={`${nameId}-color`}>
             Renk
           </p>
@@ -280,7 +288,10 @@ export function RoutineEditSheet({ routine, all, onClose }: Props) {
         )}
 
         {routine && (
-          <Button variant="danger" disabled={busy} onClick={() => run(() => store.archiveRoutine(routine.id))}>
+          <Button variant="danger" disabled={busy} onClick={() => run(async () => {
+                await store.archiveRoutine(routine.id)
+                onArchived?.(routine)
+              })}>
             Rutini arşivle
           </Button>
         )}

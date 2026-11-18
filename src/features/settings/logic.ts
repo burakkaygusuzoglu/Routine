@@ -3,7 +3,7 @@ import { DEFAULT_ROUTINE_ICON, type RoutineIconName } from '../../design/routine
 import { zonedParts, fromDateKey, toDateKey, todayKey } from '../../domain/date'
 import { validateBackup } from '../../data/backupValidate'
 import type { PushState } from '../../data/push'
-import type { AnchorType, Backup, ClockTime, Routine } from '../../domain/types'
+import type { AnchorType, Backup, ClockTime, Routine, Settings } from '../../domain/types'
 
 /** Short weekday names, 0 = Monday ... 6 = Sunday. */
 export const DAY_SHORT = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'] as const
@@ -11,6 +11,7 @@ export const DAY_LONG = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'
 
 export const MAX_OFFSET_MIN = 720
 export const MAX_IDENTITY_LENGTH = 40
+export const MAX_NAME_LENGTH = 60
 
 /** Editable form state of a routine. `offset` is text so the field can be empty while typing. */
 export interface RoutineDraft {
@@ -75,6 +76,7 @@ export interface DraftErrors {
 export function validateDraft(d: RoutineDraft): DraftErrors {
   const errors: DraftErrors = {}
   if (d.name.trim() === '') errors.name = 'Bir ad yaz.'
+  else if (d.name.trim().length > MAX_NAME_LENGTH) errors.name = `Ad en fazla ${MAX_NAME_LENGTH} harf olabilir.`
   if (d.days.length === 0) errors.days = 'En az bir gün seç.'
   if (d.anchor === 'fixed' && !/^([01]\d|2[0-3]):[0-5]\d$/.test(d.fixedTime)) errors.time = 'Bir saat seç.'
   if (d.anchor !== 'fixed' && parseOffset(d.offset) === null) {
@@ -195,6 +197,36 @@ export function backupHint(iso: string | null, now: Date): string | null {
   if (iso === null) return 'Verilerin yalnızca bu cihazda. Bir yedek almak iyi olur.'
   if (daysSinceBackup(iso, now) > BACKUP_STALE_DAYS) return 'Yedeğin biraz eski. İstersen yenisini al.'
   return null
+}
+
+const DAY_MS = 86_400_000
+export const BACKUP_SNOOZE_DAYS = 3
+
+/** True when the weekly backup reminder should show: no backup or one older than 7 days, and not snoozed. */
+export function backupDue(
+  settings: Pick<Settings, 'lastBackupAt' | 'backupReminderSnoozedUntil'>,
+  now: Date,
+): boolean {
+  const snoozed = settings.backupReminderSnoozedUntil ? Date.parse(settings.backupReminderSnoozedUntil) : NaN
+  if (!Number.isNaN(snoozed) && snoozed > now.getTime()) return false
+  if (!settings.lastBackupAt) return true
+  const last = Date.parse(settings.lastBackupAt)
+  if (Number.isNaN(last)) return true
+  return now.getTime() - last > BACKUP_STALE_DAYS * DAY_MS
+}
+
+/** Reminder text, e.g. "Son yedeğin 9 gün önce. ..." */
+export function backupReminderText(lastBackupAt: string | null | undefined, now: Date): string {
+  const tail = 'Verilerin bulutta da duruyor; ayrıca bir yedek indirmek iyi olur.'
+  const last = lastBackupAt ? Date.parse(lastBackupAt) : NaN
+  if (Number.isNaN(last)) return `Henüz yedek indirmedin. ${tail}`
+  const days = Math.max(BACKUP_STALE_DAYS, Math.floor((now.getTime() - last) / DAY_MS))
+  return `Son yedeğin ${days} gün önce. ${tail}`
+}
+
+/** ISO time until which the reminder stays hidden after "Sonra". */
+export function snoozeUntil(now: Date): string {
+  return new Date(now.getTime() + BACKUP_SNOOZE_DAYS * DAY_MS).toISOString()
 }
 
 const BAD_FILE = 'Bu dosya bir Routine yedeği değil.'

@@ -15,6 +15,8 @@ export interface RoutineStore {
   listRoutines(opts?: { includeArchived?: boolean }): Promise<Routine[]>
   saveRoutine(routine: Routine): Promise<void>
   archiveRoutine(id: string): Promise<void>
+  /** Permanently removes the routine row. Its past completions are left in place. */
+  deleteRoutine(id: string): Promise<void>
   /** `ids` in the new order; sets each routine's `sort` to its index. */
   reorderRoutines(ids: string[]): Promise<void>
 
@@ -122,6 +124,9 @@ export function createStore(db: RoutineDB = defaultDb): RoutineStore {
     },
     async archiveRoutine(id) {
       await db.routines.update(id, { archivedAt: new Date().toISOString() })
+    },
+    async deleteRoutine(id) {
+      await db.routines.delete(id)
     },
     async reorderRoutines(ids) {
       await db.transaction('rw', db.routines, async () => {
