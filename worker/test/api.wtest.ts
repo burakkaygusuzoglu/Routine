@@ -210,6 +210,106 @@ describe('trust on first use', () => {
   })
 })
 
+describe('account cap and KV write economy', () => {
+  const idAt = (n: number) => `account-number-${String(n).padStart(4, '0')}`
+  const claim = (api: Awaited<ReturnType<typeof setup>>['api'], n: number) =>
+    api('PUT', '/v1/schedule', { accountId: idAt(n), secret: SECRET, items: [] })
+
+  it('refuses new accounts beyond MAX_ACCOUNTS with 403 account_limit, existing ones keep working', async () => {
+    const { api, env, kv } = await setup()
+    ;(env as { MAX_ACCOUNTS?: string }).MAX_ACCOUNTS = '3'
+    for (let i = 0; i < 3; i++) expect((await claim(api, i)).status).toBe(204)
+    const res = await claim(api, 3)
+    expect(res.status).toBe(403)
+    expect(await res.json()).toEqual({ error: 'account_limit' })
+    const s = await makeSubscriber()
+    const sub = await api('POST', '/v1/subscribe', { accountId: idAt(9), secret: SECRET, subscription: s.subscription })
+    expect(sub.status).toBe(403)
+    expect(kv.data.has(`acct:${idAt(3)}`)).toBe(false)
+    expect((await api('PUT', '/v1/schedule', { accountId: idAt(1), secret: SECRET, items: [item('a', NOW + 60_000)] })).status).toBe(204)
+  })
+
+  it('defaults to 50 accounts and ignores an invalid MAX_ACCOUNTS', async () => {
+    const { api, env } = await setup()
+    ;(env as { MAX_ACCOUNTS?: string }).MAX_ACCOUNTS = 'many'
+    for (let i = 0; i < 50; i++) expect((await claim(api, i)).status).toBe(204)
+    expect((await claim(api, 50)).status).toBe(403)
+  })
+
+  it('does not write KV for an identical schedule or an identical subscription', async () => {
+    const { api, kv } = await setup()
+    const items = [item('a', NOW + 60_000), item('b', NOW + 120_000)]
+    const s = await makeSubscriber()
+    expect((await api('PUT', '/v1/schedule', { ...creds, items })).status).toBe(204)
+    expect((await api('POST', '/v1/subscribe', { ...creds, subscription: s.subscription })).status).toBe(204)
+    const puts = kv.puts.length
+    expect((await api('PUT', '/v1/schedule', { ...creds, items })).status).toBe(204)
+    expect((await api('POST', '/v1/subscribe', { ...creds, subscription: s.subscription })).status).toBe(204)
+    expect(kv.puts.length).toBe(puts)
+    // A real change still writes.
+    expect((await api('PUT', '/v1/schedule', { ...creds, items: [items[0]] })).status).toBe(204)
+    expect(kv.puts.length).toBeGreaterThan(puts)
+    expect(kv.json(`acct:${ACCOUNT}`).items).toHaveLength(1)
+  })
+
+  it('still creates a brand-new account from an empty schedule', async () => {
+    const { api, kv } = await setup()
+    expect((await api('PUT', '/v1/schedule', { ...creds, items: [] })).status).toBe(204)
+    expect(kv.json(`acct:${ACCOUNT}`)).toBeDefined()
+    expect(kv.json('idx')[ACCOUNT]).toBeNull()
+  })
+})
+
+describe('DELETE /v1/account', () => {
+  it('deletes the account and its index entry after authenticating', async () => {
+    const { api, kv } = await setup()
+    await api('PUT', '/v1/schedule', { ...creds, items: [item('a', NOW + 60_000)] })
+    await api('PUT', '/v1/schedule', { accountId: 'other-account-0001', secret: SECRET, items: [item('b', NOW + 60_000)] })
+    const res = await api('DELETE', '/v1/account', creds)
+    expect(res.status).toBe(204)
+    expect(kv.data.has(`acct:${ACCOUNT}`)).toBe(false)
+    expect(Object.keys(kv.json('idx'))).toEqual(['other-account-0001'])
+    expect(kv.data.has('acct:other-account-0001')).toBe(true)
+  })
+
+  it('rejects a wrong secret with 403 and deletes nothing', async () => {
+    const { api, kv } = await setup()
+    await api('PUT', '/v1/schedule', { ...creds, items: [item('a', NOW + 60_000)] })
+    const res = await api('DELETE', '/v1/account', { accountId: ACCOUNT, secret: 'zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz' })
+    expect(res.status).toBe(403)
+    expect(kv.data.has(`acct:${ACCOUNT}`)).toBe(true)
+    expect(kv.json('idx')[ACCOUNT]).toBeDefined()
+  })
+
+  it('answers 204 for an unknown account without writing anything', async () => {
+    const { api, kv } = await setup()
+    const res = await api('DELETE', '/v1/account', creds)
+    expect(res.status).toBe(204)
+    expect(kv.data.size).toBe(0)
+    expect(kv.puts).toEqual([])
+    expect(kv.deletes).toEqual([])
+  })
+
+  it('validates input, allows DELETE in CORS and rejects other methods', async () => {
+    const { api } = await setup()
+    expect((await api('DELETE', '/v1/account', { accountId: 'x', secret: SECRET })).status).toBe(400)
+    const pre = await api('OPTIONS', '/v1/account', undefined, { Origin: ORIGIN })
+    expect(pre.status).toBe(204)
+    expect(pre.headers.get('Access-Control-Allow-Methods')).toContain('DELETE')
+    const del = await api('DELETE', '/v1/account', creds, { Origin: ORIGIN })
+    expect(del.headers.get('Access-Control-Allow-Origin')).toBe(ORIGIN)
+    expect((await api('POST', '/v1/account', creds)).status).toBe(405)
+  })
+
+  it('allows the same account id to be created again afterwards', async () => {
+    const { api } = await setup()
+    await api('PUT', '/v1/schedule', { ...creds, items: [] })
+    await api('DELETE', '/v1/account', creds)
+    const other = { accountId: ACCOUNT, secret: 'new-secret-new-secret-1' }
+    expect((await api('PUT', '/v1/schedule', { ...other, items: [] })).status).toBe(204)
+  })
+})
+
 describe('subscribe, unsubscribe, schedule', () => {
   it('replaces the whole schedule, sorts it and drops items that are too late', async () => {
     const { api, kv } = await setup()
@@ -220,7 +320,7 @@ describe('subscribe, unsubscribe, schedule', () => {
     expect(kv.json(`acct:${ACCOUNT}`).items.map((i: { id: string }) => i.id)).toEqual(['c'])
     expect(kv.json('idx')[ACCOUNT]).toBe(NOW + 300_000)
     await api('PUT', '/v1/schedule', { ...creds, items: [] })
-    expect(kv.json('idx')[ACCOUNT]).toBeUndefined()
+    expect(kv.json('idx')[ACCOUNT]).toBeNull()
   })
 
   it('unsubscribes by endpoint', async () => {

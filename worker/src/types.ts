@@ -4,6 +4,8 @@ export interface Env {
   VAPID_SUBJECT: string
   /** Secret: base64url private scalar (web-push format) or a JWK JSON string. */
   VAPID_PRIVATE_KEY: string
+  /** Optional cap on the total number of accounts (default 50). */
+  MAX_ACCOUNTS?: string
 }
 
 export interface Deps {
@@ -41,5 +43,7 @@ export const LIMITS = {
   /** Items further away than this are rejected. */
   horizonMs: 14 * 24 * 60 * 60 * 1000,
 } as const
+
+export const DEFAULT_MAX_ACCOUNTS = 50
 
 export const ALLOWED_ORIGINS = ['https://burakkaygusuzoglu.github.io', 'http://localhost:5173']

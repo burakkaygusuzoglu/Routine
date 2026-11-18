@@ -3,7 +3,8 @@ import type { Account, Env } from './types.ts'
 const acctKey = (id: string) => `acct:${id}`
 const INDEX_KEY = 'idx'
 
-export type Index = Record<string, number>
+/** accountId -> earliest pending item time (null: no pending items). Every account is listed. */
+export type Index = Record<string, number | null>
 
 const enc = new TextEncoder()
 
@@ -39,6 +40,7 @@ export async function writeIndex(env: Env, index: Index): Promise<void> {
 /**
  * Saves one account (a single KV write). The earliest item time is kept as KV
  * metadata so the periodic reconcile can rebuild the index from a list call.
+ * Every account is in the index (value null when it has no items): the account cap counts it.
  * Pass `index: false` when the caller maintains the index itself (cron).
  */
 export async function saveAccount(
@@ -51,9 +53,17 @@ export async function saveAccount(
   await env.PUSH.put(acctKey(id), JSON.stringify(acc), { metadata: { nextAt: at } })
   if (!options.index) return
   const index = await readIndex(env)
-  if (at === null ? id in index : index[id] !== at) {
-    if (at === null) delete index[id]
-    else index[id] = at
+  if (index[id] !== at) {
+    index[id] = at
+    await writeIndex(env, index)
+  }
+}
+
+export async function deleteAccount(env: Env, id: string): Promise<void> {
+  await env.PUSH.delete(acctKey(id))
+  const index = await readIndex(env)
+  if (id in index) {
+    delete index[id]
     await writeIndex(env, index)
   }
 }
@@ -68,7 +78,7 @@ export async function listIndex(env: Env): Promise<{ index: Index; listOps: numb
     listOps++
     for (const key of page.keys) {
       const at = key.metadata?.nextAt
-      if (typeof at === 'number') index[key.name.slice('acct:'.length)] = at
+      index[key.name.slice('acct:'.length)] = typeof at === 'number' ? at : null
     }
     cursor = page.list_complete ? undefined : page.cursor
   } while (cursor)

@@ -6,6 +6,7 @@ import { makeVapid } from './helpers.ts'
 export class FakeKV {
   data = new Map<string, { value: string; metadata: unknown }>()
   puts: string[] = []
+  deletes: string[] = []
   lists = 0
   async get(key: string, type?: string) {
     const e = this.data.get(key)
@@ -15,6 +16,10 @@ export class FakeKV {
   async put(key: string, value: string, opts?: { metadata?: unknown }) {
     this.data.set(key, { value, metadata: opts?.metadata ?? null })
     this.puts.push(key)
+  }
+  async delete(key: string) {
+    this.data.delete(key)
+    this.deletes.push(key)
   }
   async list(opts: { prefix?: string } = {}) {
     this.lists++

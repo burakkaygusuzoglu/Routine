@@ -43,7 +43,7 @@ export async function runCron(env: Env, deps: Deps): Promise<CronReport> {
   }
 
   const due = Object.entries(index)
-    .filter(([, at]) => at <= now)
+    .filter((e): e is [string, number] => typeof e[1] === 'number' && e[1] <= now)
     .sort((a, b) => a[1] - b[1])
 
   for (const [id] of due) {
@@ -87,12 +87,7 @@ export async function runCron(env: Env, deps: Deps): Promise<CronReport> {
       ops++
     }
     const at = nextAt(acc)
-    if (at === null) {
-      if (id in index) {
-        delete index[id]
-        indexDirty = true
-      }
-    } else if (index[id] !== at) {
+    if (index[id] !== at) {
       index[id] = at
       indexDirty = true
     }
@@ -102,6 +97,6 @@ export async function runCron(env: Env, deps: Deps): Promise<CronReport> {
   return { sent, accounts: processed }
 }
 
-function sortKeys(index: Index): [string, number][] {
+function sortKeys(index: Index): [string, number | null][] {
   return Object.entries(index).sort((a, b) => a[0].localeCompare(b[0]))
 }
