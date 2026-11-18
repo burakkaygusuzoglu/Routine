@@ -66,6 +66,8 @@ export interface StudyEntry {
   minutes: number | null
   /** ISO timestamp. */
   at: string
+  /** Optional subject label, one of Settings.studySubjects (e.g. "Network"). */
+  subject?: string
 }
 
 export interface StudyDay {
@@ -97,7 +99,15 @@ export interface Settings {
   timeZone?: string
   /** Default daily study target in minutes (8 h if unset). */
   studyTargetMin?: number
+  /** Study subjects offered as quick labels (defaults to DEFAULT_STUDY_SUBJECTS when unset). */
+  studySubjects?: string[]
+  /** Break reminder while the study timer runs, in minutes of focus (0 or unset: off). */
+  studyBreakMin?: number
+  /** ISO timestamp until which the weekly backup reminder is snoozed. */
+  backupReminderSnoozedUntil?: string | null
 }
+
+export const DEFAULT_STUDY_SUBJECTS = ['Network', 'Okul', 'TryHackMe', 'Yazılım']
 
 /** Faz 3. */
 export interface FocusSession {

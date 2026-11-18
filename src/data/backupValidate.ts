@@ -152,6 +152,7 @@ function validateStudy(raw: unknown, w: string): StudyDay {
       text: str(o.text, ew, 'text', MAX_SHORT, { empty: true }),
       minutes: nullable(o.minutes, (v) => nonNeg(v, ew, 'minutes')),
       at: iso(o.at, ew, 'at'),
+      ...(o.subject !== undefined ? { subject: str(o.subject, ew, 'subject', 40, { empty: true }) } : {}),
     }
   })
   return {
@@ -205,6 +206,13 @@ function validateSettings(raw: unknown, i: number): Omit<Settings, 'push' | 'cal
     out.timeZone = tz
   }
   if (s.studyTargetMin !== undefined) out.studyTargetMin = int(s.studyTargetMin, w, 'studyTargetMin', 0, 1440)
+  if (s.studySubjects !== undefined) {
+    if (!Array.isArray(s.studySubjects) || s.studySubjects.length > 20) fail(w, '"studySubjects" bir liste olmalı')
+    out.studySubjects = [...new Set(s.studySubjects.map((x) => str(x, w, 'studySubjects', 40)))]
+  }
+  if (s.studyBreakMin !== undefined) out.studyBreakMin = int(s.studyBreakMin, w, 'studyBreakMin', 0, 240)
+  if (s.backupReminderSnoozedUntil !== undefined)
+    out.backupReminderSnoozedUntil = nullable(s.backupReminderSnoozedUntil, (v) => iso(v, w, 'backupReminderSnoozedUntil'))
   if (s.calendarExport !== undefined) {
     const c = obj(s.calendarExport, w)
     iso(c.at, w, 'calendarExport.at')
