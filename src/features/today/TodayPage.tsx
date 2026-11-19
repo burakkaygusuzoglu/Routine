@@ -8,12 +8,11 @@ import { ROUTINE_COLORS } from '../../design/palette'
 import { store } from '../../data/store'
 import { BackupReminder, RoutineEditSheet } from '../settings'
 import { useAccount } from '../../data/account'
-import { Button } from '../../ui'
+import { Button, Sheet } from '../../ui'
 import { FocusBanner } from './components/FocusBanner'
 import { Hero } from './components/Hero'
 import { StudyCard } from './components/StudyCard'
 import { RoutineRow } from './components/RoutineRow'
-import { Sheet } from './components/Sheet'
 import { WakeChip } from './components/WakeChip'
 import { UndoToast } from './components/UndoToast'
 import { MorningNote } from './components/MorningNote'
@@ -226,7 +225,7 @@ export function TodayPage() {
 
       {showNightEntry(nowMinutes, settings.targetBed) && <NightCard />}
 
-      <Sheet open={actionFor !== null} onClose={() => setActionFor(null)} title={actionFor?.name ?? ''}>
+      <Sheet variant="simple" open={actionFor !== null} onClose={() => setActionFor(null)} title={actionFor?.name ?? ''}>
         <Button look="strong" onClick={() => choose('full')}>Tam yaptım</Button>
         <Button look="strong" variant="ghost" onClick={() => choose('min')}>
           Minimumu yaptım

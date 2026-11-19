@@ -1,4 +1,4 @@
-import { Sheet } from './Sheet'
+import { Sheet } from '../../../ui'
 import { MonthCalendar } from './MonthCalendar'
 import type { CellState } from '../../../domain/streak'
 import type { Routine } from '../../../domain/types'
@@ -22,7 +22,7 @@ interface RoutineSheetProps {
 
 export function RoutineSheet({ routine, onClose, best, rate, monthStart, monthCells, today, milestones = [], onEdit }: RoutineSheetProps) {
   return (
-    <Sheet open={routine !== null} onClose={onClose} title={routine?.name ?? ''}>
+    <Sheet variant="card" open={routine !== null} onClose={onClose} title={routine?.name ?? ''}>
       {routine && (
         <div className="flex flex-col gap-4">
           {onEdit && (

@@ -13,8 +13,7 @@ import {
   shiftMonth,
   type Level,
 } from '../month'
-import { Card } from '../../../ui'
-import { Sheet } from './Sheet'
+import { Card, Sheet } from '../../../ui'
 
 const HEADERS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']
 
@@ -119,7 +118,7 @@ export function MonthView({ routines, completions, today }: MonthViewProps) {
       </div>
       <p className="sr-only">Her günün rengi, o gün yapılan rutinlerin payını gösterir.</p>
 
-      <Sheet open={openDay !== null} onClose={() => setOpenDay(null)} title={detailTitle}>
+      <Sheet variant="card" open={openDay !== null} onClose={() => setOpenDay(null)} title={detailTitle}>
         {detail.length === 0 ? (
           <p className="text-body text-muted">Bu gün için rutin yok.</p>
         ) : (

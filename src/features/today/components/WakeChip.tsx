@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import type { ClockTime } from '../../../domain/types'
-import { Button } from '../../../ui'
-import { Sheet } from './Sheet'
+import { Button, Sheet } from '../../../ui'
 
 interface Props {
   wokeAt: ClockTime | null
@@ -33,7 +32,7 @@ export function WakeChip({ wokeAt, onWake, onChange }: Props) {
       >
         Uyandın <b className="ml-1 text-text">{wokeAt}</b>
       </button>
-      <Sheet open={open} onClose={() => setOpen(false)} title="Uyanma saati">
+      <Sheet variant="simple" open={open} onClose={() => setOpen(false)} title="Uyanma saati">
         <label className="flex flex-col gap-1 text-footnote text-muted">
           Saat
           <input

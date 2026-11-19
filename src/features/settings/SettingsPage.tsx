@@ -8,12 +8,11 @@ import { deleteAllData, useAccount, type SyncKind } from '../../data/account'
 import { disablePush, enablePush, pushConfigured, sendTest, setFollowUp, usePushState } from '../../data/push'
 import { useAuthState } from '../../data/auth'
 import { store } from '../../data/store'
-import { Button, PageHeader, Switch } from '../../ui'
+import { Button, PageHeader, Sheet, Switch } from '../../ui'
 import { applyUpdate, checkForUpdate } from '../../pwa'
 import { buildIcs, exportableRoutines, scheduleSignature } from '../../domain/ics'
 import type { Backup, Routine } from '../../domain/types'
 import { ChevronDown, ChevronRight, ChevronUp, Plus } from './components/icons'
-import { Sheet } from './components/Sheet'
 import { RoutineEditSheet } from './RoutineEditSheet'
 import { downloadBackup, downloadBlob } from './downloadBackup'
 import {
@@ -507,7 +506,7 @@ export function SettingsPage() {
       )}
 
       {deleting === 'warn' && (
-        <Sheet open onClose={closeDelete} title="Tüm verilerimi sil">
+        <Sheet variant="header" open onClose={closeDelete} title="Tüm verilerimi sil">
           <div className="flex flex-col gap-3">
             <p className="text-body">
               Rutinlerin, işaretlerin, notların ve günlük değerlendirmelerin
@@ -528,7 +527,7 @@ export function SettingsPage() {
       )}
 
       {deleting === 'confirm' && (
-        <Sheet open onClose={closeDelete} title="Silmeyi onayla">
+        <Sheet variant="header" open onClose={closeDelete} title="Silmeyi onayla">
           <div className="flex flex-col gap-3">
             <label htmlFor="delete-confirm" className="text-body">
               Onaylamak için {DELETE_CONFIRM_WORD} yaz.
@@ -550,7 +549,7 @@ export function SettingsPage() {
       )}
 
       {removing && (
-        <Sheet open onClose={() => setRemoving(null)} title="Rutini sil">
+        <Sheet variant="header" open onClose={() => setRemoving(null)} title="Rutini sil">
           <div className="flex flex-col gap-3">
             <p className="text-body">
               "{removing.name}" kalıcı olarak silinecek. Geri alınamaz. Geçmişte işaretlediğin günler kayıtlarda kalır.
@@ -582,7 +581,7 @@ export function SettingsPage() {
       </div>
 
       {pending && (
-        <Sheet open onClose={() => setPending(null)} title="Yedekten yükle">
+        <Sheet variant="header" open onClose={() => setPending(null)} title="Yedekten yükle">
           <div className="flex flex-col gap-3">
             <p className="text-body">Mevcut veriler silinecek. Yedekteki veriler onların yerine geçecek.</p>
             <Button look="plain" variant="primary" onClick={confirmImport}>

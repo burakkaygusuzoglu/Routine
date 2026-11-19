@@ -3,9 +3,8 @@ import { ROUTINE_COLORS, ROUTINE_COLOR_KEYS, type RoutineColor } from '../../des
 import { ROUTINE_ICON_LABELS, ROUTINE_ICON_NAMES, RoutineIcon } from '../../design/routineIcons'
 import { store } from '../../data/store'
 import type { AnchorType, Routine } from '../../domain/types'
-import { Button, SegmentedControl, Switch } from '../../ui'
+import { Button, SegmentedControl, Sheet, Switch } from '../../ui'
 import { sheetErrorText } from './messages'
-import { Sheet } from './components/Sheet'
 import {
   DAY_LONG,
   DAY_SHORT,
@@ -87,6 +86,7 @@ export function RoutineEditSheet({ routine, all, onClose, onArchived }: Props) {
 
   return (
     <Sheet
+      variant="header"
       open
       onClose={onClose}
       title={routine ? 'Rutini düzenle' : 'Yeni rutin'}
