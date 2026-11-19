@@ -54,9 +54,3 @@ export function breaksPassed(runningSince: number | null, breakMin: number | und
   if (runningSince === null || !breakMin || breakMin <= 0 || now < runningSince) return 0
   return Math.floor((now - runningSince) / (breakMin * MIN_MS))
 }
-
-/** Epoch ms of the next break after `now`, or null when the reminder is off or the timer is paused. */
-export function nextBreakAt(runningSince: number | null, breakMin: number | undefined, now: number): number | null {
-  if (runningSince === null || !breakMin || breakMin <= 0) return null
-  return runningSince + (breaksPassed(runningSince, breakMin, now) + 1) * breakMin * MIN_MS
-}

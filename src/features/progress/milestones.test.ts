@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { addDays } from '../../domain/date'
 import type { Completion, Routine } from '../../domain/types'
-import { currentMilestone, nextMilestone, nextMilestoneText, reachedMilestones } from './milestones'
+import { nextMilestone, nextMilestoneText, reachedMilestones } from './milestones'
 
 function routine(over: Partial<Routine> = {}): Routine {
   return {
@@ -30,15 +30,6 @@ describe('nextMilestone', () => {
   it('formats the card text', () => {
     expect(nextMilestoneText(54)).toBe('Hedef 66 gün · 12 kaldı')
     expect(nextMilestoneText(120)).toBeNull()
-  })
-})
-
-describe('currentMilestone', () => {
-  it('returns the highest milestone reached', () => {
-    expect(currentMilestone(6)).toBe(0)
-    expect(currentMilestone(7)).toBe(7)
-    expect(currentMilestone(65)).toBe(30)
-    expect(currentMilestone(100)).toBe(100)
   })
 })
 

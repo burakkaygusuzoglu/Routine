@@ -58,10 +58,3 @@ export function reachedMilestones(routine: Routine, completions: Completion[], t
   }
   return reached
 }
-
-/** The milestone a streak currently stands at (highest one reached), or 0. */
-export function currentMilestone(streak: number): number {
-  let out = 0
-  for (const m of MILESTONES) if (streak >= m) out = m
-  return out
-}

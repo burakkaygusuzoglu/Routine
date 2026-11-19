@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { DateKey, StudyDay, StudyEntry } from '../../domain/types'
-import { breaksPassed, minutesBySubject, nextBreakAt, studyStreak } from './insights'
+import { breaksPassed, minutesBySubject, studyStreak } from './insights'
 
 const MIN = 60_000
 const e = (subject: string | undefined, minutes: number | null, id = Math.random().toString()): StudyEntry => ({
@@ -67,19 +67,8 @@ describe('studyStreak', () => {
   })
 })
 
-describe('nextBreakAt', () => {
+describe('breaksPassed', () => {
   const t0 = 1_000_000
-  it('is null when off or paused', () => {
-    expect(nextBreakAt(null, 50, t0)).toBeNull()
-    expect(nextBreakAt(t0, 0, t0)).toBeNull()
-    expect(nextBreakAt(t0, undefined, t0)).toBeNull()
-  })
-  it('is the next multiple of the interval after now', () => {
-    expect(nextBreakAt(t0, 25, t0)).toBe(t0 + 25 * MIN)
-    expect(nextBreakAt(t0, 25, t0 + 24 * MIN)).toBe(t0 + 25 * MIN)
-    expect(nextBreakAt(t0, 25, t0 + 25 * MIN)).toBe(t0 + 50 * MIN)
-    expect(nextBreakAt(t0, 25, t0 + 130 * MIN)).toBe(t0 + 150 * MIN)
-  })
   it('counts passed breaks', () => {
     expect(breaksPassed(t0, 50, t0 + 49 * MIN)).toBe(0)
     expect(breaksPassed(t0, 50, t0 + 101 * MIN)).toBe(2)

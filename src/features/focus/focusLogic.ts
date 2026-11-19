@@ -49,10 +49,6 @@ export function defaultStatus(startMs: number, endMs: number, plannedMin: number
   return endMs - startMs >= plannedMin * MIN_MS ? 'full' : 'min'
 }
 
-export function driftLabel(n: number): string {
-  return n === 0 ? 'Hiç dağılmadın' : `${n} kez daldın`
-}
-
 /** Summary line for the end screen. */
 export function summaryText(minutes: number, drifts: number): string {
   const first = minutes === 0 ? 'Bu sefer 1 dakikadan az odaklandın.' : `${minutes} dk odaklandın.`
