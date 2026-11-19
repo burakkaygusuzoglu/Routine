@@ -19,12 +19,47 @@ Sync rules that every table must follow:
     src/domain    types.ts (data shapes), date.ts (local-date helpers), pure logic
     src/data      db.ts (Dexie schema), store.ts (RoutineStore), seed.ts
     src/ui        shared presentational components (no data access)
-    src/features  one folder per screen: today, progress, settings, weekly
+    src/features  one folder per screen or flow (see "Where things live")
     src/pwa       manifest, service worker registration, install hint
     src/app       App.tsx: routing and shell
 
 Dependencies point downward only: features -> ui, data, domain, design. `ui` never
 imports `data`. `domain` imports nothing but `design` types.
+
+## Where things live
+
+Each line: folder, what is in it, and a short Turkish gloss.
+
+Top level
+
+    src/app          App.tsx: routes, tab bar, shell                      (uygulama iskeleti ve yönlendirme)
+    src/design       colours, themes, routine icons, theme picker         (renkler, temalar, ikonlar)
+    src/domain       types and pure rules: dates, streaks, schedule, .ics (veri tipleri ve saf mantık)
+    src/data         Dexie database, the store, backup check, push, sync  (veritabanı, yedek, eşitleme, bildirim)
+    src/ui           shared components: Button, Sheet, Card, Switch ...   (ortak bileşenler)
+    src/pwa          install hint, "new version" prompt, app icons        (kurulum ve güncelleme)
+    e2e              Playwright browser tests (*.e2e.ts)                  (tarayıcı testleri)
+    worker           Cloudflare Worker that sends push reminders          (bildirim sunucusu)
+    public           static files: icons, theme-init.js, push-sw.js       (sabit dosyalar)
+    docs             this file, DESIGN.md, PUSH.md, work packages         (belgeler)
+
+Screens in `src/features` (one folder per screen or flow; each keeps its own
+logic next to a `*.test.ts`)
+
+    today       "Bugün": routine list, timeline, wake chip, undo        (günlük rutin listesi)
+    study       "Çalışma": study timer, subjects, notes, daily target   (çalışma sayacı)
+    progress    "İlerleme": streaks, month calendar, study stats        (seriler ve istatistikler)
+    weekly      "Haftalık": weekly summary and the gardens              (haftalık özet, bahçe)
+    settings    "Ayarlar": routine editing, backup, push, account       (ayarlar, yedek, hesap)
+    focus       full-screen focus session for one routine               (odak seansı)
+    night       "Gece": bedtime checklist and night notes               (gece rutini)
+    onboarding  first-run intro                                         (ilk açılış tanıtımı)
+    auth        sign-in with an email code                              (e-posta kodu ile giriş)
+
+Where shared pieces differ between screens, `src/ui` components take an optional
+prop instead of being copied: `Button look`, `Sheet variant`, `Switch variant`,
+`SegmentedControl mode`, `ProgressRing variant`. Add a prop there rather than a
+local copy inside a feature.
 
 ## Data
 
