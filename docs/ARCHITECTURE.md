@@ -52,7 +52,7 @@ logic next to a `*.test.ts`)
     weekly      "Haftalık": weekly summary and the gardens              (haftalık özet, bahçe)
     settings    "Ayarlar": routine editing, backup, push, account       (ayarlar, yedek, hesap)
     focus       full-screen focus session for one routine               (odak seansı)
-    night       "Gece": bedtime checklist and night notes               (gece rutini)
+    night       "Gece modu": bedtime checklist and night notes          (gece rutini)
     onboarding  first-run intro                                         (ilk açılış tanıtımı)
     auth        sign-in with an email code                              (e-posta kodu ile giriş)
 
